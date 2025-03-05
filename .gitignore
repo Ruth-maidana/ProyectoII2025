@@ -1,0 +1,15 @@
+# Entorno Virtual
+env/
+# Migraciones
+**/migrations/*
+!**/migrations/__init__.py
+# Archivos compilados de Python
+*.pyc
+__pycache__/
+# Archivos de configuración y bases de datos locales
+db.sqlite3
+.env
+# Archivos de log
+*.log
+# Archivos del entorno
+.vscode/

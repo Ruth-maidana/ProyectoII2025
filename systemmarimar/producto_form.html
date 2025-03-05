@@ -1,0 +1,31 @@
+{% extends 'base/base_sitio.html' %}
+
+{% block title %} Registrar Producto {% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style>
+	li{
+		color: red;
+	}
+</style>
+<div class="container">
+	<div class="py-4">
+		<div class="card shadow">
+			<h3 class="card-header text-center">Registro de Productos</h3>
+			<div class="card-body">
+				<h5 class="card-title mb-4">Ingrese datos del producto</h5>	
+				 <form method="post">
+					{% csrf_token %}
+					{{ form|crispy}}
+					<div class="py-3">
+						<button class="btn btn-primary" type="submit">Guardar</button>
+						<a class="btn btn-secondary" href="{% url 'listarProducto'%}" title="Cancelar">Cancelar</a>
+					</div>	
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
