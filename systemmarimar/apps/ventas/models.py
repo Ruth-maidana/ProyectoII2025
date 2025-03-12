@@ -23,4 +23,6 @@ class Cliente(models.Model):
 
         
     def __str__(self):
-        return'{}'.format(self.nombre,self.apellido,self.num_tel,self.correo,self.direccion,self.activo,self.fecha_insercion)
+        return '{} {} - Tel: {} - Email: {} - Dirección: {} - Activo: {} - Fecha de inserción: {}'.format(
+            self.nombre, self.apellido, self.num_tel, self.correo, self.direccion, self.activo, self.fecha_insercion
+        )
