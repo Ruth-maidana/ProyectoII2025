@@ -1,0 +1,295 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulario Compras</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css'%}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <!-- Navbar -->
+  {%include 'navbar/navbar.html'%}
+  <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    {%include 'navbar/sidebar.html'%}
+    <!-- /.sidebar -->
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Registrar Compra</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">Validation</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+            <!-- left column -->
+            <div class="col-md-12">
+
+            <!-- jquery validation -->
+                <div class="card card-primary">
+
+                    <div class="card-header">
+                        <h3 class="card-title">Datos</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                    <!--label for="exampleInputEmail1">Email address</label>
+                                    <input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
+                                        {{ form_compra.nro_comprobante|as_crispy_field}}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form_compra.fecha_compra|as_crispy_field}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                    {{ form_compra.proveedor|as_crispy_field}}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                    {{ form_compra.forma_pago|as_crispy_field}}
+                                    </div>
+                                </div>
+                            </div>
+                            {{ form_det_compra.management_form }}
+                            <div class="form-group">
+                                <table class="table table-bordered" id="detalle-table" data-formset-prefix="{{ form_det_compra.prefix }}">
+
+                                    <thead>
+                                        <tr>
+                                        <th>Producto</th>
+                                        <th>Descripcion</th>
+                                        <th>Cantidad</th>
+                                        <th>Unidad de Medida</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Descuento</th>
+                                        <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for form in form_det_compra %}
+                                            <tr>
+                                                <td>{{ form.producto }}</td>
+                                                <td>{{ form.descripcion}}</td>
+                                                <td>{{ form.cantidad}}</td>
+                                                <td>{{ form.unidad_medida }}</td>
+                                                <td>{{ form.precio_compra }}</td>
+                                                <td>{{ form.descuento }}</td>
+                                                <td>{{ form.total_producto }}</td>
+                                                <td><button type="button" class="btn btn-danger btn-remove">Eliminar</button></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                <div class="form-group">
+                                    {{ form_compra.total|as_crispy_field}}
+                                </div>
+                                <button type="button" class="btn btn-primary" id="add-producto">Agregar Producto</button>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-success">Guardar Orden</button>
+                        </div>
+                    </form>
+                    <!-- Aquí el empty_form escondido para clonar dinámicamente -->
+                    <div id="empty-form" style="display:none;">
+                      <table>
+                          <tr>
+                              <td>{{ form_det_compra.empty_form.producto }}</td>
+                              <td>{{ form_det_compra.empty_form.descripcion }}</td>
+                              <td>{{ form_det_compra.empty_form.cantidad }}</td>
+                              <td>{{ form_det_compra.empty_form.unidad_medida }}</td>
+                              <td>{{ form_det_compra.empty_form.precio_compra }}</td>
+                              <td>{{ form_det_compra.empty_form.descuento }}</td>
+                              <td>{{ form_det_compra.empty_form.total_producto }}</td>
+                              <td><button type="button" class="btn btn-danger btn-remove">Eliminar</button></td>
+                          </tr>
+                      </table>
+                    </div>
+                </div>
+            <!-- /.card -->
+            </div>
+          <!--/.col (left) -->
+          <!-- right column -->
+          <div class="col-md-6">
+
+          </div>
+          <!--/.col (right) -->
+        </div>
+        <!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  
+  <!-- FOOTER -->
+  {% include 'footer/footer.html'%}
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+  </aside>
+  <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+		<script>
+				document.addEventListener('DOMContentLoaded', function() {
+						{% for message in messages %}
+								{% if message.tags == 'success' %}
+										Swal.fire({
+												icon: 'success',
+												title: '¡Éxito!',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% elif message.tags == 'error' %}
+										Swal.fire({
+												icon: 'error',
+												title: '¡Error!',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% elif message.tags == 'warning' %}
+										Swal.fire({
+												icon: 'warning',
+												title: 'Advertencia',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% endif %}
+						{% endfor %}
+				});
+		</script>
+{% endif %}
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- jquery-validation -->
+<script src="{% static 'plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+<script src="{% static 'plugins/jquery-validation/additional-methods.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const detalleTable = document.querySelector("#detalle-table tbody");
+      const totalGeneralField = document.querySelector("#id_total"); // Campo del total general
+
+      // Función para calcular el total_producto
+      function calcularTotalProducto(row) {
+          const cantidad = parseFloat(row.querySelector('[name$="-cantidad"]').value) || 0;
+          const precioUnitario = parseFloat(row.querySelector('[name$="-precio_compra"]').value) || 0;
+          const descuento = parseFloat(row.querySelector('[name$="-descuento"]').value) || 0;
+          const totalProductoField = row.querySelector('[name$="-total_producto"]');
+
+          const totalProducto = (cantidad * precioUnitario) - descuento;
+          totalProductoField.value = totalProducto.toFixed(2); // Actualizar el campo total_producto
+      }
+
+      // Función para calcular el total general
+      function calcularTotalGeneral() {
+          let totalGeneral = 0;
+          detalleTable.querySelectorAll("tr").forEach(function (row) {
+              const totalProducto = parseFloat(row.querySelector('[name$="-total_producto"]').value) || 0;
+              totalGeneral += totalProducto;
+          });
+          totalGeneralField.value = totalGeneral.toFixed(2); // Actualizar el campo total general
+      }
+
+      // Escuchar cambios en los campos cantidad, precio_compra y descuento
+      detalleTable.addEventListener("input", function (event) {
+          const row = event.target.closest("tr");
+          if (row) {
+              calcularTotalProducto(row); // Calcular el total_producto de la fila
+              calcularTotalGeneral(); // Calcular el total general
+          }
+      });
+
+      // Agregar funcionalidad para agregar productos
+      const addButton = document.querySelector("#add-producto");
+      const totalForms = document.querySelector("#id_{{ form_det_compra.prefix }}-TOTAL_FORMS"); // Input oculto que maneja el conteo de formularios
+
+      addButton.addEventListener("click", function () {
+        const formCount = parseInt(totalForms.value);
+        const emptyRow = document.querySelector("#empty-form table tr").cloneNode(true); // Clona la fila del empty_form
+    
+        // Reemplazar __prefix__ con el índice actual del formulario
+        emptyRow.querySelectorAll("input, select").forEach(function (input) {
+            let name = input.name.replace(/__prefix__/, formCount);
+            let id = input.id.replace(/__prefix__/, formCount);
+            input.name = name;
+            input.id = id;
+            input.value = ""; // Limpiar el valor del campo
+        });
+    
+        detalleTable.appendChild(emptyRow); // Agrega la nueva fila a la tabla
+        totalForms.value = formCount + 1; // Incrementa el contador de formularios
+    });
+
+      // Agregar funcionalidad para eliminar productos
+      detalleTable.addEventListener("click", function (event) {
+          if (event.target.classList.contains("btn-remove")) {
+              const row = event.target.closest("tr");
+              row.remove();
+              totalForms.value = parseInt(totalForms.value) - 1;
+              calcularTotalGeneral(); // Recalcular el total general después de eliminar una fila
+          }
+      });
+  });
+</script>
+
+</body>
+</html>

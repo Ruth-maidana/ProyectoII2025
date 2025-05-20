@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Orden de Compra</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Registrar Orden de Compra</h2>
+        <form>
+            <!-- Número de Orden -->
+            <div class="mb-3">
+                <label for="numeroOrden" class="form-label">Número de Orden</label>
+                <input type="text" class="form-control" id="numeroOrden" placeholder="Ej. OC-0001">
+            </div>
+
+            <!-- Fecha de Orden -->
+            <div class="mb-3">
+                <label for="fechaOrden" class="form-label">Fecha de Orden</label>
+                <input type="date" class="form-control" id="fechaOrden">
+            </div>
+
+            <!-- Proveedor -->
+            <div class="mb-3">
+                <label for="proveedor" class="form-label">Proveedor</label>
+                <select class="form-select" id="proveedor">
+                    <option selected>Selecciona un proveedor</option>
+                    <option value="1">Proveedor A</option>
+                    <option value="2">Proveedor B</option>
+                </select>
+            </div>
+
+            <!-- Lista de Productos -->
+            <div class="mb-3">
+                <label class="form-label">Productos</label>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="form-control" placeholder="Ej. Laptop"></td>
+                            <td><input type="number" class="form-control" min="1" value="1"></td>
+                            <td><input type="number" class="form-control" min="0" step="0.01" value="1000"></td>
+                            <td>1000</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-primary">+ Agregar Producto</button>
+            </div>
+
+            <!-- Total -->
+            <div class="mb-3">
+                <label for="total" class="form-label">Total</label>
+                <input type="text" class="form-control" id="total" readonly value="$1000">
+            </div>
+
+            <!-- Botón de Guardar -->
+            <button type="submit" class="btn btn-success">Guardar Orden</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

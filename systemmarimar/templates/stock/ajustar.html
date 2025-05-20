@@ -5,7 +5,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Formulario Clientes</title>
+	<title>Formulario de Ajuste</title>
 
 	<!-- Google Font: Source Sans Pro -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -32,7 +32,7 @@
 			<div class="container-fluid">
 				<div class="row mb-2">
 					<div class="col-sm-6">
-						<h1>Registrar Cliente</h1>
+						<h1>Registrar Ajuste</h1>
 					</div>
 					<div class="col-sm-6">
 						<ol class="breadcrumb float-sm-right">
@@ -54,7 +54,7 @@
 						<!-- jquery validation -->
 						<div class="card card-primary">
 							<div class="card-header">
-								<h3 class="card-title">Datos</h3>
+								<h3 class="card-title">Cargar Datos</h3>
 							</div>
 							<!-- /.card-header -->
 							<!-- form start -->
@@ -64,63 +64,31 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.nombre|as_crispy_field}}
+												{{ form_ajustar_stock.producto|as_crispy_field}}
 											</div>
 										</div>
-										<div class="col-md-6">
+                                        <div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.apellido|as_crispy_field}}
+												{{ form_ajustar_stock.cantidad|as_crispy_field}}
 											</div>
 										</div>
 									</div>
 									<div class="row">
-										<div class="col-md-4">
+										<div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.tipo_documento|as_crispy_field}}
+												{{ form_ajustar_stock.movimiento|as_crispy_field}}
 											</div>
 										</div>
-										<div class="col-md-4">
+										<div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.documento|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-4">
-											<div class="form-group">
-												{{ form_cliente.digito_verificador|as_crispy_field}}
+												{{ form_ajustar_stock.ajuste|as_crispy_field}}
 											</div>
 										</div>
 									</div>
-
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.nacionalidad|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.estado_civil|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.num_tel|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.correo|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-									
 									<div class="row">
 										<div class="col-md-12">
 											<div class="form-group">
-												{{ form_cliente.direccion|as_crispy_field}}
+												{{ form_ajustar_stock.descripcion|as_crispy_field}}
 											</div>
 										</div>
 									</div>
@@ -219,11 +187,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         const tipoDocumentoField = document.querySelector('[name="tipo_documento"]');
         toggleDigitoVerificador(tipoDocumentoField);
-
-        // Attach the change event listener to update the field dynamically
-        tipoDocumentoField.addEventListener('change', function () {
-            toggleDigitoVerificador(tipoDocumentoField);
-        });
     });
 </script>
 

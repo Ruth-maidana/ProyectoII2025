@@ -78,15 +78,12 @@
 										<div class="card card-info mb-4">
 
 												<div class="card-header d-flex justify-content-between align-items-center">
-													<h5 class="mb-0">Productos</h5>
-													<div class="d-flex position-relative">
-														<input type="text" id="busqueda" class="form-control me-2" placeholder="Buscar..." autocomplete="off">
-														<input type="hidden" id="producto_id"> <!-- Campo oculto para almacenar el ID del producto -->
-														<div id="sugerencias" class="border border-secondary rounded bg-white position-absolute" style="max-height: 200px; overflow-y: auto; z-index: 1000; width: 250px; top: 100%; left: 0;"></div>
-														<button class="btn btn-primary" id="btnAgregar">Agregar</button>
-													</div>
-													<div>
-														<button type="button" class="btn btn-primary" id="nuevo_producto">Nuevo Producto</button>
+													<h3 class="card-title">Detalle de Productos</h3>
+													<div class="input-group mb-3">
+														<input type="text" id="busqueda" class="form-control" placeholder="Buscar producto...">
+														<input type="hidden" id="producto_id" name="producto_id" value="">
+														<div id="sugerencias" class="d-none position-absolute bg-light border rounded"></div>
+														<button type="button" id="btnAgregar" class="btn btn-primary">Agregar</button>
 													</div>
 												</div>
 												
@@ -97,7 +94,6 @@
 													<thead class="table-light">
 														<tr>
 															<th>Producto</th>
-															<th>Descripcion</th>
 															<th>Cantidad</th>
 															<th>Unidad</th>
 															<th>Precio</th>
@@ -108,8 +104,7 @@
 													<tbody>
 														{% for form in form_venta_det %}
 															<tr>
-																<td>{{ form.producto }}</td>
-																<td>{{ form.descripcion }}</td>
+																<td>{{ form.producto.nombre }}</td>
 																<td>{{ form.cantidad }}</td>
 																<td>{{ form.unidad_medida }}</td>
 																<td>{{ form.precio_unit_venta }}</td>
@@ -182,11 +177,11 @@
 								<div id="empty-form" style="display:none;">
 									<table>
 											<tr>
-													<td>{{ form_venta_det.empty_form.producto.id }}</td>
-													<td>{{ form_venta_det.empty_form.producto.descripcion }}</td>
+													<td>{{ form_venta_det.empty_form.producto.nombre }}</td>
+													<!--td>{{ form_venta_det.empty_form.producto.descripcion }}</td-->
 													<td>{{ form_venta_det.empty_form.cantidad }}</td>
-													<td>{{ form_venta_det.empty_form.producto.unidad_medida }}</td>
-													<td>{{ form_venta_det.empty_form.producto.precio_unit_venta }}</td>
+													<td>{{ form_venta_det.empty_form.unidad_medida }}</td>
+													<td>{{ form_venta_det.empty_form.precio_unit_venta }}</td>
 													<!--td>{{ form_venta_det.empty_form.descuento }}</td-->
 													<td>{{ form_venta_det.empty_form.subtotal }}</td>
 													<td><button type="button" class="btn btn-danger btn-remove">Eliminar</button></td>
@@ -267,166 +262,132 @@
 <!-- Page specific script -->
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		const inputBusqueda = document.getElementById('busqueda');
-		const inputProductoId = document.getElementById('producto_id'); // Campo oculto para el ID del producto
-		const contenedorSugerencias = document.getElementById('sugerencias');
-		const btnAgregar = document.getElementById('btnAgregar');
-		const detalleTable = document.getElementById('detalle-table').querySelector('tbody');
-		const emptyFormTemplate = document.getElementById('empty-form')?.querySelector('tr');
-		const totalForms = document.querySelector('#id_TOTAL_FORMS'); // Campo oculto TOTAL_FORMS
-		const formsetPrefix = document.getElementById('detalle-table').dataset.formsetPrefix; // Obtener el prefijo del formset
+document.addEventListener('DOMContentLoaded', function () {
+    const busquedaInput = document.getElementById('busqueda');
+    const sugerenciasDiv = document.getElementById('sugerencias');
+    const detalleTable = document.getElementById('detalle-table').querySelector('tbody');
+    const totalFormsInput = document.getElementById('id_TOTAL_FORMS');
+    const descuentoInput = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
+    const totalInput = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
+    let totalForms = parseInt(totalFormsInput.value) || 0;
+    let selectedProduct = null;
 
-		// Manejo de sugerencias
-		inputBusqueda.addEventListener('input', function() {
-			const query = inputBusqueda.value.trim();
+    // Inicializar valores
+    descuentoInput.value = descuentoInput.value || 0;
+    totalInput.value = totalInput.value || 0;
 
-			if (query.length > 0) {
-				fetch(`buscar-productos/?q=${encodeURIComponent(query)}`)
-					.then(response => response.json())
-					.then(data => {
-						contenedorSugerencias.innerHTML = '';
-						if (data.length > 0) {
-							data.forEach(item => {
-								const div = document.createElement('div');
-								div.textContent = item.nombre;
-								div.dataset.id = item.id; // Almacenar el ID del producto como atributo de datos
-								div.classList.add('p-2', 'cursor-pointer', 'text-dark');
+    // Buscar productos
+    busquedaInput.addEventListener('input', function () {
+        const query = busquedaInput.value;
+        if (query.length > 2) {
+            fetch(`buscar-productos/?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    sugerenciasDiv.innerHTML = '';
+                    sugerenciasDiv.classList.remove('d-none');
+                    sugerenciasDiv.style.position = 'absolute';
+                    sugerenciasDiv.style.top = `${busquedaInput.offsetTop + busquedaInput.offsetHeight}px`;
+                    sugerenciasDiv.style.left = `${busquedaInput.offsetLeft}px`;
+                    sugerenciasDiv.style.width = `${busquedaInput.offsetWidth}px`;
 
-								div.addEventListener('click', function() {
-									inputBusqueda.value = item.nombre; // Mostrar el nombre en el input
-									inputProductoId.value = item.id; // Asignar el ID al campo oculto
-									contenedorSugerencias.classList.add('d-none');
-								});
+                    data.forEach(producto => {
+                        const item = document.createElement('div');
+                        item.textContent = producto.nombre;
+                        item.classList.add('p-2', 'cursor-pointer');
+                        item.style.cursor = 'pointer';
+                        item.addEventListener('click', function () {
+                            selectedProduct = producto;
+                            busquedaInput.value = producto.nombre;
+                            sugerenciasDiv.classList.add('d-none');
+                        });
+                        sugerenciasDiv.appendChild(item);
+                    });
+                });
+        } else {
+            sugerenciasDiv.classList.add('d-none');
+        }
+    });
 
-								contenedorSugerencias.appendChild(div);
-							});
+    // Agregar fila dinámica al dar clic en "Agregar"
+    document.getElementById('btnAgregar').addEventListener('click', function () {
+        if (selectedProduct) {
+            agregarFila(selectedProduct);
+            selectedProduct = null; // Limpiar producto seleccionado
+            busquedaInput.value = ''; // Limpiar el campo de búsqueda
+        } else {
+            alert('Seleccione un producto de la lista antes de agregar.');
+        }
+    });
 
-							contenedorSugerencias.classList.remove('d-none');
-						} else {
-							contenedorSugerencias.classList.add('d-none');
-						}
-					})
-					.catch(error => {
-						console.error('Error:', error);
-						contenedorSugerencias.classList.add('d-none');
-					});
-			} else {
-				contenedorSugerencias.classList.add('d-none');
-			}
-		});
+    // Función para agregar fila dinámica
+    function agregarFila(producto) {
+        const newRowHTML = `
+            <tr>
+                <td>${producto.nombre}</td>
+                <td><input type="number" name="form-${totalForms}-cantidad" class="form-control" value="1"></td>
+                <td><select name="form-${totalForms}-unidad_medida" class="form-control">
+                        <option value="unidad">Unidad</option>
+                        <option value="caja">Caja</option>
+                    </select></td>
+                <td><input type="number" name="form-${totalForms}-precio_unit_venta" class="form-control" value="0"></td>
+                <td><input type="number" name="form-${totalForms}-subtotal" class="form-control" value="0" readonly></td>
+                <td><button type="button" class="btn btn-danger btn-remove">Eliminar</button></td>
+                <input type="hidden" name="form-${totalForms}-producto" value="${producto.id}">
+            </tr>
+        `;
 
-		// Actualizar el campo TOTAL_FORMS
-		function actualizarTotalForms() {
-			totalForms.value = detalleTable.querySelectorAll('tr').length;
-		}
+        detalleTable.innerHTML += newRowHTML;
 
-		// Agregar funcionalidad para agregar productos
-		btnAgregar.addEventListener('click', function(e) {
-			e.preventDefault();
-			const productoNombre = inputBusqueda.value.trim();
-			const productoId = inputProductoId.value.trim();
+        // Actualizar el total de formularios
+        totalForms++;
+        totalFormsInput.value = totalForms;
 
-			if (productoNombre && productoId) {
-				// Validar si la plantilla de formulario vacío existe
-				if (!emptyFormTemplate) {
-					console.error('Error: No se encontró la plantilla de formulario vacío.');
-					return;
-				}
+        // Agregar eventos a los nuevos campos
+        const lastRow = detalleTable.lastElementChild;
+        const cantidadField = lastRow.querySelector(`[name="form-${totalForms - 1}-cantidad"]`);
+        const precioField = lastRow.querySelector(`[name="form-${totalForms - 1}-precio_unit_venta"]`);
+        const subtotalField = lastRow.querySelector(`[name="form-${totalForms - 1}-subtotal"]`);
+        const btnEliminar = lastRow.querySelector('.btn-remove');
 
-				const newRow = emptyFormTemplate.cloneNode(true);
-				const totalRows = parseInt(totalForms.value);
+        if (cantidadField && precioField) {
+            cantidadField.addEventListener('input', calcularSubtotal);
+            precioField.addEventListener('input', calcularSubtotal);
+        }
 
-				// Actualizar los nombres de los campos en la nueva fila
-				newRow.querySelectorAll('input, select, textarea').forEach((input) => {
-					input.name = input.name.replace('__prefix__', totalRows);
-					input.id = input.id.replace('__prefix__', totalRows);
-				});
+        if (btnEliminar) {
+            btnEliminar.addEventListener('click', function () {
+                lastRow.remove();
+                recalcularTotal();
+                totalForms--;
+                totalFormsInput.value = totalForms;
+            });
+        }
+    }
 
-				// Asignar el nombre del producto al campo visible y el ID al campo oculto
-				const productoCell = newRow.querySelector('td:first-child'); // Primera celda para el producto
-				const productoHiddenInput = newRow.querySelector('[name$="-producto"]'); // Campo oculto para el ID del producto
+    // Calcular subtotal
+    function calcularSubtotal() {
+        const row = this.closest('tr');
+        const cantidad = parseFloat(row.querySelector('[name$="-cantidad"]').value) || 0;
+        const precio = parseFloat(row.querySelector('[name$="-precio_unit_venta"]').value) || 0;
+        const subtotal = cantidad * precio;
+        row.querySelector('[name$="-subtotal"]').value = subtotal.toFixed(2);
+        recalcularTotal();
+    }
 
-				if (productoCell && productoHiddenInput) {
-					productoCell.textContent = productoNombre; // Mostrar el nombre del producto en la celda
-					productoHiddenInput.value = productoId; // Asignar el ID del producto al campo oculto
-				}
+    // Recalcular total
+    function recalcularTotal() {
+        let total = 0;
+        detalleTable.querySelectorAll('[name$="-subtotal"]').forEach(subtotalInput => {
+            total += parseFloat(subtotalInput.value) || 0;
+        });
+        const descuento = parseFloat(descuentoInput.value) || 0;
+        total -= descuento;
+        totalInput.value = total.toFixed(2);
+    }
 
-				detalleTable.appendChild(newRow);
-				actualizarTotalForms(); // Actualizar TOTAL_FORMS después de agregar una fila
-				inputBusqueda.value = '';
-				inputProductoId.value = '';
-			} else {
-				alert('Seleccione un producto válido antes de agregar.');
-			}
-		});
-
-		// Agregar funcionalidad para eliminar productos
-		detalleTable.addEventListener("click", function(event) {
-			if (event.target.classList.contains("btn-remove")) {
-				const row = event.target.closest("tr");
-				row.remove();
-				actualizarTotalForms(); // Actualizar TOTAL_FORMS después de eliminar una fila
-			}
-		});
-
-		// Función para calcular el total_producto
-		function calcularTotalProducto(row) {
-			const cantidadInput = row.querySelector('[name$="-cantidad"]');
-			const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
-			const totalProductoField = row.querySelector('[name$="-subtotal"]');
-
-			if (cantidadInput && precioInput && totalProductoField) {
-				const cantidad = parseFloat(cantidadInput.value) || 0;
-				const precio = parseFloat(precioInput.value) || 0;
-				const totalProducto = cantidad * precio;
-				totalProductoField.value = totalProducto.toFixed(2); // Actualizar el campo subtotal
-			}
-		}
-
-		// Función para calcular el total general
-		function calcularTotalGeneral() {
-			let totalGeneral = 0;
-			detalleTable.querySelectorAll('tr').forEach(function(row) {
-				const subtotalInput = row.querySelector('[name$="-subtotal"]');
-				if (subtotalInput) {
-					totalGeneral += parseFloat(subtotalInput.value) || 0;
-				}
-			});
-
-			// Aplicar el descuento si está presente
-			const descuentoField = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
-			const descuento = parseFloat(descuentoField?.value) || 0;
-			totalGeneral -= descuento;
-
-			const totalGeneralField = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
-			if (totalGeneralField) {
-				totalGeneralField.value = totalGeneral.toFixed(2); // Actualizar el campo total general
-			}
-		}
-
-		// Escuchar cambios en los campos cantidad, precio_unit_venta y descuento
-		detalleTable.addEventListener('input', function(event) {
-			const row = event.target.closest('tr');
-			if (row) {
-				calcularTotalProducto(row); // Calcular el subtotal de la fila
-				calcularTotalGeneral(); // Calcular el total general
-			}
-		});
-
-		// Escuchar cambios en el descuento
-		const descuentoField = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
-		descuentoField?.addEventListener('input', function() {
-			calcularTotalGeneral(); // Recalcular el total general cuando cambie el descuento
-		});
-
-		// Recalcular el total general cuando se agregan o eliminan filas
-		const observer = new MutationObserver(() => calcularTotalGeneral());
-		observer.observe(detalleTable, { childList: true });
-
-		// Cálculo inicial al cargar la página
-		calcularTotalGeneral();
-	});
+    // Evento para recalcular total al cambiar descuento
+    descuentoInput.addEventListener('input', recalcularTotal);
+});
 </script>
 
 </body>

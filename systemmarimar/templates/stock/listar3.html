@@ -1,0 +1,363 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+
+    <!-- Navbar -->
+    {% include 'navbar/navbar.html' %}
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    {% include 'navbar/sidebar.html' %}
+    <!-- /.sidebar -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>Movimiento de Stock</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active">Stock</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+
+        {% if Movimientos %}
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                                        <i class="fas fa-minus"></i>
+                                </div>
+                                <!--div class="row">
+                                    <div class="col-md-3">
+                                        <div class="card text-bg-success">Productos OK: 120</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-bg-warning">Bajo stock: 15</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-bg-danger">Críticos: 8</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-bg-info">Valor inventario: $12,000</div>
+                                    </div>
+                                </div-->
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <form method="GET" class="row g-3">
+                                            <!-- Dropdown de Tipo de Filtro-->
+                                            <div class="col-md-3">
+                                                <label for="filtro" class="form-label">Filtrar por:</label>
+                                                <select class="form-select" id="tipoFiltro" name="tipo_filtro">
+                                                    <option value="categoria">Categoria</option>
+                                                    <option value="producto">Producto</option>
+                                                    <option value="fecha">Fecha</option>
+                                                    <option value="nivel_stock">Nivel de Stock</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!--Dropdown de Categorias (visible por defecto)-->
+                                            <div class="col-md-3" id="filtroCategoria">
+                                                <label class="form-label">Categoría:</label>
+                                                <select class="form-select" name="categoria">
+                                                    <option value="">Todas</option>
+                                                    {% for categoria in categorias %}
+                                                        <option value="{{ categoria.id }}" 
+                                                            {% if categoria_seleccionada == categoria.id %}selected{% endif %}>
+                                                            {{ categoria.nombre }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <!-- Dropdown de Productos (visible por defecto) -->
+                                            <div class="col-md-3" id="filtroProducto">
+                                                <label class="form-label">Producto:</label>
+                                                <select class="form-select" name="producto">
+                                                    <option value="">Todos</option>
+                                                    {% for producto in productos %}
+                                                        <option value="{{ producto.id }}" 
+                                                            {% if producto_seleccionado == producto.id %}selected{% endif %}>
+                                                            {{ producto.nombre }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <!-- Filtro por rango de fechas (oculto inicialmente) -->
+                                            <div class="col-md-6" id="filtroFecha" style="display: none;">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Fecha Inicio:</label>
+                                                        <input type="date" class="form-control" name="fecha_inicio" 
+                                                        value="{% if fecha_inicio %}{{ fecha_inicio|date:'Y-m-d' }}{% endif %}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Fecha Fin:</label>
+                                                        <input type="date" class="form-control" name="fecha_fin" 
+                                                        value="{% if fecha_fin %}{{ fecha_fin|date:'Y-m-d' }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Filtro por nivel de stock -->
+                                            <div class="col-md-3" id="filtroNivelStock" style="display: none;">
+                                                <label class="form-label">Nivel de Stock:</label>
+                                                <select class="form-select" name="nivel_stock">
+                                                    <option value="">Todos</option>
+                                                    <option value="bajo" {% if nivel_stock_seleccionado == 'bajo' %}selected{% endif %}>Bajo</option>
+                                                    <option value="suficiente" {% if nivel_stock_seleccionado == 'suficiente' %}selected{% endif %}>Suficiente</option>
+                                                </select>
+                                            </div>
+
+                                             <!-- Botón de aplicar filtro -->
+                                            <div class="col-md-2 align-self-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-filter"></i> Filtrar
+                                                </button>
+                                            </div>
+                                            <!-- Botón de limpiar filtro -->
+                                            <div class="col-md-2 align-self-end">
+                                                <a href="{% url 'list_movimientos' %}" class="btn btn-secondary">
+                                                    <i class="fas fa-eraser"></i> Limpiar
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                                <table id="example1" class="table table-bordered table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Categoria</th>
+                                        <th>Stock Inicial</th>
+                                        <th>Stock Actual</th>
+                                        <th>Cantidad Mov</th>
+                                        <th>Unidad Medida</th>
+                                        <th>Tipo Movimiento</th>
+                                        <th>Fecha Movimiento</th>
+                                        <!--th>Acciones</th-->
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for movimiento in Movimientos %}
+                                            <tr class="table-{{ movimiento.get_color }}">
+                                                <td>{{ movimiento.producto }}</td>
+                                                <td>{{ movimiento.producto.categoria}}</td>
+                                                <td>{{ movimiento.cantidad_inicial}}</td>
+                                                <td>{{ movimiento.cantidad_actual}}</td>
+                                                <td>{{ movimiento.get_cantidad_formateada}}</td>
+                                                <td>{{ movimiento.producto.unidad_medida}}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ movimiento.get_color }}">
+                                                        {{ movimiento.get_icono }} {{ movimiento.get_movimiento_display }}
+                                                        {% if movimiento.ajuste %}({{ movimiento.get_ajuste_display }}){% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>{{ movimiento.fecha_movimiento}}</td>
+                                                <!--td>Acciones</td-->
+                                                
+                                            </tr>
+                                            <!-- Modal para mostrar el detalle de la compra --> 
+                                        {% endfor %}				
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+                    </div>
+                    <!-- /.col -->
+                </div>
+                <!-- /.row -->
+            </div>
+            <!-- /.container-fluid -->
+        </section>
+        <!-- /.content -->
+        {% else %}
+            <h1>No existen movimientos de stock!</h1>
+        {% endif %}
+    </div>
+    <!-- /.content-wrapper -->
+
+    <!-- FOOTER -->
+    {% include 'footer/footer.html' %}
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmarEliminacion(event, url) {
+        event.preventDefault(); // Evitar que el enlace se ejecute inmediatamente
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡No podrás revertir esta acción!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url; // Redirigir si se confirma
+            }
+        });
+    }
+</script>
+<script>
+    $(function () {
+        $("#example1").DataTable({
+            "responsive": true, "lengthChange": false, "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+        }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+</script>
+
+<!-- Incluye SweetAlert2 (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function verificarStockBajo() {
+    fetch('api/stock-bajo/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.productos.length > 0) {
+                // Crear mensaje combinado
+                const mensaje = data.productos.map(
+                    p => `${p.nombre}: ${p.cantidad_en_stock} unidades`
+                ).join('\n');
+
+                // Mostrar notificación
+                Swal.fire({
+                    icon: 'warning',
+                    title: data.mensaje,
+                    html: `<pre>${mensaje}</pre>`,  // Usamos <pre> para formato
+                    confirmButtonText: 'Entendido',
+                    timer: 10000  // Cierra después de 10 segundos
+                });
+            }
+            
+            // Programar próxima verificación
+            setTimeout(
+                verificarStockBajo, 
+                data.frecuencia * 1000  // Convertir segundos a milisegundos
+            );
+        });
+}
+
+// Iniciar la verificación cuando la página cargue
+document.addEventListener('DOMContentLoaded', verificarStockBajo);
+</script>
+<!-- JavaScript para mostrar/ocultar filtros -->
+<script>
+document.getElementById('tipoFiltro').addEventListener('change', function() {
+    const tipo = this.value;
+    
+    // Oculta todos los filtros primero
+    document.querySelectorAll('[id^="filtro"]').forEach(el => {
+        if (el.id !== 'tipoFiltro') {
+            el.style.display = 'none';
+        }
+    });
+    
+    // Muestra solo el filtro seleccionado
+    if (tipo === 'fecha') {
+        document.getElementById('filtroFecha').style.display = 'block';
+    } else if (tipo === 'nivel_stock') {
+        document.getElementById('filtroNivelStock').style.display = 'block';
+    } else {
+        document.getElementById(`filtro${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`).style.display = 'block';
+    }
+});
+
+// Inicializar: Mostrar el filtro correspondiente según los parámetros GET
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tipoFiltro = document.getElementById('tipoFiltro');
+    
+    if (urlParams.has('fecha_inicio') || urlParams.has('fecha_fin')) {
+        tipoFiltro.value = 'fecha';
+        document.getElementById('filtroFecha').style.display = 'block';
+    } else if (urlParams.has('nivel_stock')) {
+        tipoFiltro.value = 'nivel_stock';
+        document.getElementById('filtroNivelStock').style.display = 'block';
+    } else if (urlParams.has('producto')) {
+        tipoFiltro.value = 'producto';
+        document.getElementById('filtroProducto').style.display = 'block';
+    } else if (urlParams.has('categoria')) {
+        tipoFiltro.value = 'categoria';
+        document.getElementById('filtroCategoria').style.display = 'block';
+    } else {
+        // Por defecto mostrar filtro de producto
+        document.getElementById('filtroProducto').style.display = 'block';
+    }
+});
+</script>
+</body>
+</html>

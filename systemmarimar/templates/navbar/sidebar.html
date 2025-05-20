@@ -1,151 +1,213 @@
 {% load static%}
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="../../index3.html" class="brand-link">
-      <img src="{% static 'img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">AdminLTE 3</span>
-    </a>
+	<!-- Brand Logo -->
+	<a href="../../index3.html" class="brand-link">
+	  <img src="{% static 'img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+	  <span class="brand-text font-weight-light">System Marimar</span>
+	</a>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- Sidebar user (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="{% static 'img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
-        </div>
-        <div class="info">
-          <a href="#" class="d-block">Alexander Pierce</a>
-        </div>
-      </div>
+	<!-- Sidebar -->
+	<div class="sidebar">
+	  <!-- Sidebar user (optional) -->
+	  <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+		<div class="image">
+		  <img src="{% static 'img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
+		</div>
+		<div class="info">
+		<a href="#" class="d-block">{{user.username}}</a>
+		</div>
+	  </div>
 
-      <!-- SidebarSearch Form -->
-      <div class="form-inline">
-        <div class="input-group" data-widget="sidebar-search">
-          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-          <div class="input-group-append">
-            <button class="btn btn-sidebar">
-              <i class="fas fa-search fa-fw"></i>
-            </button>
-          </div>
-        </div>
-      </div>
+	  <!-- SidebarSearch Form -->
+	  <div class="form-inline">
+		<div class="input-group" data-widget="sidebar-search">
+		  <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+		  <div class="input-group-append">
+			<button class="btn btn-sidebar">
+			  <i class="fas fa-search fa-fw"></i>
+			</button>
+		  </div>
+		</div>
+	  </div>
 
-      <!-- Sidebar Menu -->
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>
-                Dashboard
-                <i class=""></i>
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-user-cog"></i>
-              <p>
-                Administrador
-                <i class="fas fa-angle-left right"></i>
-                <span class="badge badge-info right">6</span>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="../layout/top-nav.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Top Navigation</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="../layout/top-nav-sidebar.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Top Navigation + Sidebar</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="../layout/boxed.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Boxed</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="../layout/fixed-sidebar.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Fixed Sidebar</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-header">COMERCIAL</li>
-          <li class="nav-item">
-            <a href="../kanban.html" class="nav-link">
-              <!--i class="nav-icon fas fa-columns"></i-->
-              <i class="nav-icon fas fa-chart-bar"></i>
-              <p>
-                Ventas
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="../kanban.html" class="nav-link">
-              <i class="nav-icon fas fa-shopping-cart"></i>
-              <p>
-                Compras
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="../kanban.html" class="nav-link">
-              <i class="nav-icon fas fa-tasks"></i>
-              <p>
-                Inventarios
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-                Reportes
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="../examples/invoice.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Venta</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="../examples/profile.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Inventario</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="../examples/e-commerce.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>General</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-header">INFORMACION</li>
-          <li class="nav-item">
-            <a href="https://adminlte.io/docs/3.1/" class="nav-link">
-              <i class="nav-icon fas fa-file"></i>
-              <p>Documentation</p>
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <!-- /.sidebar-menu -->
-    </div>
-    <!-- /.sidebar -->
+	  <!-- Sidebar Menu -->
+	  <nav class="mt-2">
+		<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+		  <!-- Add icons to the links using the .nav-icon class
+			   with font-awesome or any other icon font library -->
+		  <li class="nav-item">
+			<a href="#" class="nav-link">
+			  <i class="nav-icon fas fa-tachometer-alt"></i>
+			  <p>
+				Dashboard
+				<i class=""></i>
+			  </p>
+			</a>
+		  </li>
+		  <li class="nav-item">
+			<a href="#" class="nav-link">
+			  <i class="nav-icon fas fa-user-cog"></i>
+			  <p>
+				Administrador
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			<ul class="nav nav-treeview">
+			  <li class="nav-item">
+				<a href="../layout/top-nav.html" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Usuario</p>
+				</a>
+			  </li>
+			</ul>
+		  </li>
+		  <li class="nav-header">COMERCIAL</li>
+		  <li class="nav-item">
+			<a href="#" class="nav-link">
+			  <!--i class="nav-icon fas fa-columns"></i-->
+			  <i class="nav-icon fas fa-chart-bar"></i>
+			  <p>
+				Ventas
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			  <ul class="nav nav-treeview">
+				<li class="nav-item">
+				  <a href="{% url 'reg_venta' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Nueva Venta</p>
+				  </a>
+				</li>
+				<li class="nav-item">
+				  <a href="{% url 'list_ventas' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Lista de Ventas</p>
+				  </a>
+				</li>
+				<li class="nav-item">
+				  <a href="{% url 'list_clientes' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Clientes</p>
+				  </a>
+				</li>
+			  </ul>
+		  </li>
+		  <li class="nav-item">
+			<a href="../kanban.html" class="nav-link">
+			  <i class="nav-icon fas fa-shopping-cart"></i>
+			  <p>
+				Compras
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			<ul class="nav nav-treeview">
+				<li class="nav-item">
+				  <a href="{% url 'list_categorias' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Categoria</p>
+				  </a>
+				</li>
+				<li class="nav-item">
+				  <a href="{% url 'list_productos' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Producto</p>
+				  </a>
+				</li>
+				<li class="nav-item">
+				  <a href="{% url 'list_proveedores' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Proveedor</p>
+				  </a>
+				</li>
+				<li class="nav-item">
+					<a href="{% url 'reg_compra' %}" class="nav-link">
+					  <i class="far fa-circle nav-icon"></i>
+					  <p>Nueva Compra</p>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a href="{% url 'list_compras' %}" class="nav-link">
+					  <i class="far fa-circle nav-icon"></i>
+					  <p>Lista de Compras</p>
+					</a>
+				</li>
+			  </ul>
+		  </li>
+		  <li class="nav-item">
+			<a href="../kanban.html" class="nav-link">
+			  <i class="nav-icon fas fa-tasks"></i>
+			  <p>
+				Inventarios
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			<ul class="nav nav-treeview">
+				<li class="nav-item">
+					<a href="{% url 'list_movimientos' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Movimiento de Stock</p>
+					</a>
+				</li>	
+				<li class="nav-item">
+					<a href="{% url 'config_stock' %}" class="nav-link">
+						<i class="far fa-circle nav-icon"></i>
+						<p>Configuracion de Stock</p>
+					</a>
+			  	</li>
+				<li class="nav-item">
+					<a href="{% url 'ajust_stock' %}" class="nav-link">
+						<i class="far fa-circle nav-icon"></i>
+						<p>Ajustar Stock</p>
+					</a>
+				</li>
+			</ul>
+		  </li>
+		  <li class="nav-item">
+			<a href="#" class="nav-link">
+			  <i class="nav-icon fas fa-book"></i>
+			  <p>
+				Reportes
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			<ul class="nav nav-treeview">
+			  <li class="nav-item">
+				<a href="../examples/invoice.html" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Reporte de Compras</p>
+				</a>
+			  </li>
+			  <li class="nav-item">
+				<a href="../examples/profile.html" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Reporte de Ventas</p>
+				</a>
+			  </li>
+			  <li class="nav-item">
+				<a href="../examples/e-commerce.html" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Reporte de Movimientos de Stock</p>
+				</a>
+			  </li>
+			   <li class="nav-item">
+				<a href="../examples/e-commerce.html" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Reporte de Stock</p>
+				</a>
+			  </li>
+			</ul>
+		  </li>
+		  <li class="nav-header">INFORMACION</li>
+		  <li class="nav-item">
+			<a href="https://adminlte.io/docs/3.1/" class="nav-link">
+			  <i class="nav-icon fas fa-file"></i>
+			  <p>Documentation</p>
+			</a>
+		  </li>
+		</ul>
+	  </nav>
+	  <!-- /.sidebar-menu -->
+	</div>
+	<!-- /.sidebar -->
   </aside>

@@ -1,0 +1,568 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Formulario Ventas</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css'%}">
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.3.0/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <!-- Or for RTL support -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" />
+</head>
+<body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+        <!-- Navbar -->
+        {%include 'navbar/navbar.html'%}
+        <!-- /.navbar -->
+    
+        <!-- Main Sidebar Container -->
+        {%include 'navbar/sidebar.html'%}
+        <!-- /.sidebar -->
+    
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Registrar Venta</h1>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+            <!-- /.content-header -->
+    
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- left column -->
+                        <div class="col-md-12">
+                            <!-- jquery validation -->
+                            <div class="card card-primary">
+                                <div class="card-header">
+                                    <h3 class="card-title">Registrar Venta</h3>
+                                </div>
+                                <form method="post" id="ventaForm">
+                                    {% csrf_token %}
+                                    <div class="card-body">
+                                        
+                                        <!-- Sección: Datos Generales -->
+                                        <div class="card card-info">
+                                            <div class="card-header">
+                                                <h3 class="card-title">Datos de la Venta</h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-4">{{ form_venta.nro_comprobante|as_crispy_field }}</div>
+                                                    <div class="col-md-4">{{ form_venta.tipo_comprobante|as_crispy_field }}</div>
+                                                    <div class="col-md-4">{{ form_venta.forma_pago|as_crispy_field }}</div>
+                                                </div>  
+                                                <div class="row">
+                                                    <div class="col-md-4">{{ form_venta.fecha_venta|as_crispy_field }}</div>
+                                                    <div class="col-md-4">{{ form_venta.vendedor|as_crispy_field }}</div>
+                                                    <div class="col-md-4">{{ form_venta.cliente|as_crispy_field }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Sección: Detalle de Productos -->
+                                        <!-- Sección: Detalle de Productos -->
+                                        <div class="card card-info mb-4">
+                                            {{ form_venta_det.management_form }}
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h3 class="card-title">Detalle de Productos</h3>
+                                                <div class="input-group" style="width: 50%;">
+                                                    <select id="productoSearch" class="form-control select2" style="width: 100%;">
+                                                        <option></option>
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" id="agregarProducto" class="btn btn-success">
+                                                            <i class="fas fa-plus"></i> Agregar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="card-body">
+                                                
+                                                <table class="table table-bordered" id="detalle-table">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Producto</th>
+                                                            <th>Descripción</th>
+                                                            <th width="10%">Cantidad</th>
+                                                            <th width="10%">Unidad</th>
+                                                            <th width="15%">Precio Unitario</th>
+                                                            <th width="10%">IVA</th>
+                                                            <th width="15%">Subtotal</th>
+                                                            <th width="10%">Acción</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for form in form_venta_det %}
+                                                        <tr>
+                                                            <td>{{ form.producto_id}}</td>
+                                                            <td>{{ form.nombre_producto}}</td> <!-- Mostrar el nombre del producto -->
+                                                            <td>{{ form.descripcion}}</td>
+                                                            <td>{{ form.cantidad}}</td>
+                                                            <td>{{ form.unidad_medida}}</td>
+                                                            <td>{{ form.precio_unit_venta}}</td>
+                                                            <td>{{ form.iva_producto}}%</td>
+                                                            <td>{{ form.subtotal}}</td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-danger btn-sm remover-fila">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                
+                                        <!-- Sección: Descuento e IVA -->
+                                        <div class="card card-light mt-3">
+                                            <div class="card-header">
+                                                <h3 class="card-title">Totales</h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        {{ form_venta.descuento|as_crispy_field }}
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        {{ form_venta.iva_diez|as_crispy_field }}
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        {{ form_venta.iva_cinco|as_crispy_field }}
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        {{ form_venta.total|as_crispy_field }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Botones -->
+                                    <div class="card-footer text-end">
+                                        <button type="submit" class="btn btn-success">Guardar</button>
+                                        <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                        <!--/.col (left) -->
+                    </div>
+                    <!-- /.row -->
+                </div><!-- /.container-fluid -->
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        
+        <!-- FOOTER -->
+        {% include 'footer/footer.html'%}
+    
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% if messages %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: '{{ message }}',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    {% elif message.tags == 'error' %}
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: '{{ message }}',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    {% elif message.tags == 'warning' %}
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Advertencia',
+                            text: '{{ message }}',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    {% endif %}
+                {% endfor %}
+            });
+        </script>
+    {% endif %}
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- jquery-validation -->
+    <script src="{% static 'plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'plugins/jquery-validation/additional-methods.min.js' %}"></script>
+    <!-- AdminLTE App -->
+    <script src="{% static 'js/adminlte.min.js' %}"></script>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+                // Definir el prefijo de los formularios de detalle
+                var formVentaDetPrefix = "{{ form_venta_det.prefix }}";
+    
+                // Inicializar Select2
+                $('#productoSearch').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: "Buscar producto...",
+                    minimumInputLength: 2,
+                    ajax: {
+                        url: '{% url "buscar_productos" %}',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: $.map(data, function(item) {
+                                    return {
+                                        text: item.nombre,
+                                        id: item.id,
+                                        precio: item.precio_venta,  // Asegúrate de que coincida con el backend
+                                        iva: item.iva || 10,
+                                        unidad: item.unidad_medida || '-',
+                                        descripcion: item.descripcion || item.nombre
+                                    }
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+    
+                const detalleTable = document.getElementById('detalle-table').querySelector('tbody');
+    
+                // Agregar producto al detalle
+                $('#agregarProducto').on('click', function() {
+                    var productoId = $('#productoSearch').val();
+                    var productoText = $('#productoSearch').select2('data')[0].text;
+                    var precioUnitario = $('#productoSearch').select2('data')[0].precio;
+                    var ivaProducto = $('#productoSearch').select2('data')[0].iva;
+                    var unidadMedida = $('#productoSearch').select2('data')[0].unidad;
+                    var descripcion = $('#productoSearch').select2('data')[0].descripcion;
+                    var cantidad = 1; // Valor por defecto, puedes cambiarlo según tu lógica
+                    var subtotal = (precioUnitario * cantidad).toFixed(2);
+                    //var iva = (subtotal * (ivaProducto / 100)).toFixed(2);
+                    
+    
+                    var total = (parseFloat(subtotal) + parseFloat(ivaProducto)).toFixed(2);
+    
+                    console.log("Producto ID: " + productoId);
+                    console.log("Producto Text: " + productoText);
+                    console.log("Precio Unitario: " + precioUnitario);
+                    console.log("IVA Producto: " + ivaProducto);
+                    console.log("Unidad Medida: " + unidadMedida);
+                    console.log("Descripción: " + descripcion);
+    
+                    console.log("Subtotal: " + subtotal);
+                    console.log("Total: " + total);
+    
+                    // Verificar si el producto ya está en la tabla
+                    if (!productoId) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Advertencia',
+                            text: 'Por favor, selecciona un producto.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                        return;
+                    }else{
+                        // Verificar si el producto ya está en la tabla
+                        var exists = false;
+                        $('#detalleBody tr').each(function() {
+                            if ($(this).find('td:eq(0)').text().trim() === productoText) {
+                                exists = true;
+                                return false; // Salir del bucle each
+                            }
+                        });
+    
+                        if (exists) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Advertencia',
+                                text: 'El producto ya está agregado.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                            return;
+                        }
+                    }
+    
+                    // Verificar si la cantidad es un número válido
+                    if (isNaN(cantidad) || cantidad <= 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Advertencia',
+                            text: 'La cantidad debe ser un número válido mayor que cero.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                        return;
+                    }
+                    var formIdx = parseInt($('#id_' + formVentaDetPrefix + '-TOTAL_FORMS').val());
+                    console.log("Form Index: " + formIdx);
+                    // Crear un nuevo elemento de fila para el detalle
+                    /*var newRow = document.createElement('tr');
+                    newRow.className = "formset_row";
+                    newRow.innerHTML = `
+                        <td>
+                            ${productoId}
+                            <input type="hidden" name="${formVentaDetPrefix}-${formIdx}-producto_id" value="${productoId}" class="form-control" />
+                        </td>
+                        <td>
+                            ${productoText}
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-producto_nombre" value="${productoText}" class="form-control" />
+                        </td>
+                        <td>
+                            ${descripcion}
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-descripcion" value="${descripcion}" class="form-control" />
+                        </td>
+                        <td>
+                            <input type="number" name="${formVentaDetPrefix}-${formIdx}-cantidad" value="${cantidad}" class="form-control cantidad" />
+                        </td>
+                        <td>
+                            ${unidadMedida}
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-unidad_medida" value="${unidadMedida}" class="form-control"/>
+                        </td>
+                        <td class="precio_unit_venta">
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-precio_unit_venta" value="${precioUnitario}" class="form-control precio_unit_venta" readonly />
+                        </td>
+                        <td class="iva-producto">
+                            ${ivaProducto}%
+                        </td>
+                        <td class="subtotal">
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-subtotal" value="${subtotal}" class="form-control subtotal" readonly />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remover-fila"><i class="fas fa-trash"></i></button>
+                        </td>`;
+    
+                    // Agregar el nuevo elemento de fila al cuerpo de la tabla
+                    detalleTable.appendChild(newRow);*/
+    
+                    // Crear una nueva fila en la tabla
+                    var newRow = `<tr class="formset_row">
+                        <td>
+                            ${productoText}
+                            <input type="hidden" name="${formVentaDetPrefix}-${formIdx}-producto_id" value="${productoId}" class="form-control" />
+                        </td>
+    
+                        <td>
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-descripcion" value="${descripcion}" class="form-control" />
+                        </td>
+    
+                        <td>
+                            <input type="number" name="${formVentaDetPrefix}-${formIdx}-cantidad" value="${cantidad}" class="form-control cantidad" />
+                        <td>
+                            <input type="text" name="${formVentaDetPrefix}-${formIdx}-unidad_medida" value="${unidadMedida}" class="form-control" readonly />
+                        </td>
+    
+                        <td class="precio_unit_venta">
+                            <input type="number" name="${formVentaDetPrefix}-${formIdx}-precio_unit_venta" value="${precioUnitario}" class="form-control precio_unit_venta" readonly />
+                        </td>
+    
+                        <td class="iva-producto">
+                            ${ivaProducto}%
+                        </td>
+    
+                        <td class="subtotal">
+                            <input type="number" name="${formVentaDetPrefix}-${formIdx}-subtotal" value="${subtotal}" class="form-control subtotal" readonly />
+                        </td>
+    
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remover-fila"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+    
+                    $('#detalleBody').append(newRow);
+                    $('#productoSearch').val(null).trigger('change'); // Limpiar el campo de búsqueda
+    
+                    // Actualizar el número total de formularios
+                    var totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
+                    var currentFormCount = parseInt(totalForms.val());
+                    totalForms.val(currentFormCount + 1);
+                    console.log("Total Forms: " + totalForms.val());
+    
+                    
+                });
+    
+                // Escuchar el evento de clic en el botón de eliminar fila
+                $('#detalleBody').on('click', '.remover-fila', function() {
+                    // Eliminar la fila correspondiente
+                    $(this).closest('tr').remove();
+    
+                    // Actualizar el número total de formularios
+                    var totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
+                    var currentFormCount = $('#detalleBody tr').length;
+                    totalForms.val(currentFormCount);
+    
+                    // Recalcular totales después de eliminar la fila
+                    calcularTotalGeneral();
+                    calcularTotalIVA();
+                });
+    
+                // Función para calcular el total_producto
+                function calcularTotalProducto(row) {
+                    const cantidadInput = row.querySelector('[name$="-cantidad"]');
+                    const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
+                    const totalProductoField = row.querySelector('[name$="-subtotal"]');
+    
+                    if (cantidadInput && precioInput && totalProductoField) {
+                        const cantidad = parseFloat(cantidadInput.value) || 0;
+                        const precio = parseFloat(precioInput.value) || 0;
+                        const totalProducto = cantidad * precio;
+                        totalProductoField.value = totalProducto.toFixed(2); // Actualizar el campo subtotal
+                    }
+                }
+    
+                // Función para calcular el total general
+                function calcularTotalGeneral() {
+                    let totalGeneral = 0;
+                    detalleTable.querySelectorAll('tr').forEach(function(row) {
+                        const subtotalInput = row.querySelector('[name$="-subtotal"]');
+                        if (subtotalInput) {
+                            totalGeneral += parseFloat(subtotalInput.value) || 0;
+                        }
+                    });
+    
+                    // Aplicar el descuento si está presente
+                    const descuentoField = document.querySelector('[name="{{ form_venta.descuento.name }}"]');
+    
+                    //console.log(descuentoField);
+    
+    
+                    const descuento = parseFloat(descuentoField?.value) || 0;
+                    totalGeneral -= descuento;
+    
+                    const totalGeneralField = document.querySelector('[name="{{ form_venta.total.name }}"]');
+                    if (totalGeneralField) {
+                        totalGeneralField.value = totalGeneral.toFixed(2); // Actualizar el campo total general
+                    }
+                }
+    
+    
+                // Escuchar cambios en los campos cantidad, precio_unit_venta y descuento
+                detalleTable.addEventListener('input', function(event) {
+                    const row = event.target.closest('tr');
+                    if (row) {
+                        calcularTotalProducto(row); // Calcular el subtotal de la fila
+                        calcularTotalGeneral(); // Calcular el total general
+                    }
+                });
+    
+                // Escuchar cambios en el descuento
+                const descuentoField = document.querySelector('[name="{{ form_venta.descuento.name }}"]');
+                descuentoField?.addEventListener('input', function() {
+                    calcularTotalGeneral(); // Recalcular el total general cuando cambie el descuento
+                });
+    
+                // Function to calculate IVA for a row
+                function calcularIVA(row) {
+                    const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
+                    const cantidadInput = row.querySelector('[name$="-cantidad"]');
+                    const ivaCell = row.querySelector('.iva-producto');
+                    const subtotalInput = row.querySelector('[name$="-subtotal"]');
+    
+                    if (precioInput && cantidadInput && ivaCell && subtotalInput) {
+                        const precioUnitario = parseFloat(precioInput.value) || 0;
+                        const cantidad = parseFloat(cantidadInput.value) || 0;
+                        const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+    
+                        let ivaValor = 0;
+                        if (ivaPorcentaje === 10) {
+                            ivaValor = (precioUnitario / 11) * cantidad;
+                        } else if (ivaPorcentaje === 5) {
+                            ivaValor = (precioUnitario / 21) * cantidad;
+                        }
+    
+                        subtotalInput.value = (precioUnitario * cantidad).toFixed(2); // Update subtotal
+                        return ivaValor;
+                    }
+                    return 0;
+                }
+    
+                // Function to calculate total IVA and update fields
+                function calcularTotalIVA() {
+                    let totalIvaDiez = 0;
+                    let totalIvaCinco = 0;
+    
+                    detalleTable.querySelectorAll('tr').forEach(function(row) {
+                        const ivaCell = row.querySelector('.iva-producto');
+                        const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+                        const ivaValor = calcularIVA(row);
+    
+                        if (ivaPorcentaje === 10) {
+                            totalIvaDiez += ivaValor;
+                        } else if (ivaPorcentaje === 5) {
+                            totalIvaCinco += ivaValor;
+                        }
+                    });
+    
+                    // Update IVA fields
+                    const ivaDiezField = document.querySelector('[name="{{ form_venta.iva_diez.name }}"]');
+                    const ivaCincoField = document.querySelector('[name="{{ form_venta.iva_cinco.name }}"]');
+                    if (ivaDiezField) ivaDiezField.value = totalIvaDiez.toFixed(2);
+                    if (ivaCincoField) ivaCincoField.value = totalIvaCinco.toFixed(2);
+                }
+    
+                // Listen for changes in quantity, price, or discount
+                detalleTable.addEventListener('input', function(event) {
+                    const row = event.target.closest('tr');
+                    if (row) {
+                        calcularIVA(row); // Calculate IVA for the row
+                        calcularTotalIVA(); // Recalculate total IVA
+                        calcularTotalGeneral(); // Recalculate total general
+                    }
+                });
+    
+                // Listen for changes in the discount field
+                descuentoField?.addEventListener('input', function() {
+                    calcularTotalGeneral(); // Recalculate total general when discount changes
+                });
+        });
+    </script>
+    </body>
+    </html>

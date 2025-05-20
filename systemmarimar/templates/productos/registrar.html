@@ -5,7 +5,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Formulario Clientes</title>
+	<title>Formulario Compras</title>
 
 	<!-- Google Font: Source Sans Pro -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -13,7 +13,6 @@
 	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css'%}">
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
-	
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -32,7 +31,7 @@
 			<div class="container-fluid">
 				<div class="row mb-2">
 					<div class="col-sm-6">
-						<h1>Registrar Cliente</h1>
+						<h1>Registrar Producto</h1>
 					</div>
 					<div class="col-sm-6">
 						<ol class="breadcrumb float-sm-right">
@@ -62,76 +61,87 @@
 								{% csrf_token %}
 								<div class="card-body">
 									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.nombre|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.apellido|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-md-4">
-											<div class="form-group">
-												{{ form_cliente.tipo_documento|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-4">
-											<div class="form-group">
-												{{ form_cliente.documento|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-4">
-											<div class="form-group">
-												{{ form_cliente.digito_verificador|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.nacionalidad|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.estado_civil|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.num_tel|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.correo|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-									
-									<div class="row">
 										<div class="col-md-12">
 											<div class="form-group">
-												{{ form_cliente.direccion|as_crispy_field}}
+												<!--label for="exampleInputEmail1">Email address</label>
+												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
+													{{ form_producto.nombre|as_crispy_field}}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputPassword1">Password</label>
+												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
+												{{ form_producto.precio_compra|as_crispy_field}}
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputPassword1">Password</label>
+												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
+												{{ form_producto.precio_venta|as_crispy_field}}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputPassword1">Password</label>
+												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
+												{{ form_producto.iva|as_crispy_field}}
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputPassword1">Password</label>
+												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
+												{{ form_producto.cantidad_en_stock|as_crispy_field}}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputEmail1">Email address</label>
+												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
+													{{ form_producto.categoria|as_crispy_field}}
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputPassword1">Password</label>
+												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
+												{{ form_producto.proveedor|as_crispy_field}}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputEmail1">Email address</label>
+												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
+													{{ form_producto.descripcion|as_crispy_field}}
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<!--label for="exampleInputEmail1">Email address</label>
+												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
+													{{ form_producto.unidad_medida|as_crispy_field}}
 											</div>
 										</div>
 									</div>
 								</div>
 								<!-- /.card-body -->
 								<div class="card-footer">
-									<button type="submit" class="btn btn-success">Guardar Registro</button>
+									<button type="submit" class="btn btn-success">Guardar Orden</button>
 								</div>
 							</form>
 						</div>
 						<!-- /.card -->
+						</div>
 					<!--/.col (left) -->
 					<!-- right column -->
 					<div class="col-md-6">
@@ -156,41 +166,41 @@
 	<!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% if messages %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            {% for message in messages %}
-                {% if message.tags == 'success' %}
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: '{{ message }}',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                {% elif message.tags == 'error' %}
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        text: '{{ message }}',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                {% elif message.tags == 'warning' %}
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Advertencia',
-                        text: '{{ message }}',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                {% endif %}
-            {% endfor %}
-        });
-    </script>
+		<script>
+				document.addEventListener('DOMContentLoaded', function() {
+						{% for message in messages %}
+								{% if message.tags == 'success' %}
+										Swal.fire({
+												icon: 'success',
+												title: '¡Éxito!',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% elif message.tags == 'error' %}
+										Swal.fire({
+												icon: 'error',
+												title: '¡Error!',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% elif message.tags == 'warning' %}
+										Swal.fire({
+												icon: 'warning',
+												title: 'Advertencia',
+												text: '{{ message }}',
+												timer: 3000,
+												showConfirmButton: false
+										});
+								{% endif %}
+						{% endfor %}
+				});
+		</script>
 {% endif %}
-
 
 <!-- jQuery -->
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
@@ -204,29 +214,5 @@
 <!-- AdminLTE for demo purposes -->
 <script src="{% static 'js/demo.js' %}"></script>
 <!-- Page specific script -->
-<script>
-    function toggleDigitoVerificador(selectElement) {
-        const digitoVerificadorField = document.querySelector('[name="digito_verificador"]');
-        if (selectElement.value === 'RUC') {
-            digitoVerificadorField.disabled = false;
-        } else {
-            digitoVerificadorField.disabled = true;
-            digitoVerificadorField.value = ''; // Limpiar el valor si está deshabilitado
-        }
-    }
-
-    // Ejecutar al cargar la página para establecer el estado inicial
-    document.addEventListener('DOMContentLoaded', function () {
-        const tipoDocumentoField = document.querySelector('[name="tipo_documento"]');
-        toggleDigitoVerificador(tipoDocumentoField);
-
-        // Attach the change event listener to update the field dynamically
-        tipoDocumentoField.addEventListener('change', function () {
-            toggleDigitoVerificador(tipoDocumentoField);
-        });
-    });
-</script>
-
-
 </body>
 </html>

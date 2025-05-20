@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Clientes</title>
+	<title>productos</title>
 
 	<!-- Google Font: Source Sans Pro -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -35,7 +35,7 @@
 			<div class="container-fluid">
 				<div class="row mb-2">
 					<div class="col-sm-6">
-						<h1>Clientes</h1>
+						<h1>Productos</h1>
 					</div>
 					<div class="col-sm-6">
 						<ol class="breadcrumb float-sm-right">
@@ -46,7 +46,7 @@
 				</div>
 			</div><!-- /.container-fluid -->
 		</section>
-		{%if Clientes%}
+		{%if Productos%}
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
@@ -54,9 +54,9 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-header">
-								<h3 class="card-title">Lista de Clientes</h3>
+								<h3 class="card-title">Lista de Productos</h3>
 								<div class="card-tools">
-									<a href="{% url 'reg_cliente' %}" class="btn btn-primary">Agregar Cliente</a>
+									<a href="{% url 'reg_producto' %}" class="btn btn-primary">Agregar Producto</a>
 								</div>
 							</div>
 							<!-- /.card-header -->
@@ -64,28 +64,28 @@
 								<table id="example1" class="table table-bordered table-striped">
 									<thead>
 									<tr>
-										<th>Nombre y Apellido</th>
-                                        <th>Nro. Documento</th>
-										<th>Numero Telefono</th>
-                                        <th>Correo</th>
-										<th>Fecha Insercion</th>
+										<th>Nombre</th>
+                                        <th>Stock Minimo</th>
+										<th>Precio Compra</th>
+										<th>Precio Venta</th>
+                                        <th>Fecha de Insercion</th>
 										<th>Acciones</th>
 									</tr>
 									</thead>
 									<tbody>
-										{%for cliente in Clientes%}
+										{%for producto in Productos%}
 											<tr>
-												<td>{{cliente.nombre}} {{cliente.apellido}}</td>
-                                                <td>{{cliente.nro_documento}}</td>
-                                                <td>{{cliente.num_tel}}</td>
-												<td>{{cliente.correo}}</td>
-												<td>{{cliente.fecha_insercion}}</td>
+												<td>{{producto.nombre}}</td>
+                                                <td>{{producto.cantidad_en_stock}}</td>
+												<td>{{producto.precio_compra}}</td>
+												<td>{{producto.precio_venta}}</td>
+												<td>{{producto.fecha_insercion}}</td>
 												<td>
-													{%if cliente.activo%}
-														<a class="btn btn-primary"   href="{% url 'edit_cliente' cliente.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_cliente' cliente.id %}')"><i class="fas fa-trash-alt"></i></a> 
+													{%if producto.activo%}
+														<a class="btn btn-primary"   href="{% url 'edit_producto' producto.id %}" title="Editar"><i class="fas fa-edit"></i></a>
+														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_producto' producto.id %}')"><i class="fas fa-trash-alt"></i></a> 
 													{%endif%}
-													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerCliente{{ cliente.id }}" title="Ver">
+													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerproducto{{ producto.id }}" title="Ver">
 														<i class="fas fa-eye"></i>
 													</a>
 												</td>  
@@ -93,12 +93,12 @@
 										{%endfor%}
 									</tbody>
 								</table>
-								{% for item in clientes_forms %}
-                                    <div class="modal fade" id="modalVerCliente{{ item.cliente.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerClienteLabel{{ item.cliente.id }}" aria-hidden="true">
+								{% for item in productos_forms %}
+                                    <div class="modal fade" id="modalVerproducto{{ item.producto.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerproductoLabel{{ item.producto.id }}" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="modalVerClienteLabel{{ item.cliente.id }}">Detalles de Cliente</h5>
+                                                    <h5 class="modal-title" id="modalVerproductoLabel{{ item.producto.id }}">Detalles de producto</h5>
                                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
@@ -116,7 +116,7 @@
                                     </div>
                                     {% endfor %}
 								{%else%}
-										<h1>No existen Clientes registrados!</h1>
+										<h1>No existen productos registrados!</h1>
 								{%endif%}
 							</div>
 							<!-- /.card-body -->

@@ -13,7 +13,6 @@
 	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css'%}">
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
-	
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -32,7 +31,7 @@
 			<div class="container-fluid">
 				<div class="row mb-2">
 					<div class="col-sm-6">
-						<h1>Registrar Cliente</h1>
+						<h1>Editar Clientes</h1>
 					</div>
 					<div class="col-sm-6">
 						<ol class="breadcrumb float-sm-right">
@@ -61,6 +60,7 @@
 							<form id="quickForm" method="post">
 								{% csrf_token %}
 								<div class="card-body">
+
 									<div class="row">
 										<div class="col-md-6">
 											<div class="form-group">
@@ -73,65 +73,58 @@
 											</div>
 										</div>
 									</div>
+
 									<div class="row">
-										<div class="col-md-4">
+										<div class="col-md-6">
 											<div class="form-group">
 												{{ form_cliente.tipo_documento|as_crispy_field}}
 											</div>
 										</div>
-										<div class="col-md-4">
+										<div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.documento|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-4">
-											<div class="form-group">
-												{{ form_cliente.digito_verificador|as_crispy_field}}
+												{{ form_cliente.nro_documento|as_crispy_field}}
 											</div>
 										</div>
 									</div>
 
 									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												{{ form_cliente.nacionalidad|as_crispy_field}}
-											</div>
-										</div>
 										<div class="col-md-6">
 											<div class="form-group">
 												{{ form_cliente.estado_civil|as_crispy_field}}
 											</div>
 										</div>
-									</div>
-
-									<div class="row">
 										<div class="col-md-6">
 											<div class="form-group">
 												{{ form_cliente.num_tel|as_crispy_field}}
 											</div>
 										</div>
+									</div>
+
+									<div class="row">
 										<div class="col-md-6">
 											<div class="form-group">
 												{{ form_cliente.correo|as_crispy_field}}
 											</div>
 										</div>
-									</div>
-									
-									<div class="row">
-										<div class="col-md-12">
+										<div class="col-md-6">
 											<div class="form-group">
-												{{ form_cliente.direccion|as_crispy_field}}
+												{{ form_cliente.nacionalidad|as_crispy_field}}
 											</div>
 										</div>
 									</div>
+									<div class="form-group">
+										{{ form_cliente.direccion|as_crispy_field}}
+									</div>
+									
 								</div>
 								<!-- /.card-body -->
 								<div class="card-footer">
-									<button type="submit" class="btn btn-success">Guardar Registro</button>
+									<button type="submit" class="btn btn-success">Guardar</button>
 								</div>
 							</form>
 						</div>
 						<!-- /.card -->
+						</div>
 					<!--/.col (left) -->
 					<!-- right column -->
 					<div class="col-md-6">
@@ -156,7 +149,7 @@
 	<!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 {% if messages %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -191,7 +184,6 @@
     </script>
 {% endif %}
 
-
 <!-- jQuery -->
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 <!-- Bootstrap 4 -->
@@ -205,28 +197,7 @@
 <script src="{% static 'js/demo.js' %}"></script>
 <!-- Page specific script -->
 <script>
-    function toggleDigitoVerificador(selectElement) {
-        const digitoVerificadorField = document.querySelector('[name="digito_verificador"]');
-        if (selectElement.value === 'RUC') {
-            digitoVerificadorField.disabled = false;
-        } else {
-            digitoVerificadorField.disabled = true;
-            digitoVerificadorField.value = ''; // Limpiar el valor si está deshabilitado
-        }
-    }
 
-    // Ejecutar al cargar la página para establecer el estado inicial
-    document.addEventListener('DOMContentLoaded', function () {
-        const tipoDocumentoField = document.querySelector('[name="tipo_documento"]');
-        toggleDigitoVerificador(tipoDocumentoField);
-
-        // Attach the change event listener to update the field dynamically
-        tipoDocumentoField.addEventListener('change', function () {
-            toggleDigitoVerificador(tipoDocumentoField);
-        });
-    });
 </script>
-
-
 </body>
 </html>
