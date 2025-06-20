@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.ventas',
     'apps.compras',
     'apps.inventarios',
+    'apps.administrador',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                #'inventarios.context_processors.api_stock_bajo'
             ],
         },
     },

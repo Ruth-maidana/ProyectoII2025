@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Reporte del Valor Actual del Inventario</h1>
+    
+    <div class="header-info">
+        <p><strong>Filtros aplicados:</strong></p>
+        <ul>
+            <li>Categoría: {{ filtro_categoria }}</li>
+            <li>Producto: {{ filtro_producto }}</li>
+            <li>Fecha generación: {% now "d/m/Y H:i" %}</li>
+        </ul>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Producto</th>
+                <th>Stock</th>
+                <th class="text-right">P. Costo</th>
+                <th class="text-right">P. Venta</th>
+                <th class="text-right">V. Costo</th>
+                <th class="text-right">V. Venta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in productos %}
+            <tr>
+                <td>{{ p.categoria.nombre|default:"-" }}</td>
+                <td>{{ p.nombre }}</td>
+                <td>{{ p.cantidad_en_stock }}</td>
+                <td class="text-right">{{ p.precio_compra|floatformat:0 }} GS</td>
+                <td class="text-right">{{ p.precio_venta|floatformat:0 }} GS</td>
+                <td class="text-right">{{ p.valor_costo|floatformat:0 }} GS</td>
+                <td class="text-right">{{ p.valor_venta|floatformat:0 }} GS</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3">Total general</td>
+                <td colspan="2"></td>
+                <td class="text-right">{{ total_general|floatformat:0 }} GS</td>
+                <td class="text-right">{{ total_venta|floatformat:0 }} GS</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div style="margin-top: 20px; font-size: 9pt; text-align: center;">
+        Generado automáticamente por el sistema - {% now "d/m/Y" %}
+    </div>
+</body>
+</html>

@@ -1,20 +1,25 @@
 from django.shortcuts import render, redirect
-
+from django.contrib.auth.decorators import login_required,permission_required
+from datetime import datetime
 from .models import Categoria, OrdenCompraCab, OrdenCompraDet, Producto, Proveedor
-from .forms import CategoriaViewForm, CompraCabEditForm, CompraCabForm, CompraDetForm, ProductoForm, CategoriaForm, CompraFormset, ProductoViewForm, ProveedorEditForm, ProveedorForm, ProveedorViewForm
+from .forms import CategoriaViewForm, CompraCabEditForm, CompraDetForm, FormEditCompraCabecera, FormEditCompraDetalle, FormRegCompraCabecera, FormRegCompraDetalle, ProductoForm, CategoriaForm, CompraFormset, ProductoViewForm, ProveedorEditForm, ProveedorForm, ProveedorViewForm
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
-from django.forms import inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory
 from django.http import HttpResponse
-#from django.template.loader import render_to_string
-#from weasyprint import HTML
-#import pandas as pd
-#from django.db.models import Q
 from .models import OrdenCompraCab, Proveedor
 from .forms import FiltroComprasForm
 from apps.inventarios.utils import registrar_movimiento_stock
 from django.db import transaction 
-
+from django.db.models import Q,Sum
+import matplotlib.pyplot as plt
+import base64
+import io
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+import matplotlib
+matplotlib.use('Agg')  # Configura el backend para que no requiera GUI
+from django.http import JsonResponse
 # Create your views here.
 
 """
@@ -28,6 +33,8 @@ Functions:
 		saves the purchase and redirects to the purchase list. Otherwise, renders the purchase registration form.
 """
 
+@login_required(login_url='login/')
+@permission_required('compras.add_categoria', raise_exception=True)
 def registrar_categoria(request):
 	if request.method == 'POST':
 		form = CategoriaForm(request.POST)
@@ -56,6 +63,9 @@ def registrar_categoria(request):
 	context = {'form_categoria': form}
 	return render(request, 'categorias/registrar.html', context)
 
+
+@login_required(login_url='login/')
+@permission_required('compras.change_categoria', raise_exception=True)
 def editar_categoria(request, id_categoria):
 	
 	# Recuperamos la instancia del proyecto
@@ -77,6 +87,8 @@ def editar_categoria(request, id_categoria):
 	context = {'form_categoria': form}
 	return render(request, 'categorias/editar.html',context)
 
+@login_required(login_url='login/')
+@permission_required('compras.delete_categoria', raise_exception=True)
 def inactivar_categoria(request,id_categoria):
 	categoria = Categoria.objects.get(id = id_categoria)
 	categoria.activo = False
@@ -84,6 +96,8 @@ def inactivar_categoria(request,id_categoria):
 	categoria.save()
 	return redirect('list_categorias')
 
+@login_required(login_url='login/')
+@permission_required('compras.view_categoria', raise_exception=True)
 def listar_categorias(request):
 	categorias = Categoria.objects.all().order_by('id')
 	categorias_forms = [
@@ -95,6 +109,8 @@ def listar_categorias(request):
 
 
 #------------------------------------------------------------------------------
+@login_required(login_url='login/')
+@permission_required('compras.add_producto', raise_exception=True)
 def registrar_producto(request):
 	if request.method == 'POST':
 		form = ProductoForm(request.POST)
@@ -115,8 +131,8 @@ def registrar_producto(request):
 	return render(request, 'productos/registrar.html', context)
 
 
-#@login_required(login_url='/login_user')
-#@permission_required('producto.change_producto', raise_exception=True)
+@login_required(login_url='login/')
+@permission_required('compras.change_producto', raise_exception=True)
 def editar_producto(request, id_producto):
 	
 	# Recuperamos la instancia del proyecto
@@ -139,6 +155,8 @@ def editar_producto(request, id_producto):
 	return render(request, 'productos/editar.html',context)
 
 
+@login_required(login_url='login/')
+@permission_required('compras.delete_producto', raise_exception=True)
 def inactivar_producto(request,id_producto):
 	producto = Producto.objects.get(id = id_producto)
 	producto.activo = False
@@ -146,6 +164,9 @@ def inactivar_producto(request,id_producto):
 	producto.save()
 	return redirect('list_productos')
 
+
+@login_required(login_url='login/')
+@permission_required('compras.view_producto', raise_exception=True)
 def listar_productos(request):
 	productos = Producto.objects.all().order_by('id')
 	productos_forms = [
@@ -156,7 +177,8 @@ def listar_productos(request):
 	return render(request, 'productos/listar.html',{'Productos': productos,'productos_forms': productos_forms})
 
 #------------------------------------------------------------------------------
-
+@login_required(login_url='login/')
+@permission_required('compras.add_proveedor', raise_exception=True)
 def registrar_proveedor(request):
 	if request.method == 'POST':
 		form = ProveedorForm(request.POST)
@@ -176,6 +198,8 @@ def registrar_proveedor(request):
 	return render(request, 'proveedor/registrar.html', context)
 
 
+@login_required(login_url='login/')
+@permission_required('compras.change_proveedor', raise_exception=True)
 def editar_proveedor(request, id_proveedor):
 	
 	# Recuperamos la instancia del proyecto
@@ -199,6 +223,8 @@ def editar_proveedor(request, id_proveedor):
 	context = {'form_proveedor': form}
 	return render(request, 'proveedor/editar.html',context)
 
+@login_required(login_url='login/')
+@permission_required('compras.delete_proveedor', raise_exception=True)
 def inactivar_proveedor(request,id_proveedor):
 	proveedor = Proveedor.objects.get(id = id_proveedor)
 	proveedor.activo=False
@@ -206,6 +232,9 @@ def inactivar_proveedor(request,id_proveedor):
 	proveedor.save()
 	return redirect('list_proveedores')
 
+
+@login_required(login_url='login/')
+@permission_required('compras.view_proveedor', raise_exception=True)
 def listar_proveedores(request):
 	proveedores = Proveedor.objects.all().order_by('id')
 	proveedores_forms = [
@@ -217,138 +246,306 @@ def listar_proveedores(request):
 
 #------------------------------------------------------------------------------
 
-'''def registrar_compra_cab_det(request):
+@login_required(login_url='login/')
+@permission_required('compras.add_ordencompracab', raise_exception=True)
+@permission_required('compras.add_ordencompradet', raise_exception=True)
+def registrar_compra_cab_det_version_act_v2(request):
+    formset_compra = formset_factory(FormRegCompraDetalle, extra=0, can_delete=True)
+    
+    print("Entrando a registrar_compra_cab_det_version_act_v2")
+    #fecha_actual = datetime.now().date()
 
-	if request.method == 'POST':
-		form_cab = CompraCabForm(request.POST)
-		#form_det = CompraDetForm(request.POST)
-		formset = CompraFormset(request.POST)
-		if form_cab.is_valid() and formset.is_valid():
-			#compra_cab = form_cab.save(commit=False)
-			#for obj_compra_cab in compra_cab:
-			compra = form_cab.save()
-			formset.instance = compra
-			formset.save()
+    if request.method == 'POST':
+        form_compra_cab = FormRegCompraCabecera(request.POST)
+        form_compra_det = formset_compra(request.POST)
 
-			registrar_stock_entrada(formset.instance)
-			print('Entro correctamente')
-			print(formset)
+        # Imprimir los datos enviados al backend
+        print("Datos enviados al backend:")
+        print(request.POST)
+        print("Detalles de la compra:")
+        # Imprimir los datos de cada detalle de la venta
+        for i, form_det in enumerate(form_compra_det):
+            print(f"Form Detalle #{i}: {form_det}")
 
-				
-				#formset.instance = obj_compra_cab
-				#obj_compra_cab.save()
-				#formset.save()
-				
-				#compra_det.instance.cabecera = compra_cab
-				#compra_det.save()
-			#formset.save()
-			#return redirect('lista_compras')
-			messages.success(request,"Compra Registrado Exitosamente")
-			return redirect('list_compras')
-		else:
-			print('Hay error')
-			print(form_cab.errors)
-			print(formset.errors)
-			messages.error(request, '¡Hubo un error al registrar la compra!')
-	else:
-		form_cab = CompraCabForm()
-		formset = CompraFormset()
-	context = {
-		'form_compra': form_cab,
-		'form_det_compra': formset}
-	return render(request, 'compras/registrar2.html', context)'''
+        if form_compra_cab.is_valid() and form_compra_det.is_valid():
+            print("Formularios válidos, procediendo a guardar la compra")
+            try:
+                with transaction.atomic():
+                    # Guardar la cabecera de la venta
+                    cabecera = form_compra_cab.save()
+                    print(f"Cabecera de compra guardada: {cabecera}")
+                    
+                    # Guardar los detalles de la venta
+                    for form_det in form_compra_det:
+                        if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
+                            
+                            print("Procesando detalle de compra")
+                            
+                            producto_id = form_det.cleaned_data.get('producto_id')
+                            cantidad = form_det.cleaned_data.get('cantidad')
+                            descripcion = form_det.cleaned_data.get('descripcion')
+                            unidad_medida = form_det.cleaned_data.get('unidad_medida')
+                            precio_compra = form_det.cleaned_data.get('precio_compra')
+                            subtotal = form_det.cleaned_data.get('subtotal')
+                            producto_instance = Producto.objects.get(id=producto_id)
+                            
+                            print(f"Producto ID: {producto_id}, Cantidad: {cantidad}, Descripción: {descripcion}, Unidad de Medida: {unidad_medida}, Precio Unitario: {precio_compra}, Subtotal: {subtotal}")
+                            
+                            detalle = OrdenCompraDet(
+								orden_compra_cab=cabecera,
+								producto=producto_instance,
+								cantidad=cantidad,
+								descripcion=descripcion,
+								unidad_medida=unidad_medida,
+								precio_compra=precio_compra,
+								total_producto=subtotal,
+							)
+                            print(f"Detalle: {detalle}")
+                            detalle.save()
+                            
+                            registrar_movimiento_stock(
+								producto=detalle.producto,
+								cantidad=detalle.cantidad,
+								movimiento='ENTRADA',
+								descripcion=f"Compra registrada: {cabecera.nro_comprobante}",
+								ajuste=None,
+								fecha_mov_producto=cabecera.fecha_compra,
+								compra_cab=cabecera,
+								venta_cab=None
+							)
+
+                    messages.success(request, "Compra registrada exitosamente")
+                    
+                    return redirect('list_compras')
+                
+            except Exception as e:
+                print(f'Error: {e}')  # Log the error
+                messages.error(request, '¡Error al guardar en la base de datos!')
+                print('Error de integridad')
+            
+        else:
+            
+            errores = []
+            # Errores de detalles
+            for i, form in enumerate(form_compra_det, start=1):
+                for field, field_errors in form.errors.items():
+                    for error in field_errors:
+                        errores.append(f"Detalle #{i}, Campo [{field}]: {error}")
+
+            #Errores de cabecera
+            for field, field_errors in form_compra_cab.errors.items():
+                for error in field_errors:
+                    errores.append(f"Cabecera, Campo [{field}]: {error}")
+
+            # Ahora mostramos todos
+            if errores:
+                messages.error(request, "\\n".join(errores))
+
+            print("Errores","\\n".join(errores))
+            
+
+            context = {
+				'form_compra_cab': form_compra_cab,
+				'form_compra_det': form_compra_det,
+				'form_compra_det_prefix': form_compra_det.prefix  # Pasar el prefijo al template
+			}
+            
+            return render(request, 'compras/registrar3.html', context)
+            
+    else:
+            
+        form_compra_cab = FormRegCompraCabecera()
+        form_compra_det = formset_compra()
+
+    context = {
+        'form_compra_cab': form_compra_cab,
+        'form_compra_det': form_compra_det,
+        'form_compra_det_prefix': form_compra_det.prefix  # Pasar el prefijo al template
+    }
+    return render(request, 'compras/registrar3.html', context)
 
 
 
-def registrar_compra_cab_det_version_act(request):
+@login_required(login_url='login/')
+@permission_required('compras.change_ordencompracab', raise_exception=True)
+@permission_required('compras.change_ordencompradet', raise_exception=True)
+def editar_compra(request,id_compra):
+    
+    compra = get_object_or_404(OrdenCompraCab, id=id_compra)
+    detalles_originales = OrdenCompraDet.objects.filter(orden_compra_cab=compra)
+    
+    formset_compra = formset_factory(FormEditCompraDetalle, extra=0, can_delete=True)
+    
+    print("Entrando a registrar_compra_cab_det_version_act_v2")
+    #fecha_actual = datetime.now().date()
 
-	if request.method == 'POST':
-		form_cab = CompraCabForm(request.POST)
-		#form_det = CompraDetForm(request.POST)
-		formset = CompraFormset(request.POST)
-		if form_cab.is_valid() and formset.is_valid():
-			try:
-				with transaction.atomic():
+    if request.method == 'POST':
+        form_compra_cab = FormEditCompraCabecera(request.POST,instance=compra)
+        form_compra_det = formset_compra(request.POST)
+
+        # Imprimir los datos enviados al backend
+        print("Datos enviados al backend:")
+        print(request.POST)
+        print("Detalles de la compra:")
+        # Imprimir los datos de cada detalle de la venta
+        for i, form_det in enumerate(form_compra_det):
+            print(f"Form Detalle #{i}: {form_det}")
+
+        if form_compra_cab.is_valid() and form_compra_det.is_valid():
+            print("Formularios válidos, procediendo a guardar la compra")
+            try:
+                with transaction.atomic():
+                    
+                    for detalle in detalles_originales:
+                        registrar_movimiento_stock(
+								producto=detalle.producto,
+								cantidad=detalle.cantidad,
+								movimiento='REV_ENT',
+								descripcion=f"Reverso por edición compra: {compra.nro_comprobante}",
+								fecha_mov_producto=compra.fecha_compra,
+								compra_cab=compra
+							)
+                        
+                    # 2. Actualizar cabecera
+                    cabecera = form_compra_cab.save()
+                    
+                    # 3. Eliminar detalles antiguos
+                    detalles_originales.delete() 
+                    
+                    # 4. Crear nuevos detalles y movimientos
+                    for form_det in form_compra_det:
+                        if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
+                            
+                            print("Procesando modificacion del detalle de la compra")
+                            
+                            producto_id = form_det.cleaned_data.get('producto_id')
+                            cantidad = form_det.cleaned_data.get('cantidad')
+                            descripcion = form_det.cleaned_data.get('descripcion')
+                            unidad_medida = form_det.cleaned_data.get('unidad_medida')
+                            precio_compra = form_det.cleaned_data.get('precio_compra')
+                            subtotal = form_det.cleaned_data.get('subtotal')
+                            producto_instance = Producto.objects.get(id=producto_id)
+                            
+                            print(f"Producto ID: {producto_id}, Cantidad: {cantidad}, Descripción: {descripcion}, Unidad de Medida: {unidad_medida}, Precio Unitario: {precio_compra}, Subtotal: {subtotal}")
+                            print(f"Creando nuevo detalle")
+                            
+                            detalle = OrdenCompraDet(
+								orden_compra_cab=cabecera,
+								producto=producto_instance,
+								cantidad=cantidad,
+								descripcion=descripcion,
+								unidad_medida=unidad_medida,
+								precio_compra=precio_compra,
+								total_producto=subtotal,
+							)
+                          
+                            detalle.save()
+                            
+                            # 5. Registrar movimiento de stock
+                            print(f"Registrando movimiento de stock: Producto:{producto_instance.nombre}, Cantidad: {cantidad}")
+                            registrar_movimiento_stock(
+								producto=producto_instance,
+								cantidad=cantidad,
+								movimiento='ENTRADA',
+								descripcion=f"Compra editada: #{cabecera.nro_comprobante}",
+								ajuste=None,
+								fecha_mov_producto=cabecera.fecha_compra,
+								compra_cab=cabecera,
+								venta_cab=None
+							)
+
+                    messages.success(request, "Compra editada exitosamente")
+                    
+                    return redirect('list_compras')
+                
+            except Exception as e:
+                print(f'Error: {e}')  # Log the error
+                messages.error(request, '¡Error al guardar en la base de datos!')
+                print('Error de integridad')
+            
+        else:
+            print("Formularios no válidos, mostrando errores")
+            print("-----------------------------------------")
+            print("Errores de cabecera:")
+            print(form_compra_cab.errors)
+            print("Errores de detalles:")
+            for form_det in form_compra_det:
+                print(form_det.errors)
+
+            messages.error(request, '¡Hubo un error al registrar la compra!')
+            #print('Prefix', form_compra_det.prefix)  # Imprimir el prefijo del formset para depuración
+            
+            context = {
+				'form_compra_cab': form_compra_cab,
+				'form_compra_det': form_compra_det,
+				'form_compra_det_prefix': form_compra_det.prefix  # Pasar el prefijo al template
+			}
+            
+            return render(request, 'compras/editar3.html', context)
+            
+    else:
         
-					# Guardar la cabecera de la compra
-					compra = form_cab.save()
+        # Preparar datos iniciales para el formulario
+        detalle_inicial = [{
+            'producto_id': det.producto.id,
+            'producto_nombre': det.producto.nombre,
+            'producto_iva': det.producto.iva,
+            'cantidad': det.cantidad,
+            'descripcion': det.descripcion,
+            'unidad_medida': det.unidad_medida,
+            'precio_compra': det.precio_compra,
+            'subtotal': det.total_producto
+        } for det in detalles_originales]
+            
+        form_compra_cab = FormEditCompraCabecera(instance=compra)
+        form_compra_det = formset_compra(initial=detalle_inicial)
 
-					# Guardar los detalles de la compra
-					instances = formset.save(commit=False)
-					for detalle in instances:
-						detalle.orden_compra_cab = compra
-						detalle.save()
-						
-						# Registrar el movimiento de stock
-						registrar_movimiento_stock(
-							producto=detalle.producto,
-							cantidad=detalle.cantidad,
-							movimiento='ENTRADA',
-							descripcion=f"Compra registrada: {compra.nro_comprobante}",
-							ajuste=None,
-							fecha_mov_producto=compra.fecha_compra,
-       						compra_cab=compra
-						)
-      
-					messages.success(request,"Compra Registrado Exitosamente")
-					return redirect('list_compras')
- 
-			except Exception as e:
-				print(f'Error: {e}')  # Log the error
-				messages.error(request, '¡Error al guardar en la base de datos!')
-				print('Error de integridad')
-		else:
-			messages.error(request, '¡Hubo errores en el formulario!')
-			print(form_cab.errors, formset.errors)
-	  
-	else:
-		form_cab = CompraCabForm()
-		formset = CompraFormset()
-	context = {
-		'form_compra': form_cab,
-		'form_det_compra': formset}
-	return render(request, 'compras/registrar2.html', context)
+    context = {
+        'form_compra_cab': form_compra_cab,
+        'form_compra_det': form_compra_det,
+        'form_compra_det_prefix': form_compra_det.prefix  # Pasar el prefijo al template
+    }
+    return render(request, 'compras/editar3.html', context)
 
 
-def editar_compra(request, id_compra):
-	# Obtener la cabecera de la compra
-	compra = get_object_or_404(OrdenCompraCab, id=id_compra)
+def buscar_productos(request):
+    q = request.GET.get('q', '')
+    productos = Producto.objects.filter(
+        Q(nombre__icontains=q),
+        activo=True
+    )
 
-	# Crear un formset para los detalles de la compra
-	CompraFormset = inlineformset_factory(
-		OrdenCompraCab,
-		OrdenCompraDet,
-		form=CompraDetForm,
-		extra=0,  # No agregar filas adicionales por defecto
-		can_delete=True  # Permitir eliminar detalles
-	)
+    data = []
+    for p in productos:
+        data.append({
+            'id': p.id,
+            'nombre': f"{p.nombre}",
+            'precio_compra': float(p.precio_compra),  # Cambiar a 'precio_compra' para coincidir con el frontend
+            'iva': float(p.iva) if p.iva else 10,
+            'unidad_medida': p.unidad_medida,
+            'descripcion': p.descripcion[:100] if p.descripcion else p.nombre
+        })
+    print(data)
+    return JsonResponse(data, safe=False)
 
-	if request.method == 'POST':
-		form_cab = CompraCabEditForm(request.POST, instance=compra)
-		formset = CompraFormset(request.POST, instance=compra)
-
-		if form_cab.is_valid() and formset.is_valid():
-			# Guardar la cabecera y los detalles
-			form_cab.save()
-			formset.save()
-			messages.success(request, "¡La compra fue actualizada exitosamente!")
-			return redirect('list_compras')  # Redirigir a la lista de compras
-		else:
-			print('Hay error')
-			print(form_cab)
-			print(formset)
-			messages.error(request, "¡Hubo un error al actualizar la compra! Verifica los datos ingresados.")
-	else:
-		form_cab = CompraCabEditForm(instance=compra)
-		formset = CompraFormset(instance=compra)
-
-	context = {
-		'form_compra': form_cab,
-		'form_det_compra': formset,
-	}
-	return render(request, 'compras/editar2.html', context)
+def obtener_datos_producto(request):
+    producto_id = request.GET.get('producto_id')
+    try:
+        producto = Producto.objects.get(pk=producto_id)
+        data = {
+            'precio_compra': str(producto.precio_compra),
+            'unidad_medida_id': producto.unidad_medida.id if producto.unidad_medida else '',
+            'descripcion': producto.descripcion or ''
+        }
+        return JsonResponse(data)
+    except Producto.DoesNotExist:
+        return JsonResponse({'error': 'Producto no encontrado'}, status=404)
 
 
+
+@login_required(login_url='login/')
+@permission_required('compras.delete_ordencompracab', raise_exception=True)
+@permission_required('compras.delete_ordencompradet', raise_exception=True)
 def inactivar_compra(request, id_compra):
 	# Obtener la cabecera de la compra
 	compra_cab = get_object_or_404(OrdenCompraCab, id=id_compra)
@@ -364,90 +561,309 @@ def inactivar_compra(request, id_compra):
 	return redirect('list_compras')
 
 
+@login_required(login_url='login/')
+@permission_required('compras.view_ordencompracab', raise_exception=True)
 def listar_compras(request):
 	compras = OrdenCompraCab.objects.prefetch_related('ordencompradet_set').all()  # Cargar detalles relacionados
 	context = {'Compras': compras}
 	return render(request, 'compras/listar.html', context)
 
 
-'''
-def manage_books(request, author_id):
-	author = Author.objects.get(pk=author_id)
-	BookInlineFormSet = inlineformset_factory(Author, Book, fields=["title"])
-	if request.method == "POST":
-		formset = BookInlineFormSet(request.POST, request.FILES, instance=author)
-		if formset.is_valid():
-			formset.save()
-			# Do something. Should generally end with a redirect. For example:
-			return HttpResponseRedirect(author.get_absolute_url())
-	else:
-		formset = BookInlineFormSet(instance=author)
-	return render(request, "manage_books.html", {"formset": formset})
+def reporte_compras(request):
+	fecha_inicio = request.GET.get('fecha_inicio')
+	fecha_fin = request.GET.get('fecha_fin')
+	proveedor_id = request.GET.get('proveedor')  # Cambiado de 'cliente' a 'proveedor'
+	
+	compras = OrdenCompraCab.objects.filter(activo=True).order_by('-fecha_compra')
+	
+	# Aplicar filtros
+	if fecha_inicio and fecha_fin:
+		fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+		fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
+		compras = compras.filter(fecha_compra__date__range=[fecha_inicio, fecha_fin])
+	
+	if proveedor_id:
+		compras = compras.filter(proveedor_id=proveedor_id)
+
+	# Datos para el gráfico
+	datos_grafico = compras.values('fecha_compra__date').annotate(total_compras=Sum('total')).order_by('fecha_compra__date')
+	
+	fechas = [item['fecha_compra__date'].strftime('%d-%m-%Y') for item in datos_grafico]
+	montos = [float(item['total_compras']) for item in datos_grafico]
+	
+	# Calcular total general
+	total_general = compras.aggregate(
+		total=Sum('total')
+	)['total'] or 0
+	
+	# Generar gráfico
+	plt.figure(figsize=(10, 5))
+	plt.bar(fechas, montos, color='skyblue')
+	plt.xlabel('Fecha')
+	plt.ylabel('Total Compras')  # Corregido de 'Ventas' a 'Compras'
+	plt.title('Compras por Día')  # Corregido de 'Ventas' a 'Compras'
+	plt.xticks(rotation=45)
+	plt.tight_layout()
+	
+	# Guardar gráfico en buffer
+	buffer = io.BytesIO()
+	plt.savefig(buffer, format='png')
+	buffer.seek(0)
+	grafico_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+	plt.close()
+	
+	# Obtener lista de proveedores para el formulario
+	proveedores = Proveedor.objects.filter(activo=True)
+	
+	context = {
+		'compras': compras,
+		'grafico': grafico_base64,
+		'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d') if fecha_inicio else '',
+		'fecha_fin': fecha_fin.strftime('%Y-%m-%d') if fecha_fin else '',
+		'total_general': total_general,
+		'proveedores': proveedores,  # Corregido: variable en lugar de string
+		'proveedor_seleccionado': int(proveedor_id) if proveedor_id else None,
+	}
+	
+	return render(request, 'reportes/rep_compras.html', context)
 
 
-var = var_form(commit = False)
-var.product = product.title
-var.save()
-'''
 
-'''
-def export_pdf(request):
-	# Filter purchases based on request parameters (e.g., date range, provider)
-	compras = OrdenCompraCab.objects.prefetch_related('ordencompradet_set').all()  # Replace with actual filtering logic
-
-	# Render the purchases to an HTML template
-	html_string = render_to_string('compras/reporte_pdf.html', {'compras': compras})
-	html = HTML(string=html_string)
-
-	# Generate PDF
+def exportar_compras_pdf(request):
+	fecha_inicio = request.GET.get('fecha_inicio')
+	fecha_fin = request.GET.get('fecha_fin')
+	proveedor_id = request.GET.get('proveedor')
+	
+	compras = OrdenCompraCab.objects.filter(activo=True).order_by('-fecha_compra')
+	
+	# Aplicar filtros
+	if fecha_inicio and fecha_fin:
+		fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+		fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
+		compras = compras.filter(fecha_compra__date__range=[fecha_inicio, fecha_fin])
+	
+	if proveedor_id:
+		compras = compras.filter(proveedor_id=proveedor_id)
+	
+	# Calcular total general
+	total_general = compras.aggregate(
+		total=Sum('total')
+	)['total'] or 0
+	
+	template_path = 'reportes/rep_compras_pdf.html'
+	context = {
+		'compras': compras,
+		'total_general': total_general,
+		'fecha_inicio': fecha_inicio.strftime('%d/%m/%Y') if fecha_inicio else '',
+		'fecha_fin': fecha_fin.strftime('%d/%m/%Y') if fecha_fin else '',
+	}
+	
 	response = HttpResponse(content_type='application/pdf')
-	response['Content-Disposition'] = 'inline; filename="reporte_compras.pdf"'
-	html.write_pdf(response)
-	return response
-
-def export_excel(request):
-	# Filter purchases based on request parameters (e.g., date range, provider)
-	compras = OrdenCompraCab.objects.prefetch_related('ordencompradet_set').all()  # Replace with actual filtering logic
-
-	# Create a DataFrame for Excel export
-	data = []
-	for compra in compras:
-		for detalle in compra.ordencompradet_set.all():
-			data.append({
-				'Nro. Comprobante': compra.nro_comprobante,
-				'Fecha Compra': compra.fecha_compra,
-				'Proveedor': compra.proveedor.razon_social,
-				'Forma de Pago': compra.forma_pago,
-				'Producto': detalle.producto.nombre,
-				'Cantidad': detalle.cantidad,
-				'Precio Unitario': detalle.precio_compra,
-				'Descuento': detalle.descuento,
-				'Total Producto': detalle.total_producto,
-			})
-
-	df = pd.DataFrame(data)
-
-	# Generate Excel file
-	response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-	response['Content-Disposition'] = 'attachment; filename="reporte_compras.xlsx"'
-	with pd.ExcelWriter(response, engine='openpyxl') as writer:
-		df.to_excel(writer, index=False, sheet_name='Compras')
+	response['Content-Disposition'] = 'attachment; filename="reporte_compras.pdf"'
+	
+	template = get_template(template_path)
+	html = template.render(context)
+	
+	pisa_status = pisa.CreatePDF(html, dest=response)
+	
+	if pisa_status.err:
+		return HttpResponse('Error al generar PDF', status=500)
+	
 	return response
 
 
-def listar_compras(request):
-	form = FiltroComprasForm(request.GET or None)
-	compras = OrdenCompraCab.objects.all()
+def rep_compras_mensual_anual_v2(request):
+    # Obtener parámetros
+    tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
+    anio = request.GET.get('anio', datetime.now().year)
+    mes = request.GET.get('mes') if tipo_reporte == 'mensual' else None
+    
+    # Validación básica
+    if not anio:
+        messages.error(request, 'Debe seleccionar al menos el año')
+        return render(request, 'reportes/rep_compras_mens_anual.html', {})
 
-	if form.is_valid():
-		fecha_inicio = form.cleaned_data.get('fecha_inicio')
-		fecha_fin = form.cleaned_data.get('fecha_fin')
-		proveedor = form.cleaned_data.get('proveedor')
+    # Filtrar compras
+    compras = OrdenCompraCab.objects.filter(activo=True)
+    
+    if tipo_reporte == 'mensual' and mes:
+        compras = compras.filter(
+            fecha_compra__year=anio,
+            fecha_compra__month=mes
+        )
+        grupo = 'fecha_compra__day'
+        titulo_grafico = f'Compras Diarias - {mes}/{anio}'
+    else:
+        compras = compras.filter(fecha_compra__year=anio)
+        grupo = 'fecha_compra__month'
+        titulo_grafico = f'Compras Mensuales - Año {anio}'
 
-		if fecha_inicio and fecha_fin:
-			compras = compras.filter(fecha_compra__range=(fecha_inicio, fecha_fin))
-		if proveedor:
-			compras = compras.filter(proveedor=proveedor)
+    # Agrupar datos para el gráfico
+    datos_grafico = compras.values(grupo).annotate(
+        total_compras=Sum('total')
+    ).order_by(grupo)
 
-	return render(request, 'compras/listar.html', {'form': form, 'compras': compras})
-'''
+    # Preparar datos para el gráfico
+    if tipo_reporte == 'mensual':
+        categorias = [f'Día {item[grupo]}' for item in datos_grafico]
+    else:
+        meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        categorias = [meses[item[grupo]-1] for item in datos_grafico]
+    
+    montos = [float(item['total_compras']) for item in datos_grafico]
+
+    # Generar gráfico solo si hay datos
+    grafico_base64 = None
+    if categorias and montos:
+        plt.figure(figsize=(12, 6))
+        
+        if tipo_reporte == 'mensual':
+            plt.bar(categorias, montos, color='#4CAF50')
+        else:
+            plt.plot(categorias, montos, marker='o', color='#2196F3', linewidth=2)
+        
+        plt.title(titulo_grafico, pad=20, fontweight='bold')
+        plt.xlabel('Días' if tipo_reporte == 'mensual' else 'Meses')
+        plt.ylabel('Total Compras (Gs)')
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        
+        # Formatear eje Y con separadores de miles
+        ax = plt.gca()
+        ax.yaxis.set_major_formatter(plt.matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+        
+        plt.tight_layout()
+        
+        # Convertir gráfico a base64
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100)
+        buffer.seek(0)
+        grafico_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+        plt.close()
+
+    # Totales
+    total_general = compras.aggregate(total=Sum('total'))['total'] or 0
+    promedio = total_general / len(montos) if len(montos) > 0 else 0
+
+    # Obtener años disponibles para el filtro
+    años_disponibles = OrdenCompraCab.objects.dates('fecha_compra', 'year')
+
+    context = {
+        'compras': compras,
+        'grafico': grafico_base64,
+        'total_general': total_general,
+        'promedio': promedio,
+        'tipo_reporte': tipo_reporte,
+        'anio_seleccionado': int(anio),
+        'mes_seleccionado': int(mes) if mes else None,
+        'años_disponibles': años_disponibles,
+        'mostrar_filtro_mes': tipo_reporte == 'mensual',
+        'meses': [(1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'), 
+                 (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
+                 (9, 'Setiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')]
+    }
+
+    return render(request, 'reportes/rep_compras_mens_anual.html', context)
+
+
+def exportar_compras_mensual_anual_pdf(request):
+    # Obtener parámetros (los mismos que en la función original)
+    tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
+    anio = request.GET.get('anio', datetime.now().year)
+    mes = request.GET.get('mes') if tipo_reporte == 'mensual' else None
+    
+    # Validación básica
+    if not anio:
+        messages.error(request, 'Debe seleccionar al menos el año')
+        #return render(request, 'reportes/rep_compras_mens_anual.html', {})
+
+    # Filtrar compras (igual que en la función original)
+    compras = OrdenCompraCab.objects.filter(activo=True)
+    
+    if tipo_reporte == 'mensual' and mes:
+        compras = compras.filter(
+            fecha_compra__year=anio,
+            fecha_compra__month=mes
+        )
+        grupo = 'fecha_compra__day'
+        titulo_grafico = f'Compras Diarias - {mes}/{anio}'
+        periodo = f"{mes}/{anio}"
+    else:
+        compras = compras.filter(fecha_compra__year=anio)
+        grupo = 'fecha_compra__month'
+        titulo_grafico = f'Compras Mensuales - Año {anio}'
+        periodo = f"Año {anio}"
+
+    # Agrupar datos para el gráfico (igual que en la función original)
+    datos_grafico = compras.values(grupo).annotate(
+        total_compras=Sum('total')
+    ).order_by(grupo)
+
+    # Preparar datos para el gráfico (igual que en la función original)
+    if tipo_reporte == 'mensual':
+        categorias = [f'Día {item[grupo]}' for item in datos_grafico]
+    else:
+        meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        categorias = [meses[item[grupo]-1] for item in datos_grafico]
+    
+    montos = [float(item['total_compras']) for item in datos_grafico]
+
+    # Generar gráfico (similar a la función original)
+    plt.figure(figsize=(10, 5))
+    if tipo_reporte == 'mensual':
+        plt.bar(categorias, montos, color='#4CAF50')
+    else:
+        plt.plot(categorias, montos, marker='o', color='#2196F3', linewidth=2)
+    
+    plt.title(titulo_grafico, pad=20, fontweight='bold')
+    plt.xlabel('Días' if tipo_reporte == 'mensual' else 'Meses')
+    plt.ylabel('Total Compras (Gs)')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Formatear eje Y con separadores de miles
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(plt.matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+    
+    plt.tight_layout()
+    
+    # Convertir gráfico a base64 para el PDF
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png', dpi=100)
+    buffer.seek(0)
+    grafico_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+
+    # Totales (igual que en la función original)
+    total_general = compras.aggregate(total=Sum('total'))['total'] or 0
+    promedio = total_general / len(montos) if len(montos) > 0 else 0
+
+    # Preparar el contexto para el PDF
+    context = {
+        'grafico': grafico_base64,
+        'tipo_reporte': tipo_reporte,
+        'periodo': periodo,
+        'total_general': total_general,
+        'promedio': promedio,
+        'fecha_generacion': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+        'datos': zip(categorias, montos),  # Para la tabla de datos
+    }
+
+    # Configurar la respuesta PDF
+    template_path = 'reportes/rep_compras_mens_anual_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    nombre_archivo = f"compras_{'mensual' if tipo_reporte == 'mensual' else 'anual'}_{anio}"
+    if mes:
+        nombre_archivo += f"_{mes}"
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}.pdf"'
+
+    # Renderizar el template a PDF
+    template = get_template(template_path)
+    html = template.render(context)
+    
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    if pisa_status.err:
+        return HttpResponse('Error al generar PDF', status=500)
+    
+    return response

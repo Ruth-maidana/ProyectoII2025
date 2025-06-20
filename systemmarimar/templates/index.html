@@ -1,648 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
-  {% load static %}
+	{% load static %}
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Dashboard</title>
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-  <!-- Tempusdominus Bootstrap 4 -->
-  <link rel="stylesheet" href="{% static 'plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
-  <!-- iCheck -->
-  <link rel="stylesheet" href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
-  <!-- JQVMap -->
-  <link rel="stylesheet" href="{% static 'plugins/jqvmap/jqvmap.min.css' %}">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
-  <!-- overlayScrollbars -->
-  <link rel="stylesheet" href="{% static 'plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
-  <!-- Daterange picker -->
-  <link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
-  <!-- summernote -->
-  <link rel="stylesheet" href="{% static 'plugins/summernote/summernote-bs4.min.css' %}">
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- Ionicons -->
+	<link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+	<!-- Tempusdominus Bootstrap 4 -->
+	<link rel="stylesheet" href="{% static 'plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+	<!-- iCheck -->
+	<link rel="stylesheet" href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+	<!-- JQVMap -->
+	<link rel="stylesheet" href="{% static 'plugins/jqvmap/jqvmap.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+	<!-- overlayScrollbars -->
+	<link rel="stylesheet" href="{% static 'plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+	<!-- Daterange picker -->
+	<link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
+	<!-- summernote -->
+	<link rel="stylesheet" href="{% static 'plugins/summernote/summernote-bs4.min.css' %}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
-  <!-- Preloader -->
-  <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="{% static 'img/AdminLTELogo.png' %}" alt="AdminLTELogo" height="60" width="60">
-  </div>
+	<!-- Preloader -->
+	<div class="preloader flex-column justify-content-center align-items-center">
+		<img class="animation__shake" src="{% static 'img/AdminLTELogo.png' %}" alt="AdminLTELogo" height="60" width="60">
+	</div>
 
-  <!-- Navbar -->
-  {%include 'navbar/navbar.html'%}
-  <!-- /.navbar -->
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
 
-  <!-- Main Sidebar Container -->
-   {%include 'navbar/sidebar.html'%}
-  <!-- /.sidebar -->
+	<!-- Main Sidebar Container -->
+	 {%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
 
 
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    {%include 'header/page_header.html'%}
-    <!-- /.content-header -->
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		{%include 'header/page_header.html'%}
+		<!-- /.content-header -->
 
-    <!-- Main content -->
-    <section class="content">
-      <div class="container-fluid">
-        <!-- Small boxes (Stat box) -->
-        <div class="row">
-          <div class="col-lg-3 col-6">
-            <!-- small box -->
-            <div class="small-box bg-info">
-              <div class="inner">
-                <h3>150</h3>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+				<!-- Small boxes (Stat box) -->
+				<div class="row">
+					<!-- Box 1: Resumen de Stock Crítico -->
+					<div class="col-lg-4 col-6">
+						<div class="small-box bg-danger">
+								<div class="inner">
+										<h3 id="critical-items">0</h3>
+										<p>Productos en Stock Crítico</p>
+								</div>
+								<div class="icon">
+										<i class="ion ion-alert-circled"></i>
+								</div>
+								<a href="{% url 'lista_stock_critico' %}" class="small-box-footer">
+										Ver detalles <i class="fas fa-arrow-circle-right"></i>
+								</a>
+						</div>
+					</div>
+		
+					<!-- Box 2: Movimientos Recientes -->
+					<div class="col-lg-4 col-6">
+						<div class="small-box bg-info">
+							<div class="inner">
+									<h3 id="recent-movements">0</h3>
+									<p>Movimientos Hoy</p>
+							</div>
+							<div class="icon">
+									<i class="ion ion-arrow-swap"></i>
+							</div>
+							<a href="{% url 'movimientos_recientes' %}" class="small-box-footer">
+									Visualizar <i class="fas fa-arrow-circle-right"></i>
+							</a>
+						</div>
+					</div>
+		
+					<!-- Box 3: Valor del Inventario -->
+					<div class="col-lg-4 col-6">
+						<div class="small-box bg-success">
+							<div class="inner">
+									<h3 id="inventory-value">Gs. 0</h3>
+									<p>Valor Total del Inventario</p>
+							</div>
+							<div class="icon">
+									<i class="ion ion-cash"></i>
+							</div>
+							<a href="{% url 'valor_inventario' %}" class="small-box-footer">
+									Análisis <i class="fas fa-arrow-circle-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
 
-                <p>New Orders</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-bag"></i>
-              </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <!-- ./col -->
-          <div class="col-lg-3 col-6">
-            <!-- small box -->
-            <div class="small-box bg-success">
-              <div class="inner">
-                <h3>53<sup style="font-size: 20px">%</sup></h3>
+				<div class="row">
+					<!-- Left col -->
+					<section class="col-lg-7 connectedSortable">
+						<!-- Custom tabs (Charts with tabs)-->
+						<div class="card">
+							<div class="card-header bg-info text-white">
+								<h3 class="card-title"><i class="fas fa-star"></i> Análisis ABC de Inventario</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool" data-card-widget="collapse">
+											<i class="fas fa-minus"></i>
+									</button>
+								</div>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-md-6">
+										<div class="chart-container" style="height: 250px;">
+												<canvas id="abcPieChart"></canvas>
+										</div>
+									</div>
+									<div class="col-md-6">
+										<div class="info-box mb-3 bg-a">
+											<span class="info-box-icon"><i class="fas fa-star"></i></span>
+											<div class="info-box-content">
+													<span class="info-box-text">Productos Clase A</span>
+													<span class="info-box-number" id="class-a-count">0 (0%)</span>
+													<span>Gestionar con máximo control</span>
+											</div>
+										</div>
+										<div class="info-box mb-3 bg-b">
+											<span class="info-box-icon"><i class="fas fa-star-half-alt"></i></span>
+											<div class="info-box-content">
+													<span class="info-box-text">Productos Clase B</span>
+													<span class="info-box-number" id="class-b-count">0 (0%)</span>
+													<span>Revisión periódica</span>
+											</div>
+										</div>
+											
+										<div class="info-box mb-3 bg-c">
+											<span class="info-box-icon"><i class="far fa-star"></i></span>
+											<div class="info-box-content">
+													<span class="info-box-text">Productos Clase C</span>
+													<span class="info-box-number" id="class-c-count">0 (0%)</span>
+													<span>Gestión básica</span>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<hr>
+								
+								<table id="abcTable" class="table table-bordered table-hover">
+									<thead class="thead-light">
+										<tr>
+											<th>Producto</th>
+											<th>Valor Total</th>
+											<th>% del Total</th>
+											<th>% Acumulado</th>
+											<th>Clase</th>
+										</tr>
+									</thead>
+									<tbody>
+										
+									</tbody>
+								</table>
+							</div>
+							<div class="card-footer text-muted" id="total-abc">
+								Valor total inventario: <strong>Gs. {{ stats.total_valor|floatformat:2 }}</strong>
+							</div>	
+						</div>
+						<!-- /.card -->
 
-                <p>Bounce Rate</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-stats-bars"></i>
-              </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <!-- ./col -->
-          <div class="col-lg-3 col-6">
-            <!-- small box -->
-            <div class="small-box bg-warning">
-              <div class="inner">
-                <h3>44</h3>
+						<div class="card">
+							<div class="card-header bg-primary text-white">
+								<h3 class="card-title"><i class="fas fa-robot"></i> Predicción de Reabastecimiento</h3>
+							</div>
+							<div class="card-body">
+								<div class="alert alert-info">
+									<i class="fas fa-info-circle"></i> Basado en el historial de ventas de los últimos 60 días
+								</div>
+								
+								<div class="table-responsive">
+									<table class="table table-striped">
+										<thead>
+											<tr>
+												<th>Producto</th>
+												<th>Stock Actual</th>
+												<th>Ventas/Día</th>
+												<th>Días Restantes</th>
+												<th>Sugerencia</th>
+											</tr>
+										</thead>
+										<tbody id="prediccionTableBody">
+											<!-- Los datos se cargarán aquí con JavaScript -->
+											<tr>
+												<td colspan="5" class="text-center">Cargando datos...</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div class="card-footer">
+								<small class="text-muted">
+									<i class="fas fa-sync-alt"></i> Actualizado: <span id="lastUpdated"></span>
+								</small>
+							</div>
+						</div>			
+					</section>
+					<!-- /.Left col -->
+					<!-- right col (We are only adding the ID to make the widgets sortable)-->
+					<section class="col-lg-5 connectedSortable">
+						<div class="card h-100">
+							<div class="card-header bg-purple text-white">
+								<h3 class="card-title"><i class="fas fa-exchange-alt"></i> Rotación de Inventario</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool" data-card-widget="collapse">
+										<i class="fas fa-minus"></i>
+									</button>
+								</div>
+							</div>
+							<div class="card-body d-flex flex-column">
+								<div class="row flex-grow-1">
+									<div class="col-md-6 mb-3">
+										<div class="h-100 d-flex flex-column">
+											<h5><i class="fas fa-bolt text-success"></i> Mayor Rotación</h5>
+											<div class="flex-grow-1 overflow-auto">
+												<ul class="list-group" id="topRotacionList">
+													<li class="list-group-item text-center">Cargando datos...</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-6 mb-3">
+										<div class="h-100 d-flex flex-column">
+											<h5><i class="fas fa-stopwatch text-danger"></i> Sin Rotación (30+ días)</h5>
+											<div class="flex-grow-1 overflow-auto">
+												<ul class="list-group" id="sinRotacionList">
+													<li class="list-group-item text-center">Cargando datos...</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+							
+								<hr>
+								
+								<div style="min-height: 200px;">
+									<canvas id="rotacionChart"></canvas>
+								</div>
+							</div>
+							<!-- /.card-body -->
+							<div class="card-footer text-muted">
+								<i class="fas fa-sync-alt"></i> Actualizado cada 30 minutos
+							</div>
+						</div>
+						<!-- /.card -->
+					</section>
+					<!-- right col -->
+				</div>
+				<style>
+					.bg-purple {
+						background-color: #6f42c1;
+					}
+					/* Asegurar que las cards tengan la misma altura */
+					.connectedSortable {
+						display: flex;
+						flex-direction: column;
+						gap: 20px; /* Espacio entre cards */
+					}
+					.connectedSortable > .card {
+						flex: 1;
+					}
+					/* Scroll para listas muy largas */
+					.overflow-auto {
+						max-height: 200px;
+						overflow-y: auto;
+					}
+				</style>
+				<!-- /.row (main row) -->
+	</div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+	<style>
+    .bg-a { background-color: #ff6384; color: white; }
+    .bg-b { background-color: #36a2eb; color: white; }
+    .bg-c { background-color: #ffce56; color: white; }
+    .bg-a-light { background-color: rgba(255, 99, 132, 0.2); }
+    .bg-b-light { background-color: rgba(54, 162, 235, 0.2); }
+    .bg-c-light { background-color: rgba(255, 206, 86, 0.2); }
+	</style>
+	</div>
+	
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
 
-                <p>User Registrations</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-person-add"></i>
-              </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <!-- ./col -->
-          <div class="col-lg-3 col-6">
-            <!-- small box -->
-            <div class="small-box bg-danger">
-              <div class="inner">
-                <h3>65</h3>
-
-                <p>Unique Visitors</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-pie-graph"></i>
-              </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <!-- ./col -->
-        </div>
-        <!-- /.row -->
-        <!-- Main row -->
-        <div class="row">
-          <!-- Left col -->
-          <section class="col-lg-7 connectedSortable">
-            <!-- Custom tabs (Charts with tabs)-->
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">
-                  <i class="fas fa-chart-pie mr-1"></i>
-                  Sales
-                </h3>
-                <div class="card-tools">
-                  <ul class="nav nav-pills ml-auto">
-                    <li class="nav-item">
-                      <a class="nav-link active" href="#revenue-chart" data-toggle="tab">Area</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="#sales-chart" data-toggle="tab">Donut</a>
-                    </li>
-                  </ul>
-                </div>
-              </div><!-- /.card-header -->
-              <div class="card-body">
-                <div class="tab-content p-0">
-                  <!-- Morris chart - Sales -->
-                  <div class="chart tab-pane active" id="revenue-chart"
-                       style="position: relative; height: 300px;">
-                      <canvas id="revenue-chart-canvas" height="300" style="height: 300px;"></canvas>
-                   </div>
-                  <div class="chart tab-pane" id="sales-chart" style="position: relative; height: 300px;">
-                    <canvas id="sales-chart-canvas" height="300" style="height: 300px;"></canvas>
-                  </div>
-                </div>
-              </div><!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-
-            <!-- DIRECT CHAT -->
-            <div class="card direct-chat direct-chat-primary">
-              <div class="card-header">
-                <h3 class="card-title">Direct Chat</h3>
-
-                <div class="card-tools">
-                  <span title="3 New Messages" class="badge badge-primary">3</span>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" title="Contacts" data-widget="chat-pane-toggle">
-                    <i class="fas fa-comments"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <!-- Conversations are loaded here -->
-                <div class="direct-chat-messages">
-                  <!-- Message. Default to the left -->
-                  <div class="direct-chat-msg">
-                    <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-left">Alexander Pierce</span>
-                      <span class="direct-chat-timestamp float-right">23 Jan 2:00 pm</span>
-                    </div>
-                    <!-- /.direct-chat-infos -->
-                    <img class="direct-chat-img" src="{% static 'img/user1-128x128.jpg' %}" alt="message user image">
-                    <!-- /.direct-chat-img -->
-                    <div class="direct-chat-text">
-                      Is this template really for free? That's unbelievable!
-                    </div>
-                    <!-- /.direct-chat-text -->
-                  </div>
-                  <!-- /.direct-chat-msg -->
-
-                  <!-- Message to the right -->
-                  <div class="direct-chat-msg right">
-                    <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-right">Sarah Bullock</span>
-                      <span class="direct-chat-timestamp float-left">23 Jan 2:05 pm</span>
-                    </div>
-                    <!-- /.direct-chat-infos -->
-                    <img class="direct-chat-img" src="{% static 'img/user3-128x128.jpg' %}" alt="message user image">
-                    <!-- /.direct-chat-img -->
-                    <div class="direct-chat-text">
-                      You better believe it!
-                    </div>
-                    <!-- /.direct-chat-text -->
-                  </div>
-                  <!-- /.direct-chat-msg -->
-
-                  <!-- Message. Default to the left -->
-                  <div class="direct-chat-msg">
-                    <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-left">Alexander Pierce</span>
-                      <span class="direct-chat-timestamp float-right">23 Jan 5:37 pm</span>
-                    </div>
-                    <!-- /.direct-chat-infos -->
-                    <img class="direct-chat-img" src="{% static 'img/user1-128x128.jpg' %}" alt="message user image">
-                    <!-- /.direct-chat-img -->
-                    <div class="direct-chat-text">
-                      Working with AdminLTE on a great new app! Wanna join?
-                    </div>
-                    <!-- /.direct-chat-text -->
-                  </div>
-                  <!-- /.direct-chat-msg -->
-
-                  <!-- Message to the right -->
-                  <div class="direct-chat-msg right">
-                    <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-right">Sarah Bullock</span>
-                      <span class="direct-chat-timestamp float-left">23 Jan 6:10 pm</span>
-                    </div>
-                    <!-- /.direct-chat-infos -->
-                    <img class="direct-chat-img" src="{% static 'img/user3-128x128.jpg' %}" alt="message user image">
-                    <!-- /.direct-chat-img -->
-                    <div class="direct-chat-text">
-                      I would love to.
-                    </div>
-                    <!-- /.direct-chat-text -->
-                  </div>
-                  <!-- /.direct-chat-msg -->
-
-                </div>
-                <!--/.direct-chat-messages-->
-
-                <!-- Contacts are loaded here -->
-                <div class="direct-chat-contacts">
-                  <ul class="contacts-list">
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user1-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            Count Dracula
-                            <small class="contacts-list-date float-right">2/28/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">How have you been? I was...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user7-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            Sarah Doe
-                            <small class="contacts-list-date float-right">2/23/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">I will be waiting for...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user3-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            Nadia Jolie
-                            <small class="contacts-list-date float-right">2/20/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">I'll call you back at...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user5-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            Nora S. Vans
-                            <small class="contacts-list-date float-right">2/10/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">Where is your new...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user6-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            John K.
-                            <small class="contacts-list-date float-right">1/27/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">Can I take a look at...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                    <li>
-                      <a href="#">
-                        <img class="contacts-list-img" src="{% static 'img/user8-128x128.jpg' %}" alt="User Avatar">
-
-                        <div class="contacts-list-info">
-                          <span class="contacts-list-name">
-                            Kenneth M.
-                            <small class="contacts-list-date float-right">1/4/2015</small>
-                          </span>
-                          <span class="contacts-list-msg">Never mind I found...</span>
-                        </div>
-                        <!-- /.contacts-list-info -->
-                      </a>
-                    </li>
-                    <!-- End Contact Item -->
-                  </ul>
-                  <!-- /.contacts-list -->
-                </div>
-                <!-- /.direct-chat-pane -->
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer">
-                <form action="#" method="post">
-                  <div class="input-group">
-                    <input type="text" name="message" placeholder="Type Message ..." class="form-control">
-                    <span class="input-group-append">
-                      <button type="button" class="btn btn-primary">Send</button>
-                    </span>
-                  </div>
-                </form>
-              </div>
-              <!-- /.card-footer-->
-            </div>
-            <!--/.direct-chat -->
-
-            <!-- TO DO List -->
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">
-                  <i class="ion ion-clipboard mr-1"></i>
-                  To Do List
-                </h3>
-
-                <div class="card-tools">
-                  <ul class="pagination pagination-sm">
-                    <li class="page-item"><a href="#" class="page-link">&laquo;</a></li>
-                    <li class="page-item"><a href="#" class="page-link">1</a></li>
-                    <li class="page-item"><a href="#" class="page-link">2</a></li>
-                    <li class="page-item"><a href="#" class="page-link">3</a></li>
-                    <li class="page-item"><a href="#" class="page-link">&raquo;</a></li>
-                  </ul>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <ul class="todo-list" data-widget="todo-list">
-                  <li>
-                    <!-- drag handle -->
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <!-- checkbox -->
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo1" id="todoCheck1">
-                      <label for="todoCheck1"></label>
-                    </div>
-                    <!-- todo text -->
-                    <span class="text">Design a nice theme</span>
-                    <!-- Emphasis label -->
-                    <small class="badge badge-danger"><i class="far fa-clock"></i> 2 mins</small>
-                    <!-- General tools such as edit or delete-->
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo2" id="todoCheck2" checked>
-                      <label for="todoCheck2"></label>
-                    </div>
-                    <span class="text">Make the theme responsive</span>
-                    <small class="badge badge-info"><i class="far fa-clock"></i> 4 hours</small>
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo3" id="todoCheck3">
-                      <label for="todoCheck3"></label>
-                    </div>
-                    <span class="text">Let theme shine like a star</span>
-                    <small class="badge badge-warning"><i class="far fa-clock"></i> 1 day</small>
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo4" id="todoCheck4">
-                      <label for="todoCheck4"></label>
-                    </div>
-                    <span class="text">Let theme shine like a star</span>
-                    <small class="badge badge-success"><i class="far fa-clock"></i> 3 days</small>
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo5" id="todoCheck5">
-                      <label for="todoCheck5"></label>
-                    </div>
-                    <span class="text">Check your messages and notifications</span>
-                    <small class="badge badge-primary"><i class="far fa-clock"></i> 1 week</small>
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="handle">
-                      <i class="fas fa-ellipsis-v"></i>
-                      <i class="fas fa-ellipsis-v"></i>
-                    </span>
-                    <div  class="icheck-primary d-inline ml-2">
-                      <input type="checkbox" value="" name="todo6" id="todoCheck6">
-                      <label for="todoCheck6"></label>
-                    </div>
-                    <span class="text">Let theme shine like a star</span>
-                    <small class="badge badge-secondary"><i class="far fa-clock"></i> 1 month</small>
-                    <div class="tools">
-                      <i class="fas fa-edit"></i>
-                      <i class="fas fa-trash-o"></i>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer clearfix">
-                <button type="button" class="btn btn-primary float-right"><i class="fas fa-plus"></i> Add item</button>
-              </div>
-            </div>
-            <!-- /.card -->
-          </section>
-          <!-- /.Left col -->
-          <!-- right col (We are only adding the ID to make the widgets sortable)-->
-          <section class="col-lg-5 connectedSortable">
-
-            <!-- Map card -->
-            <div class="card bg-gradient-primary">
-              <div class="card-header border-0">
-                <h3 class="card-title">
-                  <i class="fas fa-map-marker-alt mr-1"></i>
-                  Visitors
-                </h3>
-                <!-- card tools -->
-                <div class="card-tools">
-                  <button type="button" class="btn btn-primary btn-sm daterange" title="Date range">
-                    <i class="far fa-calendar-alt"></i>
-                  </button>
-                  <button type="button" class="btn btn-primary btn-sm" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                </div>
-                <!-- /.card-tools -->
-              </div>
-              <div class="card-body">
-                <div id="world-map" style="height: 250px; width: 100%;"></div>
-              </div>
-              <!-- /.card-body-->
-              <div class="card-footer bg-transparent">
-                <div class="row">
-                  <div class="col-4 text-center">
-                    <div id="sparkline-1"></div>
-                    <div class="text-white">Visitors</div>
-                  </div>
-                  <!-- ./col -->
-                  <div class="col-4 text-center">
-                    <div id="sparkline-2"></div>
-                    <div class="text-white">Online</div>
-                  </div>
-                  <!-- ./col -->
-                  <div class="col-4 text-center">
-                    <div id="sparkline-3"></div>
-                    <div class="text-white">Sales</div>
-                  </div>
-                  <!-- ./col -->
-                </div>
-                <!-- /.row -->
-              </div>
-            </div>
-            <!-- /.card -->
-
-            <!-- solid sales graph -->
-            <div class="card bg-gradient-info">
-              <div class="card-header border-0">
-                <h3 class="card-title">
-                  <i class="fas fa-th mr-1"></i>
-                  Sales Graph
-                </h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn bg-info btn-sm" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn bg-info btn-sm" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="card-body">
-                <canvas class="chart" id="line-chart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer bg-transparent">
-                <div class="row">
-                  <div class="col-4 text-center">
-                    <input type="text" class="knob" data-readonly="true" value="20" data-width="60" data-height="60"
-                           data-fgColor="#39CCCC">
-
-                    <div class="text-white">Mail-Orders</div>
-                  </div>
-                  <!-- ./col -->
-                  <div class="col-4 text-center">
-                    <input type="text" class="knob" data-readonly="true" value="50" data-width="60" data-height="60"
-                           data-fgColor="#39CCCC">
-
-                    <div class="text-white">Online</div>
-                  </div>
-                  <!-- ./col -->
-                  <div class="col-4 text-center">
-                    <input type="text" class="knob" data-readonly="true" value="30" data-width="60" data-height="60"
-                           data-fgColor="#39CCCC">
-
-                    <div class="text-white">In-Store</div>
-                  </div>
-                  <!-- ./col -->
-                </div>
-                <!-- /.row -->
-              </div>
-              <!-- /.card-footer -->
-            </div>
-            <!-- /.card -->
-
-            <!-- Calendar -->
-            <div class="card bg-gradient-success">
-              <div class="card-header border-0">
-
-                <h3 class="card-title">
-                  <i class="far fa-calendar-alt"></i>
-                  Calendar
-                </h3>
-                <!-- tools card -->
-                <div class="card-tools">
-                  <!-- button with a dropdown -->
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" data-offset="-52">
-                      <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="dropdown-menu" role="menu">
-                      <a href="#" class="dropdown-item">Add new event</a>
-                      <a href="#" class="dropdown-item">Clear events</a>
-                      <div class="dropdown-divider"></div>
-                      <a href="#" class="dropdown-item">View calendar</a>
-                    </div>
-                  </div>
-                  <button type="button" class="btn btn-success btn-sm" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-success btn-sm" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-                <!-- /. tools -->
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body pt-0">
-                <!--The calendar -->
-                <div id="calendar" style="width: 100%"></div>
-              </div>
-              <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-          </section>
-          <!-- right col -->
-        </div>
-        <!-- /.row (main row) -->
-      </div><!-- /.container-fluid -->
-    </section>
-    <!-- /.content -->
-  </div>
-  
-  <!-- FOOTER -->
-  {% include 'footer/footer.html'%}
-
-  <!-- Control Sidebar -->
-  <aside class="control-sidebar control-sidebar-dark">
-    <!-- Control sidebar content goes here -->
-  </aside>
-  <!-- /.control-sidebar -->
+	<!-- Control Sidebar -->
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
 
@@ -652,7 +313,7 @@
 <script src="{% static 'plugins/jquery-ui/jquery-ui.min.js' %}"></script>
 <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
 <script>
-  $.widget.bridge('uibutton', $.ui.button)
+	$.widget.bridge('uibutton', $.ui.button)
 </script>
 <!-- Bootstrap 4 -->
 <script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -680,5 +341,350 @@
 <script src="{% static 'js/demo.js' %}"></script>
 <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
 <script src="{% static 'js/pages/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	 // En tu archivo JS o script del template
+document.addEventListener('DOMContentLoaded', function() {
+		// Simulación de datos - reemplazar con llamadas AJAX reales
+		fetch('inventarios/inventory-summary/')
+				.then(response => response.json())
+				.then(data => {
+						document.getElementById('critical-items').textContent = data.critical_items;
+						document.getElementById('recent-movements').textContent = data.movements_today;
+						document.getElementById('inventory-value').textContent = 'Gs. ' + data.total_value.toLocaleString();
+				});
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('inventarios/inventory-abc/')  // Asegúrate que esta ruta es correcta
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta de la red');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Actualizar gráfico
+            const ctx = document.getElementById('abcPieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Clase A', 'Clase B', 'Clase C'],
+                    datasets: [{
+                        data: [
+                            data.stats.percent_a,
+                            data.stats.percent_b,
+                            data.stats.percent_c
+                        ],
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw.toFixed(2)}% del valor`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Actualizar los info-boxes
+            document.getElementById('class-a-count').textContent = 
+                `${data.stats.count_a} (${data.stats.percent_a.toFixed(2)}%)`;
+            
+            document.getElementById('class-b-count').textContent = 
+                `${data.stats.count_b} (${data.stats.percent_b.toFixed(2)}%)`;
+            
+            document.getElementById('class-c-count').textContent = 
+                `${data.stats.count_c} (${data.stats.percent_c.toFixed(2)}%)`;
+
+            
+            // Actualizar tabla si la tienes
+            if (data.abc_data && data.abc_data.length > 0) {
+                const tableBody = document.querySelector('#abcTable tbody');
+                tableBody.innerHTML = '';  // Limpiar tabla
+                console.log('Datos ABC:', data);
+				
+                
+				data.abc_data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = item.clase === 'A' ? 'table-danger' : 
+                                  item.clase === 'B' ? 'table-warning' : 'table-info';
+                    
+                    row.innerHTML = `
+                        <td>${item.nombre}</td>
+                        <td>Gs. ${item.valor_total.toFixed(2)}</td>
+                        <td>${item.porcentaje.toFixed(2)}%</td>
+                        <td>${item.porcentaje_acumulado.toFixed(2)}%</td>
+                        <td><span class="badge bg-${item.clase.toLowerCase()}">${item.clase}</span></td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar datos ABC:', error);
+			console.error('Error:', error);
+			console.log('Datos', data);
+            // Mostrar mensaje de error al usuario
+            document.getElementById('class-a-count').textContent = 'Error';
+            document.getElementById('class-b-count').textContent = 'Error';
+            document.getElementById('class-c-count').textContent = 'Error';
+        });
+});
+</script>
+
+
+<script>
+/*document.addEventListener('DOMContentLoaded', function() {
+    // Función para formatear fechas
+    function formatDate(date) {
+        return new Date(date).toLocaleString('es-PY', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Función para actualizar la tabla
+    function updatePredictionTable(data) {
+        const tableBody = document.getElementById('prediccionTableBody');
+        tableBody.innerHTML = ''; // Limpiar tabla
+        
+        if (data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">No hay productos que requieran reabastecimiento</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Determinar clase del badge según días restantes
+            const badgeClass = item.dias_restantes < 5 ? 'danger' : 'warning';
+            
+            row.innerHTML = `
+                <td>${item.nombre}</td>
+                <td>${item.cantidad_en_stock}</td>
+                <td>${item.ventas_diarias ? item.ventas_diarias.toFixed(2) : '0.00'}</td>
+                <td>
+                    <span class="badge bg-${badgeClass}">
+                        ${item.dias_restantes ? item.dias_restantes.toFixed(1) : '∞'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-success">
+                        Ordenar ${item.sugerencia} unidades
+                    </button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Actualizar fecha
+        document.getElementById('lastUpdated').textContent = formatDate(new Date());
+    }
+
+    // Función para cargar datos
+    function loadPredictionData() {
+        fetch('inventarios/inventory-reabastecimiento/')  // Asegúrate de que esta URL coincida con tu vista
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updatePredictionTable(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar datos:', error);
+                document.getElementById('prediccionTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">
+                            Error al cargar datos. Intente recargar la página.
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+
+    // Cargar datos al inicio
+    loadPredictionData();
+    
+    // Opcional: Recargar cada 5 minutos
+    setInterval(loadPredictionData, 300000);
+});*/
+</script>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+    // Función para cargar datos de rotación
+    function loadRotationData() {
+        fetch('inventarios/rotacion-inventario/')  // Asegúrate de que esta URL coincida con tu vista
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateRotationLists(data);
+                updateRotationChart(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar datos de rotación:', error);
+                document.getElementById('topRotacionList').innerHTML = `
+                    <li class="list-group-item text-center text-danger">
+                        Error al cargar datos
+                    </li>
+                `;
+                document.getElementById('sinRotacionList').innerHTML = `
+                    <li class="list-group-item text-center text-danger">
+                        Error al cargar datos
+                    </li>
+                `;
+            });
+    }
+
+    // Actualizar las listas de rotación
+    function updateRotationLists(data) {
+        const topRotacionList = document.getElementById('topRotacionList');
+        const sinRotacionList = document.getElementById('sinRotacionList');
+        
+        // Lista de mayor rotación
+        if (data.top_rotacion && data.top_rotacion.length > 0) {
+            topRotacionList.innerHTML = '';
+            data.top_rotacion.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    ${item.nombre}
+                    <span class="badge bg-success rounded-pill">
+                        ${item.rotacion.toFixed(2)} veces/mes
+                    </span>
+                `;
+                topRotacionList.appendChild(li);
+            });
+        } else {
+            topRotacionList.innerHTML = `
+                <li class="list-group-item text-center">
+                    No hay datos de rotación disponibles
+                </li>
+            `;
+        }
+        
+        // Lista sin rotación
+        if (data.sin_rotacion && data.sin_rotacion.length > 0) {
+            sinRotacionList.innerHTML = '';
+            data.sin_rotacion.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    ${item.nombre}
+                    <span class="badge bg-danger rounded-pill">
+                        ${item.dias_sin_movimiento} días
+                    </span>
+                `;
+                sinRotacionList.appendChild(li);
+            });
+        } else {
+            sinRotacionList.innerHTML = `
+                <li class="list-group-item text-center">
+                    ¡Todos los productos tienen movimiento!
+                </li>
+            `;
+        }
+    }
+
+    // Actualizar el gráfico de rotación
+    function updateRotationChart(data) {
+        const ctx = document.getElementById('rotacionChart').getContext('2d');
+        
+        // Destruir gráfico anterior si existe
+        if (window.rotationChart) {
+            window.rotationChart.destroy();
+        }
+        
+        window.rotationChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.chart_labels || [],
+                datasets: [{
+                    label: 'Rotación (veces/mes)',
+                    data: data.chart_values || [],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Veces por mes'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Productos'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Rotación: ${context.raw.toFixed(2)} veces/mes`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Cargar datos al inicio
+    loadRotationData();
+    
+    // Opcional: Recargar cada 30 minutos
+    setInterval(loadRotationData, 1800000);
+});
+</script>
 </body>
 </html>

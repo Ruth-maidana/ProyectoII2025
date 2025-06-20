@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Compras</title>
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
+
+	<!-- Main Sidebar Container -->
+	{%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+            <div class="container-fluid">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <h1 class="m-0 text-dark font-weight-bold">
+                                    <i class="fas fa-shopping-cart text-primary mr-2"></i>Reporte de Compras Mensual - Anual
+                                </h1>
+                                <small class="text-muted">Registro detallado de adquisiciones y proveedores</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <ol class="breadcrumb float-md-right">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-file-invoice-dollar"></i> Reportes</a></li>
+                            <li class="breadcrumb-item active text-primary font-weight-bold">Compras</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+                 <!-- Filtro por fechas -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-filter mr-1"></i>
+                        Filtros
+                    </div>
+                    <div class="card-body">
+                        <form method="get" class="row align-items-end">
+
+                            <div class="col-md-2 form-group">
+                                <label>Tipo de Reporte:</label>
+                                <select name="tipo_reporte" class="form-control" onchange="this.form.submit()">
+                                    <option value="mensual" {% if tipo_reporte == 'mensual' %}selected{% endif %}>Mensual</option>
+                                    <option value="anual" {% if tipo_reporte == 'anual' %}selected{% endif %}>Anual</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Año:</label>
+                                <select name="anio" class="form-control" required>
+                                    {% for año in años_disponibles %}
+                                        <option value="{{ año.year }}" {% if anio_seleccionado == año.year %}selected{% endif %}>
+                                            {{ año.year }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            {% if mostrar_filtro_mes %}
+                            <div class="col-md-2 form-group">
+                                <label>Mes:</label>
+                                <select name="mes" class="form-control" required>
+                                    {% for num, mes in meses %}
+                                        <option value="{{ num }}" {% if mes_seleccionado == num %}selected{% endif %}>
+                                            {{ mes }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <div class="col-md-2 form-group">
+                                <!-- Botón para limpiar filtros -->
+                                <a href="{% url 'reporte_compra_men_anual' %}" class="btn btn-secondary ml-2">
+                                    Limpiar
+                                </a>
+                                <button type="submit" class="btn btn-primary mr-2">
+                                    <i class="fas fa-search"></i> Filtrar
+                                </button>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <a href="{% url 'rep_compra_men_anual_pdf' %}"
+                                class="btn btn-danger">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                                </a>
+                            </div>   
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Card para el gráfico de compras -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar mr-1"></i>
+                    </div>
+                    <div class="card-body">
+                        {% if grafico %}
+                        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfico de Compras" class="img-fluid">
+                        {% else %}
+                        <p class="text-center">No hay datos para mostrar el gráfico</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card para el listado de Compras -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Resumen</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total General:</strong> Gs {{ total_general|floatformat:0 }}</p>
+                        <p><strong>Promedio {{ tipo_reporte|title }}:</strong> Gs {{ promedio|floatformat:0 }}</p>
+                    </div>
+                </div>
+
+				<!-- /.row -->
+			</div>
+			<!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
+	<!-- Control Sidebar -->
+
+
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+<!-- Agregar en el <head> o antes del cierre de </body> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</body>
+</html>

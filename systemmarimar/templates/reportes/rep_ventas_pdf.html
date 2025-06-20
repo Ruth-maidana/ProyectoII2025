@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Ventas</h1>
+    
+    <div class="header-info">
+        <div>
+            <strong>Fecha Inicio:</strong> {{ fecha_inicio|default:"-" }}
+        </div>
+        <div>
+            <strong>Fecha Fin:</strong> {{ fecha_fin|default:"-" }}
+        </div>
+        <div>
+            <strong>Generado:</strong> {% now "d/m/Y H:i" %}
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Comprobante</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Condición</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in ventas %}
+            <tr>
+                <td>{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
+                <td>{{ venta.nro_comprobante }}</td>
+                <td>{{ venta.cliente }}</td>
+                <td>{{ venta.vendedor }}</td>
+                <td>{{ venta.get_condicion_venta_display }}</td>
+                <td>{{ venta.total|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay ventas registradas</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="5" class="text-right">Total:</td>
+                <td>{{total_general|floatformat:0}}</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

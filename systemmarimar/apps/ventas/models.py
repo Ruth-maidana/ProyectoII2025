@@ -8,6 +8,48 @@ from apps.compras.utils import validar_stock_venta
 
 # Create your models here.
 
+
+class ConfigTimbradoNumeracion(models.Model):
+    numero_timbrado = models.CharField(max_length=100, null=False, unique=True)
+    fecha_inicio = models.DateField(default=timezone.now)
+    fecha_fin = models.DateField(default=timezone.now)
+    nro_inicial = models.IntegerField(null=False)
+    nro_final = models.IntegerField(null=True)
+    nro_actual = models.IntegerField(null=False, default=0)
+    
+    fecha_insercion = models.DateTimeField(default=timezone.now)
+    establecimiento = models.IntegerField(default=1)        # 001
+    punto_expedicion = models.IntegerField(default=1)
+    
+    
+    def obtener_timbrado(self):
+        return self.numero_timbrado
+    
+    def obtener_numeracion_formateada(self):
+        if self.nro_actual == 0:
+            self.nro_actual = self.nro_inicial
+            return f"{self.establecimiento:03d}-{self.punto_expedicion:03d}-{self.nro_actual:08d}"
+        else:
+            return f"{self.establecimiento:03d}-{self.punto_expedicion:03d}-{self.nro_actual:08d}"
+    
+    '''def obtener_siguiente_numero(self):
+        siguiente = self.nro_actual + 1
+        if self.nro_final and siguiente > self.nro_final:
+            raise ValueError("Se alcanzó el número final del timbrado.")
+        return f"{siguiente:03d}-{1:03d}-{1:03d}"  # Personaliza si los otros bloques cambian'''
+    
+    def incrementar_numeracion(self):
+        if self.nro_final and self.nro_actual + 1 > self.nro_final:
+            raise ValueError("No se puede incrementar, se alcanzó el número final.")
+        self.nro_actual += 1
+        self.save()
+
+
+    
+    def __str__(self):
+        return '{}'.format(self.numero_timbrado,self.fecha_inicio,self.fecha_fin,self.nro_inicial,self.nro_final,self.nro_actual)
+    
+
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100,null=False)
     apellido = models.CharField(max_length=100,null=False)
@@ -57,12 +99,13 @@ class Cliente(models.Model):
 class VentaCabecera(models.Model):
     fecha_venta = models.DateTimeField(default=timezone.now)
     nro_comprobante = models.CharField(max_length=100, null=False,unique=True)
-    TIPO_COMP = (
-        ('boleta','Boleta'),
-        ('factura','Factura'),
-        ( 'Ticket','Ticket')
+    CONDICION_VENTA_CHOICES = (
+        ('contado','Contado'),
+        ('credito','Credito')
     )
-    tipo_comprobante = models.CharField(max_length=100, null=False,choices=TIPO_COMP)
+    condicion_venta = models.CharField(max_length=100, null=False,choices=CONDICION_VENTA_CHOICES)
+    timbrado = models.CharField(max_length=100, null=False)
+    nota_remision = models.CharField(max_length=100, null=True)
     vendedor = models.CharField(max_length=100, null=False)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     total = models.DecimalField(max_digits=10, decimal_places=2)
@@ -80,7 +123,7 @@ class VentaCabecera(models.Model):
     fecha_modificacion = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return '{}'.format(self.fecha_venta,self.nro_comprobante,self.tipo_comprobante,self.vendedor,self.total,self.estado,self.cliente,self.activo,self.forma_pago,self.iva_diez,self.iva_cinco,self.descuento)
+        return '{}'.format(self.fecha_venta,self.nro_comprobante,self.condicion_venta,self.vendedor,self.total,self.estado,self.cliente,self.activo,self.forma_pago,self.iva_diez,self.iva_cinco,self.descuento)
     
 class VentaDetalle(models.Model):
     venta_cab = models.ForeignKey(VentaCabecera, on_delete=models.CASCADE, related_name='detalles')
@@ -97,11 +140,10 @@ class VentaDetalle(models.Model):
     fecha_modificacion = models.DateTimeField(auto_now=True)
     activo = models.BooleanField(default=True)
     
-    def __str__(self):
-        return '{}'.format(self.venta_cab,self.producto,self.cantidad,self.descripcion,self.subtotal)
+    
 
-    def clean(self):
-        validar_stock_venta(self.producto, self.cantidad)
+    '''def clean(self):
+        validar_stock_venta(self.producto, self.cantidad)'''
         # Validar que la cantidad sea mayor a cero
     
     
@@ -113,3 +155,24 @@ class VentaDetalle(models.Model):
         #self.producto.save()
         super(VentaDetalle, self).save(*args, **kwargs)
         
+    def __str__(self):
+        return '{}'.format(self.venta_cab,self.producto,self.cantidad,self.descripcion,self.subtotal)
+        
+
+class Empresa(models.Model):
+    nombre = models.CharField(max_length=100, null=False)
+    ruc = models.CharField(max_length=20, null=False, unique=True)
+    direccion = models.CharField(max_length=200, null=False)
+    descripcion = models.TextField(null=True, blank=True)
+    ramo_actividad = models.CharField(max_length=100, null=False)
+    telefono = models.CharField(max_length=15, null=False)
+    email = models.EmailField(max_length=100, null=False)
+    fecha_insercion = models.DateTimeField(default=timezone.now)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+       return '{}'.format(self.nombre,self.ruc,self.direccion,self.descripcion,self.ramo_actividad,self.telefono,self.email,self.fecha_insercion,self.fecha_modificacion)
+    
+    def clean(self):
+        if Empresa.objects.filter(ruc=self.ruc).exclude(id=self.id).exists():
+            raise ValidationError({'ruc': 'Ya existe una empresa con ese RUC.'})

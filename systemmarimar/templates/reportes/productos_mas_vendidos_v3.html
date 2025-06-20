@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Inventario</title>
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
+
+	<!-- Main Sidebar Container -->
+	{%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+            <div class="container-fluid">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <h1 class="m-0 text-dark font-weight-bold">
+                                    <i class="fas fa-trophy text-warning mr-2"></i>Top 10 Productos Más Vendidos
+                                </h1>
+                                <small class="text-muted">Ranking de productos con mayor demanda</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <ol class="breadcrumb float-md-right">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-chart-pie"></i> Reportes</a></li>
+                            <li class="breadcrumb-item active text-warning font-weight-bold">Top Ventas</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+				<div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row align-items-end">
+                            <div class="col-md-2 form-group">
+                                <select name="categoria" class="form-control mr-2">
+                                    <option value="">Todas las categorías</option>
+                                    {% for cat in todas_categorias %}
+                                    <option value="{{ cat.id }}" 
+                                            {% if categoria_seleccionada == cat.id %}selected{% endif %}>
+                                        {{ cat.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label for="fecha_inicio" class="mr-2">Desde:</label>
+                                <input type="date" name="fecha_inicio" class="form-control" 
+                                    value="{{ request.GET.fecha_inicio }}">
+                            </div>
+                            
+                            <div class="col-md-2 form-group">
+                                <label for="fecha_fin" class="mr-2">Hasta:</label>
+                                <input type="date" name="fecha_fin" class="form-control" 
+                                    value="{{ request.GET.fecha_fin }}">
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <!-- Botón para limpiar filtros -->
+                                <a href="{% url 'mas_vendidos' %}" class="btn btn-secondary ml-2">
+                                    Limpiar
+                                </a>
+
+                                <button type="submit" class="btn btn-primary">Filtrar</button>
+
+                            </div>
+                        </form>
+                        <!-- Botón para abrir el modal (puede ir en cualquier parte de tu template) -->
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalVerGrafico" title="Ver gráfico">
+                            <i class="fas fa-chart-pie"></i> Grafico
+                        </button>
+
+                        <a href="{% url 'exp_graf_prod_mas_vendido_pdf' %}" 
+                        class="btn btn-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tabla de Productos -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Detalle de Producto</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="tabla-producto-mas-vendido">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th>Categoría</th>
+                                        <th>Producto</th>
+                                        <th>Movimiento de Stock</th>
+                                        <th>Ingresos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for producto in productos %}
+                                    <tr>
+                                        <td>{{ producto.producto__nombre }}</td>
+                                        <td>{{ producto.producto__categoria__nombre }}</td>
+                                        <td>{{ producto.total_vendido }}</td>
+                                        <td>{{ producto.total_ingresos|floatformat:2 }} GS</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="font-weight-bold">
+                                    <tr>
+                                        <td colspan="2">Total General</td>
+                                        <td>{{ total_unidades|floatformat:0 }}</td>
+                                        <td>{{ total_ventas|floatformat:0 }} GS</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+				<!-- /.row -->
+                
+                <!-- Modal del gráfico -->
+                <div class="modal fade" id="modalVerGrafico" tabindex="-1" role="dialog" aria-labelledby="modalVerGraficoLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Top 5 Productos Mas Vendidos</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="grafico-productos" style="width: 100%; height: 500px;"></div>  <!-- Tamaño fijo -->
+                            </div>
+                            <div class="modal-footer">
+                                 <small class="text-muted mr-auto">
+                                    {% if fecha_inicio_obj and fecha_fin_obj %}
+                                        Período: {{ fecha_inicio_obj|date:"d/m/Y" }} al {{ fecha_fin_obj|date:"d/m/Y" }}
+                                    {% endif %}
+                                </small>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <i class="fas fa-times"></i> Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			<!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
+	<!-- Control Sidebar -->
+
+
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+<!-- Agregar en el <head> o antes del cierre de </body> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fechaInicio = document.querySelector('[name="fecha_inicio"]').value;
+    const fechaFin = document.querySelector('[name="fecha_fin"]').value;
+    
+    if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+        alert('La fecha de inicio no puede ser mayor a la fecha final');
+        e.preventDefault();
+    }
+});
+</script>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const graph = JSON.parse('{{ graph_json|escapejs }}');
+    Plotly.newPlot('grafico-productos', graph.data, graph.layout, {
+        responsive: true
+    });
+});
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+</body>
+</html>

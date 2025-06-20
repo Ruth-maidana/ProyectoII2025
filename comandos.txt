@@ -5,3 +5,5 @@ python ..\\manage.py migrate compras zero
 python ..\\manage.py test apps.compras.test_unitario
 
 Marimar.2025
+
+luzm marimar.2025

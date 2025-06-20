@@ -35,14 +35,22 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
             <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1>Movimiento de Stock</h1>
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <h1 class="m-0 text-dark font-weight-bold">
+                                    <i class="fas fa-boxes text-success mr-2"></i>Movimientos de Stock
+                                </h1>
+                                <small class="text-muted">Gestión completa de inventario</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Stock</li>
+                    <div class="col-md-4">
+                        <ol class="breadcrumb float-md-right">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-file-alt"></i> Stock</a></li>
+                            <li class="breadcrumb-item active text-success font-weight-bold">Movimiento Stock</li>
                         </ol>
                     </div>
                 </div>
@@ -62,20 +70,7 @@
                                     <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                                         <i class="fas fa-minus"></i>
                                 </div>
-                                <!--div class="row">
-                                    <div class="col-md-3">
-                                        <div class="card text-bg-success">Productos OK: 120</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-bg-warning">Bajo stock: 15</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-bg-danger">Críticos: 8</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-bg-info">Valor inventario: $12,000</div>
-                                    </div>
-                                </div-->
+            
                                 <div class="row mb-4">
                                     <div class="col-md-12">
                                         <form method="GET" class="row g-3">
@@ -193,7 +188,7 @@
                                                         {% if movimiento.ajuste %}({{ movimiento.get_ajuste_display }}){% endif %}
                                                     </span>
                                                 </td>
-                                                <td>{{ movimiento.fecha_movimiento}}</td>
+                                                <td>{{ movimiento.fecha_movimiento|date:"d/m/Y"}}</td>
                                                 <!--td>Acciones</td-->
                                                 
                                             </tr>

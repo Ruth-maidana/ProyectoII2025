@@ -1,0 +1,359 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Inventario</title>
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
+
+	<!-- Main Sidebar Container -->
+	{%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+            <div class="container-fluid">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <h1 class="m-0 text-dark font-weight-bold">
+                                    <i class="fas fa-boxes text-success mr-2"></i>Reporte de Valor de Inventario Historico
+                                </h1>
+                                <small class="text-muted">Valoración Historica</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <ol class="breadcrumb float-md-right">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-file-alt"></i> Reportes</a></li>
+                            <li class="breadcrumb-item active text-success font-weight-bold">Valor Inventario Historico</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+				<div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row align-items-end">
+
+                             <div class="col-md-2 form-group">
+                                <label>Rango de Fechas</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+                                    <input type="date" class="form-control" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+                                </div>
+                            </div>
+                            
+
+                            <div class="col-md-2 form-group">
+                                <label>Año</label>
+                                <input type="number" class="form-control" name="anio" value="{{ filtros.anio }}" min="2000" max="2100">
+                            </div>
+
+
+
+                            <div class="col-md-2 form-group">
+                                <label>Mes</label>
+                                <select class="form-control" name="mes">
+                                    <option value="">Todos</option>
+                                    {% for num,month in meses %}
+                                    <option value="{{ num }}" {% if filtros.mes == num %}selected{% endif %}>{{ month }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2 form-group">
+                                 <label>Día</label>
+                                <input type="number" class="form-control" name="dia" value="{{ filtros.dia }}" min="1" max="31">
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Categoría</label>
+                                <select class="form-control" name="categoria">
+                                    <option value="">Todas</option>
+                                    {% for cat in categorias %}
+                                    <option value="{{ cat.id }}" {% if filtros.categoria_id == cat.id %}selected{% endif %}>{{ cat.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Producto</label>
+                                <select class="form-control" name="producto">
+                                    <option value="">Todos</option>
+                                    {% for prod in productos %}
+                                    <option value="{{ prod.id }}" {% if filtros.producto_id == prod.id %}selected{% endif %}>{{ prod.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Proveedor</label>
+                                <select class="form-control" name="proveedor">
+                                    <option value="">Todos</option>
+                                    {% for prov in proveedores %}
+                                    <option value="{{ prov.id }}" {% if filtros.proveedor_id == prov.id %}selected{% endif %}>{{ prov.razon_social }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Tipo de Movimiento</label>
+                                <select class="form-control" name="tipo_movimiento">
+                                    <option value="">Todos</option>
+                                    <option value="ENTRADA" {% if filtros.tipo_movimiento == 'ENTRADA' %}selected{% endif %}>Entradas</option>
+                                    <option value="SALIDA" {% if filtros.tipo_movimiento == 'SALIDA' %}selected{% endif %}>Salidas</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <label>Tipo de Ajuste</label>
+                                <select class="form-control" name="tipo_ajuste">
+                                    <option value="">Todos</option>
+                                    <option value="DEVOLUCION" {% if filtros.tipo_ajuste == 'DEVOLUCION' %}selected{% endif %}>Devolución</option>
+                                    <option value="PERDIDA" {% if filtros.tipo_ajuste == 'PERDIDA' %}selected{% endif %}>Pérdida</option>
+                                    <option value="DETERIORO" {% if filtros.tipo_ajuste == 'DETERIORO' %}selected{% endif %}>Deterioro</option>
+                                    <option value="EXTRAVIO" {% if filtros.tipo_ajuste == 'EXTRAVIO' %}selected{% endif %}>Extravio</option>
+                                    <option value="RECLAMO" {% if filtros.tipo_ajuste == 'RECLAMO' %}selected{% endif %}>Reclamo</option>
+                                    <option value="REPOSICION" {% if filtros.tipo_ajuste == 'REPOSICION' %}selected{% endif %}>Reposicion</option>
+                                    <option value="OTRO" {% if filtros.tipo_ajuste == 'OTRO' %}selected{% endif %}>Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 form-group">
+                                <!-- Botón para limpiar filtros -->
+                                <a href="{% url 'inventario_historico' %}" class="btn btn-secondary ml-2">
+                                    Limpiar
+                                </a>
+
+                                <button type="submit" class="btn btn-primary">Filtrar</button>
+
+                            </div>
+                        </form>
+                        <a href="{% url 'exp_inventario_historico_pdf' %}?{{ request.GET.urlencode }}" 
+                        class="btn btn-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar"></i> Resumen
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Costo</h5>
+                                        <p class="card-text">Gs. {{ totales.total_costo|default:0|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Venta</h5>
+                                        <p class="card-text">Gs. {{ totales.total_venta|default:0|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-info mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Movimientos</h5>
+                                        <p class="card-text">{{ totales.total_movimientos|default:0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráfico -->
+                        <canvas id="graficoInventario" height="100"></canvas>
+                    </div>
+                </div>
+    
+
+                <!-- Tabla de Detalles -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Detalle de Movimientos</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="tabla-inventario">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Proveedor</th>
+                                        <th>Tipo</th>
+                                        <th>Cantidad</th>
+                                        <th>Valor Costo</th>
+                                        <th>Valor Venta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mov in movimientos %}
+                                    <tr>
+                                        <td>{{ mov.fecha|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ mov.producto.nombre }}</td>
+                                        <td>{{ mov.producto.categoria.nombre }}</td>
+                                        <td>{{ mov.producto.proveedor.razon_social }}</td>
+                                        <td>
+                                            {{ mov.get_movimiento_display }}
+                                            {% if mov.ajuste %} - {{ mov.get_ajuste_display }}{% endif %}
+                                        </td>
+                                        <td>{{ mov.cantidad }}</td>
+                                        <td>Gs. {{ mov.valor_costo|floatformat:2 }}</td>
+                                        <td>Gs. {{ mov.valor_venta|floatformat:2 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No hay movimientos con los filtros seleccionados</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+				<!-- /.row -->
+                
+            </div>
+			<!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
+	<!-- Control Sidebar -->
+
+
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+<!-- Agregar en el <head> o antes del cierre de </body> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- Script para el gráfico -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('graficoInventario').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ datos_grafico.fechas|safe }},
+            datasets: [
+                {
+                    label: 'Valor de Costo',
+                    data: {{ datos_grafico.costos|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Valor de Venta',
+                    data: {{ datos_grafico.ventas|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Gs. ' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += 'Gs. ' + context.raw.toLocaleString();
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<!-- En tu sección de scripts o al final del body -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</body>
+</html>

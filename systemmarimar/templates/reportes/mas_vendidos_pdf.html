@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Reporte de Productos Mas Vendidos</h1>
+    
+    <div class="header-info">
+        <p><strong>Filtros aplicados:</strong></p>
+        <ul>
+            <li>Categoría: {{ filtro_categoria }}</li>
+            <li>Fecha Inicio: {{ fecha_inicio }}</li>
+            <li>Fecha Fin: {{ fecha_fin }}</li>
+            <li>Fecha generación: {% now "d/m/Y H:i" %}</li>
+        </ul>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Producto</th>
+                <th>Movimiento Stock</th>
+                <th class="text-right">Ingresos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in productos %}
+            <tr>
+                <td>{{ p.producto__nombre }}</td>
+                <td>{{ p.producto__categoria__nombre }}</td>
+                <td class="text-right">{{ p.total_vendido }}</td>
+                <td class="text-right">{{ p.total_ingresos|floatformat:0 }} GS</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="2">Total general</td>
+                <td class="text-right">{{ total_unidades|floatformat:0 }}</td>
+                <td class="text-right">{{ total_ventas|floatformat:0 }} GS</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div style="margin-top: 20px; font-size: 9pt; text-align: center;">
+        Generado automáticamente por el sistema - {% now "d/m/Y" %}
+    </div>
+</body>
+</html>

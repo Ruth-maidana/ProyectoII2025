@@ -30,101 +30,259 @@
 
 	<!-- Content Wrapper. Contains page content -->
 	<div class="content-wrapper">
-		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Productos</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<h1 class="m-0 text-dark font-weight-bold">
+								<i class="fas fa-boxes text-teal mr-2"></i>Gestión de Productos
+							</h1>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">DataTables</li>
-						</ol>
+					<div class="col-md-4">
+						<div class="d-flex justify-content-end align-items-center">
+							<a href="{% url 'reg_producto' %}" class="btn btn-teal ml-3">
+								<i class="fas fa-plus-circle mr-2"></i>Nuevo Producto
+							</a>
+							<ol class="breadcrumb float-sm-right ml-3 mb-0">
+								<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home text-gray"></i></a></li>
+								<li class="breadcrumb-item active text-teal font-weight-bold">Productos</li>
+							</ol>
+						</div>
 					</div>
 				</div>
 			</div><!-- /.container-fluid -->
 		</section>
-		{%if Productos%}
+
+		<style>
+			.text-teal {
+				color: #20c997 !important;
+			}
+			.btn-teal {
+				background-color: #20c997;
+				border-color: #20c997;
+				color: white;
+				transition: all 0.3s ease;
+			}
+			.btn-teal:hover {
+				background-color: #17a2b8;
+				border-color: #17a2b8;
+				transform: translateY(-2px);
+			}
+			.text-gray {
+				color: #6c757d !important;
+			}
+		</style>
+
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-12">
-						<div class="card">
-							<div class="card-header">
-								<h3 class="card-title">Lista de Productos</h3>
+						<div class="card card-outline card-teal">
+							<div class="card-header border-0">
+								<h3 class="card-title font-weight-bold">
+									<i class="fas fa-box-open mr-2"></i>Inventario de Productos
+								</h3>
 								<div class="card-tools">
-									<a href="{% url 'reg_producto' %}" class="btn btn-primary">Agregar Producto</a>
+									<div class="input-group input-group-sm" style="width: 200px;">
+										<!--input type="text" id="tableSearch" class="form-control float-right" placeholder="Buscar...">
+										<div class="input-group-append">
+											<button class="btn btn-teal">
+												<i class="fas fa-search"></i>
+											</button>
+										</div-->
+									</div>
 								</div>
 							</div>
-							<!-- /.card-header -->
-							<div class="card-body">
-								<table id="example1" class="table table-bordered table-striped">
-									<thead>
-									<tr>
-										<th>Nombre</th>
-                                        <th>Stock Minimo</th>
-										<th>Precio Compra</th>
-										<th>Precio Venta</th>
-                                        <th>Fecha de Insercion</th>
-										<th>Acciones</th>
-									</tr>
-									</thead>
-									<tbody>
-										{%for producto in Productos%}
+							
+							<div class="card-body pt-0">
+								{% if Productos %}
+								<div class="table-responsive">
+									<table id="productsTable" class="table table-hover table-bordered" style="width:100%">
+										<thead class="bg-teal text-white">
 											<tr>
-												<td>{{producto.nombre}}</td>
-                                                <td>{{producto.cantidad_en_stock}}</td>
-												<td>{{producto.precio_compra}}</td>
-												<td>{{producto.precio_venta}}</td>
-												<td>{{producto.fecha_insercion}}</td>
-												<td>
-													{%if producto.activo%}
-														<a class="btn btn-primary"   href="{% url 'edit_producto' producto.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_producto' producto.id %}')"><i class="fas fa-trash-alt"></i></a> 
-													{%endif%}
-													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerproducto{{ producto.id }}" title="Ver">
-														<i class="fas fa-eye"></i>
-													</a>
-												</td>  
+												<th class="text-center">Producto</th>
+												<th class="text-center">Stock</th>
+												<th class="text-center">P. Compra</th>
+												<th class="text-center">P. Venta</th>
+												<th class="text-center">Registro</th>
+												<th class="text-center" style="width: 120px;">Acciones</th>
 											</tr>
-										{%endfor%}
-									</tbody>
-								</table>
+										</thead>
+										<tbody>
+											{% for producto in Productos %}
+											<tr class="{% if not producto.activo %}table-secondary{% endif %}">
+												<td class="align-middle font-weight-bold">{{ producto.nombre }}</td>
+												<td class="align-middle text-center">
+													<span class="badge {% if producto.cantidad_en_stock < 10 %}badge-danger{% else %}badge-success{% endif %}">
+														{{ producto.cantidad_en_stock }} unidades
+													</span>
+												</td>
+												<td class="align-middle text-right">Gs {{ producto.precio_compra|floatformat:0 }}</td>
+												<td class="align-middle text-right">Gs {{ producto.precio_venta|floatformat:0 }}</td>
+												<td class="align-middle text-center">{{ producto.fecha_insercion|date:"d/m/Y" }}</td>
+												<td class="align-middle text-center">
+													<div class="btn-group btn-group-sm" role="group">
+														<button type="button" class="btn btn-info" data-toggle="modal" data-target="#modalVerproducto{{ producto.id }}" title="Ver detalles">
+															<i class="fas fa-eye"></i>
+														</button>
+														{% if producto.activo %}
+														<a class="btn btn-primary" href="{% url 'edit_producto' producto.id %}" title="Editar">
+															<i class="fas fa-edit"></i>
+														</a>
+														<button type="button" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_producto' producto.id %}')" title="Desactivar">
+															<i class="fas fa-trash-alt"></i>
+														</button>
+														{% else %}
+														<span class="badge badge-secondary">Inactivo</span>
+														{% endif %}
+													</div>
+												</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+								
+								<!-- Modales para ver detalles -->
 								{% for item in productos_forms %}
-                                    <div class="modal fade" id="modalVerproducto{{ item.producto.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerproductoLabel{{ item.producto.id }}" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="modalVerproductoLabel{{ item.producto.id }}">Detalles de producto</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form>
-                                                        {{ item.form.as_p }}
-                                                    </form>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-								{%else%}
-										<h1>No existen productos registrados!</h1>
-								{%endif%}
+								<div class="modal fade" id="modalVerproducto{{ item.producto.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-lg" role="document">
+										<div class="modal-content border-0 shadow">
+											<div class="modal-header bg-teal text-white">
+												<h5 class="modal-title font-weight-bold">
+													<i class="fas fa-box mr-2"></i>{{ item.producto.nombre }}
+												</h5>
+												<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="container-fluid">
+													<div class="row mb-4">
+														<div class="col-md-4 text-center">
+															<div class="product-icon-circle bg-teal-light mb-3">
+																<i class="fas fa-box-open fa-2x text-teal"></i>
+															</div>
+															<h5 class="font-weight-bold text-teal">{{ item.producto.nombre }}</h5>
+															<div class="badge {% if item.producto.cantidad_en_stock < 10 %}badge-danger{% else %}badge-success{% endif %}">
+																{{ item.producto.cantidad_en_stock }} unidades
+															</div>
+														</div>
+														<div class="col-md-8">
+															<div class="row">
+																{% for field in item.form %}
+																<div class="col-md-6 mb-3">
+																	<label class="font-weight-bold text-muted">
+																		{% if field.label == 'Activo' %} 
+																			Estado
+																		{%else%}
+																			{{ field.label }}
+																		{%endif%}
+																	</label>
+																	<div class="form-control-plaintext border-bottom pb-2">
+
+																		{% if field.label == 'Activo' %}
+																			{% if item.producto.activo %}
+																				<span class="badge badge-success p-2">Activo</span>
+																			{% else %}
+																				<span class="badge badge-danger p-2">Inactivo</span>
+																			{% endif %}
+
+																		{% elif field.label == 'Proveedor' %}
+																			<span class="form-control-plaintext">
+																				{% if item.producto.proveedor %}
+																					{{ item.producto.proveedor.razon_social }}
+																				{% else %}
+																					<span class="text-muted">No asignado</span>
+																				{% endif %}
+																			</span>
+
+																		{% elif field.label == 'Categoria' %}
+																			<span class="form-control-plaintext">
+																				{% if item.producto.categoria %}
+																					{{ item.producto.categoria.nombre }}
+																				{% else %}
+																					<span class="text-muted">No asignada</span>
+																				{% endif %}
+																			</span>
+
+																		{% else %}
+																			<input type="text" class="form-control-plaintext" 
+																				value="{% if field.value %}{{ field.value }}{% else %}-{% endif %}" readonly>
+																		{% endif %}
+																	</div>
+																</div>
+																{% endfor %}
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="modal-footer bg-light">
+												<div class="d-flex justify-content-between w-100">
+													<button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+														<i class="fas fa-times mr-1"></i> Cerrar
+													</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								{% endfor %}
+								
+								{% else %}
+								<div class="alert alert-info text-center py-4">
+									<i class="fas fa-boxes fa-3x mb-3 text-teal"></i>
+									<h4 class="font-weight-bold">No hay productos registrados</h4>
+									<p class="mb-3">Comience agregando nuevos productos al sistema</p>
+									<a href="{% url 'reg_producto' %}" class="btn btn-teal">
+										<i class="fas fa-plus-circle mr-2"></i> Agregar Producto
+									</a>
+								</div>
+								{% endif %}
 							</div>
-							<!-- /.card-body -->
+							
+							<div class="card-footer clearfix">
+								<!-- Paginación puede ir aquí -->
+							</div>
 						</div>
-						<!-- /.card -->
 					</div>
-					<!-- /.col -->
 				</div>
+
+				<style>
+					.card-teal {
+						border-top: 3px solid #20c997;
+					}
+					
+					.bg-teal {
+						background-color: #20c997 !important;
+					}
+					
+					.bg-teal-light {
+						background-color: #e8f9f4;
+					}
+					
+					.product-icon-circle {
+						width: 80px;
+						height: 80px;
+						border-radius: 50%;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						margin: 0 auto;
+					}
+					
+					.table-hover tbody tr:hover {
+						background-color: rgba(32, 201, 151, 0.05);
+					}
+					
+					.btn-group-sm > .btn {
+						padding: 0.25rem 0.5rem;
+					}
+				</style>
 				<!-- /.row -->
 			</div>
 			<!-- /.container-fluid -->
@@ -205,10 +363,10 @@
 {% endif %}
 <script>
 	$(function () {
-		$("#example1").DataTable({
+		$("#productsTable").DataTable({
 			"responsive": true, "lengthChange": false, "autoWidth": false,
 			"buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-		}).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+		}).buttons().container().appendTo('#productsTable_wrapper .col-md-6:eq(0)');
 		$('#example2').DataTable({
 			"paging": true,
 			"lengthChange": false,

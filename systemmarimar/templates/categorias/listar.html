@@ -33,94 +33,306 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Categorias</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<h1 class="m-0 text-dark font-weight-bold">
+								<i class="fas fa-tags text-purple mr-2"></i>Gestión de Categorías
+							</h1>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">DataTables</li>
-						</ol>
+					<div class="col-md-4">
+						<div class="d-flex justify-content-end">
+							<a href="{% url 'reg_categoria' %}" class="btn btn-purple ml-2">
+								<i class="fas fa-plus-circle mr-2"></i>Nueva Categoría
+							</a>
+							<ol class="breadcrumb float-md-right ml-3 mb-0">
+								<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i></a></li>
+								<li class="breadcrumb-item active text-purple font-weight-bold">Categorías</li>
+							</ol>
+						</div>
 					</div>
 				</div>
 			</div><!-- /.container-fluid -->
 		</section>
-		{%if Categorias%}
+
+		<style>
+			.btn-purple {
+				background-color: #6f42c1;
+				border-color: #6f42c1;
+				transition: all 0.3s ease;
+			}
+			
+			.btn-purple:hover {
+				background-color: #5a32a3;
+				transform: translateY(-1px);
+			}
+			
+			.text-purple {
+				color: #6f42c1 !important;
+			}
+		</style>
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-12">
-						<div class="card">
-							<div class="card-header">
-								<h3 class="card-title">Lista de Categorias</h3>
-								<div class="card-tools">
-									<a href="{% url 'reg_categoria' %}" class="btn btn-primary">Agregar Categoria</a>
+						<div class="card card-purple card-outline">
+							<div class="card-header bg-white border-bottom-0 py-3">
+								<h3 class="card-title font-weight-bold">
+									<i class="fas fa-list-ol mr-2 text-purple"></i>Registro de Categorías
+								</h3>
+								<div class="card-tools d-flex align-items-center">
+									<div class="input-group input-group-sm mr-3" style="width: 200px;">
+										<input type="text" id="searchInput" class="form-control" placeholder="Buscar categoria...">
+										<div class="input-group-append">
+											<button class="btn btn-outline-secondary" type="button">
+												<i class="fas fa-search"></i>
+											</button>
+										</div>
+									</div>
+									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
+										<i class="fas fa-minus"></i>
+									</button>
 								</div>
+								
 							</div>
-							<!-- /.card-header -->
-							<div class="card-body">
-								<table id="example1" class="table table-bordered table-striped">
-									<thead>
-									<tr>
-										<th>Nombre</th>
-										<th>Descripcion</th>
-										<th>Fecha Insercion</th>
-										<th>Acciones</th>
-									</tr>
-									</thead>
-									<tbody>
-										{%for categoria in Categorias%}
+
+							<style>
+                                .card-header {
+                                    padding: 1rem 1.25rem;
+                                    background-color: #f8fafc !important;
+                                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                                }
+                                
+                                .card-title {
+                                    font-size: 1.2rem;
+                                    font-weight: 600;
+                                    color: #2d3748;
+                                }
+                                
+                                .btn-tool {
+                                    color: #718096;
+                                    border-radius: 50%;
+                                    width: 32px;
+                                    height: 32px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    transition: all 0.2s;
+                                }
+                                
+                                .btn-tool:hover {
+                                    background-color: #edf2f7;
+                                    color: #4a5568;
+                                }
+                                
+                                #searchInput {
+                                    border-radius: 20px 0 0 20px;
+                                    border-right: none;
+                                }
+                                
+                                .input-group-append .btn {
+                                    border-radius: 0 20px 20px 0;
+                                    border-left: none;
+                                }
+                                
+                                @media (max-width: 576px) {
+                                    .input-group {
+                                        width: 150px !important;
+                                    }
+                                }
+                            </style>
+							
+							<div class="card-body pt-0">
+								{% if Categorias %}
+								<div class="table-responsive">
+									<table id="categoriasTable" class="table table-hover table-bordered table-striped">
+										<thead class="bg-purple text-white">
 											<tr>
-												<td>{{categoria.nombre}}</td>
-												<td>{{categoria.descripcion}}</td>
-												<td>{{categoria.fecha_insercion}}</td>
-												<td>
-													{%if categoria.activo%}
-														<a class="btn btn-primary"   href="{% url 'edit_categoria' categoria.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_categoria' categoria.id %}')"><i class="fas fa-trash-alt"></i></a> 
-													{%endif%}
-													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerCategoria{{ categoria.id }}" title="Ver">
-														<i class="fas fa-eye"></i>
-													</a>
-												</td>  
+												<th class="text-center" style="width: 25%;">Nombre</th>
+												<th class="text-center" style="width: 35%;">Descripción</th>
+												<th class="text-center" style="width: 20%;">Fecha de Registro</th>
+												<th class="text-center" style="width: 20%;">Acciones</th>
 											</tr>
-										{%endfor%}
-									</tbody>
-								</table>
+										</thead>
+										<tbody>
+											{% for categoria in Categorias %}
+											<tr class="{% if not categoria.activo %}table-secondary{% endif %}">
+												<td class="align-middle font-weight-bold">{{ categoria.nombre }}</td>
+												<td class="align-middle">
+													{% if categoria.descripcion %}
+														{{ categoria.descripcion|truncatechars:50 }}
+													{% else %}
+														<span class="text-muted">Sin descripción</span>
+													{% endif %}
+												</td>
+												<td class="align-middle text-center">{{ categoria.fecha_insercion|date:"d/m/Y" }}</td>
+												<td class="align-middle text-center">
+													<div class="btn-group btn-group-sm" role="group">
+														<button type="button" class="btn btn-info" data-toggle="modal" data-target="#modalVerCategoria{{ categoria.id }}" title="Ver">
+															<i class="fas fa-eye"></i>
+														</button>
+														{% if categoria.activo %}
+														<a class="btn btn-primary" href="{% url 'edit_categoria' categoria.id %}" title="Editar">
+															<i class="fas fa-edit"></i>
+														</a>
+														<button type="button" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_categoria' categoria.id %}')" title="Eliminar">
+															<i class="fas fa-trash-alt"></i>
+														</button>
+														{% else %}
+														<span class="badge badge-secondary">Inactiva</span>
+														{% endif %}
+													</div>
+												</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+								
+								<!-- Modales para ver detalles -->
+								<!-- Modales para ver detalles -->
 								{% for item in categorias_forms %}
-									<div class="modal fade" id="modalVerCategoria{{ item.categoria.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerCategoriaLabel{{ item.categoria.id }}" aria-hidden="true">
-										<div class="modal-dialog" role="document">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h5 class="modal-title" id="modalVerCategoriaLabel{{ item.categoria.id }}">Detalles de la Categoría</h5>
-													<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-														<span aria-hidden="true">&times;</span>
-													</button>
+								<div class="modal fade" id="modalVerCategoria{{ item.categoria.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-lg" role="document">
+										<div class="modal-content border-0 shadow-lg">
+											<div class="modal-header bg-gradient-purple text-white">
+												<h5 class="modal-title font-weight-bold">
+													<i class="fas fa-tag mr-2"></i>Detalles completos: {{ item.categoria.nombre }}
+												</h5>
+												<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="container-fluid">
+													<div class="row mb-4">
+														<div class="col-md-3 text-center">
+															<div class="icon-circle bg-purple-light mb-3">
+																<i class="fas fa-tag fa-2x text-purple"></i>
+															</div>
+															<h5 class="font-weight-bold text-purple">{{ item.categoria.nombre }}</h5>
+															<p class="text-muted small">Categoría</p>
+														</div>
+														<div class="col-md-9">
+															<div class="form-details">
+																{% for field in item.form %}
+																<div class="form-group row border-bottom pb-2 mb-3">
+																	<label class="col-sm-4 col-form-label font-weight-bold text-right text-muted">
+																		
+																		{% if field.label == 'Activo' %} 
+																			Estado
+																		{%else%}
+																			{{ field.label }}
+																		{%endif%}
+																	</label>
+																	<div class="col-sm-8">
+																		<div class="form-control-plaintext">
+																			{% if field.label == 'Activo' %}
+
+																				{% if item.categoria.activo %}
+																					<span class="badge badge-success p-2">Activo</span>
+																				{% else %}
+																					<span class="badge badge-danger p-2">Inactivo</span>
+																				{% endif %}
+
+																			{% else %}
+																			<input type="text" class="form-control-plaintext" 
+																				value="{% if field.value %}{{ field.value }}{% else %}-{% endif %}" readonly>
+																			{% endif %}
+																		</div>
+																	</div>
+																</div>
+																{% endfor %}
+															</div>
+														</div>
+													</div>
 												</div>
-												<div class="modal-body">
-													<form>
-														{{ item.form.as_p }}
-													</form>
-												</div>
-												<div class="modal-footer">
-													<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+											</div>
+											<div class="modal-footer bg-light">
+												<div class="d-flex justify-content-between w-100">
+													<div>
+														<button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+															<i class="fas fa-times mr-1"></i> Cerrar
+														</button>
+													</div>
 												</div>
 											</div>
 										</div>
 									</div>
-									{% endfor %}
-								{%else%}
-										<h1>No existen categorias registradas!</h1>
-								{%endif%}
+								</div>
+								{% endfor %}
+
+								<style>
+									.bg-gradient-purple {
+										background: linear-gradient(135deg, #6f42c1 0%, #8a63d2 100%);
+									}
+									
+									.bg-purple-light {
+										background-color: #f3e9ff;
+									}
+									
+									.icon-circle {
+										width: 80px;
+										height: 80px;
+										border-radius: 50%;
+										display: flex;
+										align-items: center;
+										justify-content: center;
+										margin: 0 auto;
+									}
+									
+									.form-details .form-group {
+										margin-bottom: 0;
+									}
+									
+									.form-control-plaintext {
+										padding: 0.375rem 0;
+										min-height: calc(1.5em + 0.75rem + 2px);
+									}
+								</style>
+								
+								{% else %}
+								<div class="alert alert-info text-center py-4">
+									<i class="fas fa-info-circle fa-2x mb-3"></i>
+									<h4 class="font-weight-bold">No hay categorías registradas</h4>
+									<p class="mb-3">Comience agregando nuevas categorias al sistema</p>
+									<a href="{% url 'reg_categoria' %}" class="btn btn-teal">
+										<i class="fas fa-plus-circle mr-2"></i> Agregar Categoria
+									</a>
+								</div>
+								{% endif %}
 							</div>
-							<!-- /.card-body -->
+							
+							<div class="card-footer clearfix">
+								<!-- Paginación puede ir aquí -->
+							</div>
 						</div>
-						<!-- /.card -->
 					</div>
-					<!-- /.col -->
 				</div>
+
+				<style>
+					.bg-purple {
+						background-color: #6f42c1 !important;
+					}
+					
+					.card-purple {
+						border-top: 3px solid #6f42c1;
+					}
+					
+					.card-purple.card-outline {
+						border-top-width: 3px;
+					}
+					
+					.table-hover tbody tr:hover {
+						background-color: rgba(111, 66, 193, 0.05);
+					}
+					
+					.btn-group-sm > .btn {
+						padding: 0.25rem 0.5rem;
+					}
+				</style>
 				<!-- /.row -->
 			</div>
 			<!-- /.container-fluid -->
@@ -168,10 +380,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 	$(function () {
-		$("#example1").DataTable({
+		$("#categoriasTables").DataTable({
 			"responsive": true, "lengthChange": false, "autoWidth": false,
 			"buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-		}).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+		}).buttons().container().appendTo('#categoriasTable_wrapper .col-md-6:eq(0)');
 		$('#example2').DataTable({
 			"paging": true,
 			"lengthChange": false,
@@ -202,6 +414,19 @@
 				}
 		});
 }
+</script>
+
+<script>
+    // Función para búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#categoriasTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
 </script>
 
 </body>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Test PDF</h1>
+    <p>Generado el: {{ fecha_generacion }}</p>
+</body>
+</html>
+
+  <tbody>
+            {% for mov in movimientos %}
+            <tr>
+                <td>{{ mov.fecha|date:"d/m/Y H:i" }}</td>
+                <td>{{ mov.producto.nombre }}</td>
+                <td>{{ mov.producto.categoria.nombre }}</td>
+                <td>{{ mov.producto.proveedor.razon_social }}</td>
+                <td>
+                    {{ mov.get_movimiento_display }}
+                    {% if mov.ajuste %} - {{ mov.get_ajuste_display }}{% endif %}
+                </td>
+                <td>{{ mov.cantidad }}</td>
+                <td>Gs. {{ mov.valor_costo|floatformat:2 }}</td>
+                <td>Gs. {{ mov.valor_venta|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+
+<div class="filtros">
+        <table>
+            <tr>
+                <td class="label">Período:</td>
+                <td>
+                    {% if filtros.fecha_inicio and filtros.fecha_fin %}
+                        Desde {{ filtros.fecha_inicio }} hasta {{ filtros.fecha_fin }}
+                    {% elif filtros.anio %}
+                        Año: {{ filtros.anio }}
+                        {% if filtros.mes %} - Mes: {{ filtros.mes }}{% endif %}
+                        {% if filtros.dia %} - Día: {{ filtros.dia }}{% endif %}
+                    {% else %}
+                        Todos los períodos
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Categoría:</td>
+                <td>{{ filtros.categoria }}</td>
+            </tr>
+            <tr>
+                <td class="label">Producto:</td>
+                <td>{{ filtros.producto }}</td>
+            </tr>
+            <tr>
+                <td class="label">Proveedor:</td>
+                <td>{{ filtros.proveedor }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tipo de Movimiento:</td>
+                <td>{{ filtros.tipo_movimiento }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tipo de Ajuste:</td>
+                <td>{{ filtros.tipo_ajuste }}</td>
+            </tr>
+        </table>
+    </div>

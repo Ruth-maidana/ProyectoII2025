@@ -29,14 +29,22 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Configurar Notificacion</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<div class="d-flex flex-column">
+								<h1 class="m-0 text-dark font-weight-bold">
+									<i class="fas fa-bell text-info mr-2"></i>Configuración de Alertas de Stock
+								</h1>
+								<small class="text-muted">Gestione los umbrales de notificación para inventario</small>
+							</div>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">Validation</li>
+					<div class="col-md-4">
+						<ol class="breadcrumb float-md-right">
+							<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-cog"></i> Configuración</a></li>
+							<li class="breadcrumb-item"><a href="{% url 'list_movimientos' %}"><i class="fas fa-boxes"></i> Inventario</a></li>
+							<li class="breadcrumb-item active text-info font-weight-bold">Alertas</li>
 						</ol>
 					</div>
 				</div>
@@ -48,61 +56,100 @@
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
-					<!-- left column -->
 					<div class="col-md-12">
-						<!-- jquery validation -->
-						<div class="card card-primary">
-							<div class="card-header">
-								<h3 class="card-title">Datos</h3>
+						<div class="card card-info shadow">
+							<div class="card-header bg-info text-white">
+								<h3 class="card-title font-weight-bold"><i class="fas fa-sliders-h mr-2"></i>Configurar Parámetros de Notificación</h3>
 							</div>
-							<!-- /.card-header -->
-							<!-- form start -->
-							<form id="quickForm" method="post">
+							
+							<form id="notificationConfigForm" method="post" novalidate>
 								{% csrf_token %}
 								<div class="card-body">
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												<!--label for="exampleInputEmail1">Email address</label>
-												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
-													{{ form_config_notificacion.cantidad_maxima|as_crispy_field}}
+									<!-- Sección 1: Umbrales de Stock -->
+									<div class="mb-4 border-bottom pb-3">
+										<h5 class="text-info mb-3"><i class="fas fa-tachometer-alt mr-2"></i>Umbrales de Inventario</h5>
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													
+													{{ form_config_notificacion.cantidad_maxima|as_crispy_field }}
+													<small class="form-text text-muted">Cantidad mínima para activar alertas</small>
+												</div>
 											</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <!--label for="exampleInputPassword1">Password</label>
-                                                <input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-                                                {{ form_config_notificacion.frecuencia_notificacion|as_crispy_field}}
-                                            </div>
-                                        </div>
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													{{ form_config_notificacion.frecuencia_notificacion|as_crispy_field }}
+													<small class="form-text text-muted">Frecuencia de recordatorios</small>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												<!--label for="exampleInputPassword1">Password</label>
-												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-												{{ form_config_notificacion.descripcion|as_crispy_field}}
+
+									<!-- Sección 2: Mensaje Personalizado -->
+									<div class="mb-4">
+										<h5 class="text-info mb-3"><i class="fas fa-comment-alt mr-2"></i>Mensaje de Notificación</h5>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_config_notificacion.descripcion|as_crispy_field }}
+													<small class="form-text text-muted">Este mensaje se incluirá en las alertas</small>
+												</div>
 											</div>
 										</div>
 									</div>
 								</div>
-								<!-- /.card-body -->
-								<div class="card-footer">
-									<button type="submit" class="btn btn-success">Guardar</button>
+
+								<!-- Pie de Tarjeta - Botones -->
+								<div class="card-footer bg-white border-top py-3">
+									<div class="d-flex justify-content-between">
+										<button type="button" class="btn btn-outline-secondary px-4" onclick="history.back()">
+											<i class="fas fa-times mr-2"></i>Cancelar
+										</button>
+										<button type="submit" class="btn btn-info px-4 text-white">
+											<i class="fas fa-bell mr-2"></i>Guardar Configuración
+										</button>
+									</div>
 								</div>
 							</form>
 						</div>
-						<!-- /.card -->
-						</div>
-					<!--/.col (left) -->
-					<!-- right column -->
-					<div class="col-md-6">
-
 					</div>
-					<!--/.col (right) -->
 				</div>
-				<!-- /.row -->
-			</div><!-- /.container-fluid -->
+
+				<style>
+					.card-info {
+						border-color: #17a2b8;
+					}
+					
+					.card-info .card-header {
+						background-color: #17a2b8;
+					}
+					
+					.btn-info {
+						background-color: #17a2b8;
+						border-color: #17a2b8;
+						transition: all 0.3s ease;
+					}
+					
+					.btn-info:hover {
+						background-color: #138496;
+						transform: translateY(-1px);
+						color: white;
+					}
+					
+					.input-group-text {
+						background-color: #e9ecef;
+						color: #495057;
+					}
+					
+					.shadow {
+						box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+					}
+					
+					.border-bottom {
+						border-bottom: 1px solid #dee2e6 !important;
+					}
+				</style>
+			</div>
 		</section>
 		<!-- /.content -->
 	</div>

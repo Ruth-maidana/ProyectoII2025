@@ -154,8 +154,8 @@ class OrdenCompraDet(models.Model):
     orden_compra_cab = models.ForeignKey(OrdenCompraCab, on_delete=models.CASCADE)
     fecha_insercion = models.DateTimeField(default=timezone.now) 
     
-    def clean(self):
-        validar_stock_compra(self.producto, self.cantidad)
+    '''def clean(self):
+        validar_stock_compra(self.producto, self.cantidad)'''
         
     def save(self, *args, **kwargs):
         # Actualizar cantidad del producto

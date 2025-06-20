@@ -33,98 +33,262 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Proveedores</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<div class="d-flex flex-column">
+								<h1 class="m-0 text-dark font-weight-bold">
+									<i class="fas fa-truck text-indigo mr-2"></i>Gestión de Proveedores
+								</h1>
+								<small class="text-muted">Administre su lista de proveedores</small>
+							</div>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">DataTables</li>
-						</ol>
+					<div class="col-md-4">
+						<div class="d-flex justify-content-end align-items-center">
+							<a href="{% url 'reg_proveedor' %}" class="btn btn-indigo ml-3">
+								<i class="fas fa-plus-circle mr-2"></i>Nuevo Proveedor
+							</a>
+							<ol class="breadcrumb float-sm-right ml-3 mb-0">
+								<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home text-gray"></i></a></li>
+								<li class="breadcrumb-item active text-indigo font-weight-bold">Proveedores</li>
+							</ol>
+						</div>
 					</div>
 				</div>
 			</div><!-- /.container-fluid -->
 		</section>
-		{%if Proveedores%}
+
+		<style>
+			.text-indigo {
+				color: #6610f2 !important;
+			}
+			.btn-indigo {
+				background-color: #6610f2;
+				border-color: #6610f2;
+				color: white;
+				transition: all 0.3s ease;
+			}
+			.btn-indigo:hover {
+				background-color: #5a0dd8;
+				border-color: #5a0dd8;
+				transform: translateY(-2px);
+				box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+			}
+			.text-gray {
+				color: #6c757d !important;
+			}
+			.content-header {
+				padding: 15px 0.5rem;
+			}
+		</style>
+
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-12">
-						<div class="card">
-							<div class="card-header">
-								<h3 class="card-title">Lista de Proveedores</h3>
-								<div class="card-tools">
-									<a href="{% url 'reg_proveedor' %}" class="btn btn-primary">Agregar Proveedor</a>
-								</div>
+						<div class="card card-indigo card-outline">
+							<div class="card-header border-0">
+								<h3 class="card-title font-weight-bold">
+									<i class="fas fa-truck-loading mr-2 text-indigo"></i>Registro de Proveedores
+								</h3>
+								 <div class="card-tools d-flex align-items-center">
+                                    <div class="input-group input-group-sm mr-3" style="width: 200px;">
+										<input type="text" id="searchInput" class="form-control" placeholder="Buscar proveedor...">
+										<div class="input-group-append">
+											<button class="btn btn-indigo" type="button">
+												<i class="fas fa-search"></i>
+											</button>
+										</div>
+									</div>
+									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
+										<i class="fas fa-minus"></i>
+									</button>
+                                </div>
 							</div>
-							<!-- /.card-header -->
-							<div class="card-body">
-								<table id="example1" class="table table-bordered table-striped">
-									<thead>
-									<tr>
-										<th>Nombre</th>
-                                        <th>Nro. Documento</th>
-										<th>Numero Telefono</th>
-                                        <th>Correo</th>
-										<th>Fecha Insercion</th>
-										<th>Acciones</th>
-									</tr>
-									</thead>
-									<tbody>
-										{%for proveedor in Proveedores%}
+							
+							<div class="card-body pt-0">
+								{% if Proveedores %}
+								<div class="table-responsive">
+									<table id="providersTable" class="table table-hover table-bordered" style="width:100%">
+										<thead class="bg-indigo text-white">
 											<tr>
-												<td>{{proveedor.razon_social}}</td>
-                                                <td>{{proveedor.nro_documento}}</td>
-                                                <td>{{proveedor.num_tel}}</td>
-												<td>{{proveedor.correo}}</td>
-												<td>{{proveedor.fecha_insercion}}</td>
-												<td>
-													{%if proveedor.activo%}
-														<a class="btn btn-primary"   href="{% url 'edit_proveedor' proveedor.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_proveedor' proveedor.id %}')"><i class="fas fa-trash-alt"></i></a> 
-													{%endif%}
-													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerProveedor{{ proveedor.id }}" title="Ver">
-														<i class="fas fa-eye"></i>
-													</a>
-												</td>  
+												<th class="text-center" style="width: 25%;">Razón Social</th>
+												<th class="text-center" style="width: 15%;">Documento</th>
+												<th class="text-center" style="width: 15%;">Teléfono</th>
+												<th class="text-center" style="width: 20%;">Correo</th>
+												<th class="text-center" style="width: 15%;">Registro</th>
+												<th class="text-center" style="width: 10%;">Acciones</th>
 											</tr>
-										{%endfor%}
-									</tbody>
-								</table>
+										</thead>
+										<tbody>
+											{% for proveedor in Proveedores %}
+											<tr class="{% if not proveedor.activo %}table-secondary{% endif %}">
+												<td class="align-middle font-weight-bold">{{ proveedor.razon_social }}</td>
+												<td class="align-middle text-center">{{ proveedor.nro_documento }}</td>
+												<td class="align-middle text-center">
+													{% if proveedor.num_tel %}
+														{{ proveedor.num_tel }}
+													{% else %}
+														<span class="text-muted">No especificado</span>
+													{% endif %}
+												</td>
+												<td class="align-middle">
+													{% if proveedor.correo %}
+														<a href="mailto:{{ proveedor.correo }}">{{ proveedor.correo }}</a>
+													{% else %}
+														<span class="text-muted">No especificado</span>
+													{% endif %}
+												</td>
+												<td class="align-middle text-center">{{ proveedor.fecha_insercion|date:"d/m/Y" }}</td>
+												<td class="align-middle text-center">
+													<div class="btn-group btn-group-sm" role="group">
+														<button type="button" class="btn btn-info" data-toggle="modal" data-target="#modalVerProveedor{{ proveedor.id }}" title="Ver detalles">
+															<i class="fas fa-eye"></i>
+														</button>
+														{% if proveedor.activo %}
+														<a class="btn btn-primary" href="{% url 'edit_proveedor' proveedor.id %}" title="Editar">
+															<i class="fas fa-edit"></i>
+														</a>
+														<button type="button" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_proveedor' proveedor.id %}')" title="Desactivar">
+															<i class="fas fa-user-slash"></i>
+														</button>
+														{% else %}
+														<span class="badge badge-secondary">Inactivo</span>
+														{% endif %}
+													</div>
+												</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+								
+								<!-- Modales para ver detalles -->
 								{% for item in proveedores_forms %}
-                                    <div class="modal fade" id="modalVerProveedor{{ item.proveedor.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerProveedorLabel{{ item.proveedor.id }}" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="modalVerProveedorLabel{{ item.proveedor.id }}">Detalles de Proveedor</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form>
-                                                        {{ item.form.as_p }}
-                                                    </form>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-								{%else%}
-										<h1>No existen Proveedores registradas!</h1>
-								{%endif%}
+								<div class="modal fade" id="modalVerProveedor{{ item.proveedor.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-lg" role="document">
+										<div class="modal-content border-0 shadow-lg">
+											<div class="modal-header bg-indigo text-white">
+												<h5 class="modal-title font-weight-bold">
+													<i class="fas fa-truck mr-2"></i>{{ item.proveedor.razon_social }}
+												</h5>
+												<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="container-fluid">
+													<div class="row mb-4">
+														<div class="col-md-4 text-center">
+															<div class="provider-icon-circle bg-indigo-light mb-3">
+																<i class="fas fa-truck fa-2x text-indigo"></i>
+															</div>
+															<h5 class="font-weight-bold text-indigo">{{ item.proveedor.razon_social }}</h5>
+															<div class="badge {% if item.proveedor.activo %}badge-success{% else %}badge-secondary{% endif %}">
+																{% if item.proveedor.activo %}Activo{% else %}Inactivo{% endif %}
+															</div>
+														</div>
+														<div class="col-md-8">
+															<div class="row">
+																{% for field in item.form %}
+																<div class="col-md-6 mb-3">
+																	<label class="font-weight-bold text-muted">
+																		{% if field.label == 'Activo' %} 
+																			Estado
+																		{%else%}
+																			{{ field.label }}
+																		{%endif%}
+																	</label>
+																	<div class="form-control-plaintext border-bottom pb-2">
+																		{% if field.value %}
+																			{% if field.label == 'Correo' %}
+																				<a href="mailto:{{ field.value }}">{{ field.value }}</a>
+																			{% elif field.label == 'Teléfono' %}
+																				<a href="tel:{{ field.value }}">{{ field.value }}</a>
+																			{% elif field.label == 'Activo' %}
+																				{% if item.proveedor.activo %}
+																					<span class="badge badge-success p-2">Activo</span>
+																				{% else %}
+																					<span class="badge badge-danger p-2">Inactivo</span>
+																				{% endif %}
+																			{% else %}
+																				{{ field.value }}
+																			{% endif %}
+																		{% else %}
+																			<span class="text-muted">No especificado</span>
+																		{% endif %}
+																	</div>
+																</div>
+																{% endfor %}
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="modal-footer bg-light">
+												<div class="d-flex justify-content-between w-100">
+													<button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+														<i class="fas fa-times mr-1"></i> Cerrar
+													</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								{% endfor %}
+								
+								{% else %}
+								<div class="alert alert-info text-center py-4">
+									<i class="fas fa-truck fa-3x mb-3 text-indigo"></i>
+									<h4 class="font-weight-bold">No hay proveedores registrados</h4>
+									<p class="mb-3">Comience agregando nuevos proveedores al sistema</p>
+									<a href="{% url 'reg_proveedor' %}" class="btn btn-indigo">
+										<i class="fas fa-plus-circle mr-2"></i> Agregar Proveedor
+									</a>
+								</div>
+								{% endif %}
 							</div>
-							<!-- /.card-body -->
+							
+							<div class="card-footer clearfix">
+								<!-- Paginación puede ir aquí -->
+							</div>
 						</div>
-						<!-- /.card -->
 					</div>
-					<!-- /.col -->
 				</div>
+
+				<style>
+					.card-indigo {
+						border-top: 3px solid #6610f2;
+					}
+					
+					.bg-indigo {
+						background-color: #6610f2 !important;
+					}
+					
+					.bg-indigo-light {
+						background-color: #f0e6ff;
+					}
+					
+					.provider-icon-circle {
+						width: 80px;
+						height: 80px;
+						border-radius: 50%;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						margin: 0 auto;
+					}
+					
+					.table-hover tbody tr:hover {
+						background-color: rgba(102, 16, 242, 0.05);
+					}
+					
+					.btn-group-sm > .btn {
+						padding: 0.25rem 0.5rem;
+					}
+				</style>
 				<!-- /.row -->
 			</div>
 			<!-- /.container-fluid -->
@@ -241,5 +405,18 @@
 }
 </script>
 
+
+<script>
+    // Función para búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#providersTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,18 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración del gráfico Plotly
+    const nombres = {{ nombres|safe }};
+    const cantidades = {{ cantidades|safe }};
+    
+    Plotly.newPlot('grafico-productos', [{
+        x: nombres,
+        y: cantidades,
+        type: 'bar',
+        marker: { color: '#4e73df' }
+    }], {
+        title: 'Productos Más Vendidos',
+        xaxis: { title: 'Producto' },
+        yaxis: { title: 'Cantidad Vendida' }
+    });
+});
+</script>

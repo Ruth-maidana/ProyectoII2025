@@ -33,130 +33,173 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
             <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1>Compras</h1>
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <h1 class="m-0 text-dark font-weight-bold">
+                                <i class="fas fa-cart-plus mr-2"></i>Gestión de Compras
+                            </h1>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Compras</li>
-                        </ol>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'reg_compra' %}" class="btn btn-success shadow-sm mr-3">
+								<i class="fas fa-plus-circle mr-2"></i>Nueva Compra
+							</a>
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+								<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i></a></li>
+								<li class="breadcrumb-item active text-success font-weight-bold">Compras</li>
+							</ol>
+                        </div>
                     </div>
                 </div>
             </div><!-- /.container-fluid -->
         </section>
 
-        {% if Compras %}
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Lista de Compras</h3>
-                                <div class="card-tools">
-                                    <a href="{% url 'reg_compra' %}" class="btn btn-primary">Agregar Compra</a>
-                                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                                        <i class="fas fa-minus"></i>
+                        <div class="card card-success card-outline">
+                            <div class="card-header bg-white border-bottom-0 py-3">
+                                <h3 class="card-title font-weight-bold">
+                                    <i class="fas fa-list-ol mr-2"></i>Registro de Compras
+                                </h3>
+                                <div class="card-tools d-flex align-items-center">
+                                    <div class="input-group input-group-sm mr-3" style="width: 200px;">
+										<input type="text" id="searchInput" class="form-control" placeholder="Buscar compra...">
+										<div class="input-group-append">
+											<button class="btn btn-outline-secondary" type="button">
+												<i class="fas fa-search"></i>
+											</button>
+										</div>
+									</div>
+									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
+										<i class="fas fa-minus"></i>
+									</button>
                                 </div>
                             </div>
                             <!-- /.card-header -->
-                            <div class="card-body">
-                                <table id="example1" class="table table-bordered table-striped">
-                                    <thead>
-                                    <tr>
-                                        <th>Nro. Comprobante</th>
-                                        <th>Fecha Compra</th>
-                                        <th>Proveedor</th>
-                                        <th>Total</th>
-                                        <th>Acciones</th>
-                                    </tr>
+                            <div class="card-body pt-0">
+                                {% if Compras %}
+                                <table id="tblCompras" class="table table-bordered table-hover table-striped w-100">
+                                    <thead class="bg-success">
+                                        <tr>
+                                            <th class="text-center" width="15%">Comprobante</th>
+                                            <th class="text-center" width="12%">Fecha</th>
+                                            <th class="text-center">Proveedor</th>
+                                            <th class="text-center" width="12%">Total</th>
+                                            <th width="15%" class="text-center">Acciones</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
                                         {% for compra in Compras %}
-                                            <tr>
-                                                <td>{{ compra.nro_comprobante }}</td>
-                                                <td>{{ compra.fecha_compra }}</td>
-                                                <td>{{ compra.proveedor.razon_social }}</td>
-                                                <td>{{ compra.total }}</td>
-                                                <td>
-													
-                                                    <a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerCompra{{ compra.id }}" title="Ver">
+                                        <tr>
+                                            <td class="text-center font-weight-bold">{{ compra.nro_comprobante }}</td>
+                                            <td class="text-center">{{ compra.fecha_compra|date:"d/m/Y" }}</td>
+                                            <td>{{ compra.proveedor.razon_social }}</td>
+                                            <td class="text-right">Gs. {{ compra.total|floatformat:0 }}</td>
+                                            <td class="text-center py-1">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerCompra{{ compra.id }}" title="Ver Detalles">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-													{%if compra.activo%}
+                                                    {% if compra.activo %}
                                                     <a class="btn btn-primary" href="{% url 'edit_compra' compra.id %}" title="Editar">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_compra' compra.id %}')">
+                                                    <button class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_compra' compra.id %}')" title="Eliminar">
                                                         <i class="fas fa-trash-alt"></i>
-                                                    </a>
-													{%endif%}
-                                                </td>
-                                            </tr>
-                                            <!-- Modal para mostrar el detalle de la compra --> 
+                                                    </button>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">Eliminada</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
                                         {% endfor %}				
                                     </tbody>
                                 </table>
-								{% for compra in Compras %}
-								<div class="modal fade" id="modalVerCompra{{ compra.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerCompraLabel{{ compra.id }}" aria-hidden="true">
-									<div class="modal-dialog modal-lg" role="document">
-										<div class="modal-content">
-											<div class="modal-header">
-												<h5 class="modal-title" id="modalVerCompraLabel{{ compra.id }}">Detalle de la Compra</h5>
-												<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-													<span aria-hidden="true">&times;</span>
-												</button>
-											</div>
-											<div class="modal-body">
-												<p><strong>Nro. Comprobante:</strong> {{ compra.nro_comprobante }}</p>
-												<p><strong>Fecha de Compra:</strong> {{ compra.fecha_compra }}</p>
-												<p><strong>Proveedor:</strong> {{ compra.proveedor.razon_social }}</p>
-												<p><strong>Forma de Pago:</strong> {{ compra.forma_pago }}</p>
-                                                <p><strong>Descuento:</strong> {{ compra.descuento }}</p>
-												<p><strong>Total:</strong> {{ compra.total }}</p>
-												<hr>
-												<h5>Productos:</h5>
-												<table class="table table-bordered">
-													<thead>
-														<tr>
-															<th>Producto</th>
-															<th>Descripción</th>
-															<th>Cantidad</th>
-															<th>Unidad de Medida</th>
-															<th>Precio Unitario</th>
-															<th>Total</th>
-														</tr>
-													</thead>
-													<tbody>
-														{% for detalle in compra.ordencompradet_set.all %}
-															<tr>
-																<td>{{ detalle.producto.nombre }}</td>
-																<td>{{ detalle.descripcion }}</td>
-																<td>{{ detalle.cantidad }}</td>
-																<td>{{ detalle.unidad_medida }}</td>
-																<td>{{ detalle.precio_compra }}</td>
-																<td>{{ detalle.total_producto }}</td>
-															</tr>
-														{% endfor %}
-													</tbody>
-												</table>
-											</div>
-											<div class="modal-footer">
-												<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-											</div>
-										</div>
-									</div>
-								</div>
-								{% endfor %}
+                                
+                                <!-- Modales para mostrar el detalle de cada compra -->
+                                {% for compra in Compras %}
+                                <div class="modal fade" id="modalVerCompra{{ compra.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerCompraLabel{{ compra.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-success text-white">
+                                                <h5 class="modal-title" id="modalVerCompraLabel{{ compra.id }}">
+                                                    <i class="fas fa-file-invoice mr-2"></i>Detalle de Compra #{{ compra.nro_comprobante }}
+                                                </h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row mb-4">
+                                                    <div class="col-md-6">
+                                                        <p><strong><i class="fas fa-calendar-alt mr-2"></i>Fecha:</strong> {{ compra.fecha_compra|date:"d/m/Y" }}</p>
+                                                        <p><strong><i class="fas fa-truck mr-2"></i>Proveedor:</strong> {{ compra.proveedor.razon_social }}</p>
+                                                        <p><strong><i class="fas fa-file-alt mr-2"></i>Comprobante:</strong> {{ compra.nro_comprobante }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong><i class="fas fa-money-bill-wave mr-2"></i>Forma de Pago:</strong> {{ compra.forma_pago }}</p>
+                                                        <p><strong><i class="fas fa-percentage mr-2"></i>Descuento:</strong> {{ compra.descuento|default:"0" }}%</p>
+                                                        <p><strong><i class="fas fa-coins mr-2"></i>Total:</strong> Gs.{{ compra.total|floatformat:0 }}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <hr>
+                                                
+                                                <h5 class="mb-3"><i class="fas fa-boxes mr-2"></i>Productos Adquiridos</h5>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover">
+                                                        <thead class="bg-light">
+                                                            <tr>
+                                                                <th width="25%">PRODUCTO</th>
+                                                                <th width="30%">DESCRIPCION</th>
+                                                                <th width="8%" class="text-center">CANTIDAD</th>
+                                                                <th width="12%" class="text-center">UNIDAD</th>
+                                                                <th width="12%" class="text-right">PRECIO UNIT.</th>
+                                                                <th width="13%" class="text-right">SUBTOTAL</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for detalle in compra.ordencompradet_set.all %}
+                                                            <tr>
+                                                                <td>{{ detalle.producto.nombre }}</td>
+                                                                <td>{{ detalle.descripcion }}</td>
+                                                                <td class="text-center">{{ detalle.cantidad }}</td>
+                                                                <td class="text-center">{{ detalle.unidad_medida }}</td>
+                                                                <td class="text-right">Gs.{{ detalle.precio_compra|floatformat:0 }}</td>
+                                                                <td class="text-right">Gs.{{ detalle.total_producto|floatformat:0 }}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    <i class="fas fa-times mr-1"></i> Cerrar
+                                                </button>
+                                                <button type="button" class="btn btn-primary" onclick="window.print()">
+                                                    <i class="fas fa-print mr-1"></i> Imprimir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
                             <!-- /.card-body -->
+                            <div class="card-footer clearfix">
+                                <div class="float-right">
+                                    <span class="text-muted">Mostrando {{ Compras|length }} registros</span>
+                                </div>
+                            </div>
                         </div>
-                        <!-- /.card -->
                     </div>
-                    <!-- /.col -->
                 </div>
                 <!-- /.row -->
             </div>
@@ -226,6 +269,19 @@
             "responsive": true, "lengthChange": false, "autoWidth": false,
             "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
         }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+</script>
+
+<script>
+    // Función para búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#tblCompras tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
     });
 </script>
 </body>

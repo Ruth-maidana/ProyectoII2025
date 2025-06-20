@@ -29,14 +29,25 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Registrar Categoria</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<a type="button" class="btn btn-outline-secondary mr-3" href="{% url 'list_categorias' %}">
+								<i class="fas fa-arrow-left mr-2"></i>Volver
+							</a>
+							<div class="d-flex flex-column">
+								<h1 class="m-0 text-dark font-weight-bold">
+									<i class="fas fa-tags text-purple mr-2"></i>Registro de Categoría
+								</h1>
+								<small class="text-muted">Complete los datos para crear una nueva categoría</small>
+							</div>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">Validation</li>
+					<div class="col-md-4">
+						<ol class="breadcrumb float-md-right">
+							<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+							<li class="breadcrumb-item"><a href="{% url 'list_categorias' %}"><i class="fas fa-list"></i> Categorías</a></li>
+							<li class="breadcrumb-item active text-purple font-weight-bold">Nueva</li>
 						</ol>
 					</div>
 				</div>
@@ -48,51 +59,87 @@
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
-					<!-- left column -->
 					<div class="col-md-12">
-						<!-- jquery validation -->
-						<div class="card card-primary">
-							<div class="card-header">
-								<h3 class="card-title">Datos</h3>
+						<div class="card card-purple shadow-lg">
+							<div class="card-header bg-purple text-white">
+								<h3 class="card-title font-weight-bold"><i class="fas fa-tag mr-2"></i>Datos de la Categoría</h3>
 							</div>
-							<!-- /.card-header -->
-							<!-- form start -->
-							<form id="quickForm" method="post">
+							
+							<form id="categoryForm" method="post" novalidate>
 								{% csrf_token %}
 								<div class="card-body">
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												{{ form_categoria.nombre|as_crispy_field}}
+									<!-- Sección 1: Información Básica -->
+									<div class="mb-4">
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													<div class="input-group">
+														{{ form_categoria.nombre|as_crispy_field }}
+													</div>
+													<small class="form-text text-muted">Nombre único para identificar la categoría</small>
+												</div>
 											</div>
 										</div>
 									</div>
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												<!--label for="exampleInputPassword1">Password</label>
-												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-												{{ form_categoria.descripcion|as_crispy_field}}
+
+									<!-- Sección 2: Descripción -->
+									<div class="mb-4">
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_categoria.descripcion|as_crispy_field }}
+													<small class="form-text text-muted">Descripción detallada (opcional)</small>
+												</div>
 											</div>
 										</div>
 									</div>
 								</div>
-								<!-- /.card-body -->
-								<div class="card-footer">
-									<button type="submit" class="btn btn-success">Guardar</button>
+
+								<!-- Pie de Tarjeta - Botones -->
+								<div class="card-footer bg-white border-top py-3">
+									<div class="d-flex justify-content-between">
+										<a type="button" class="btn btn-outline-secondary px-4" href="{% url 'list_categorias' %}">
+											<i class="fas fa-times mr-2"></i>Cancelar
+										</a>
+										<button type="submit" class="btn btn-purple px-4 text-white">
+											<i class="fas fa-save mr-2"></i>Guardar Categoría
+										</button>
+									</div>
 								</div>
 							</form>
 						</div>
-						<!-- /.card -->
-						</div>
-					<!--/.col (left) -->
-					<!-- right column -->
-					<div class="col-md-6">
-
 					</div>
-					<!--/.col (right) -->
 				</div>
-				<!-- /.row -->
+
+				<style>
+					.card-purple {
+						border-color: #6f42c1;
+					}
+					
+					.card-purple .card-header {
+						background-color: #6f42c1;
+					}
+					
+					.btn-purple {
+						background-color: #6f42c1;
+						border-color: #6f42c1;
+						transition: all 0.3s ease;
+					}
+					
+					.btn-purple:hover {
+						background-color: #5a32a3;
+						transform: translateY(-1px);
+					}
+					
+					.shadow-lg {
+						box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+					}
+					
+					.form-group {
+						margin-bottom: 1.5rem;
+					}
+				</style>
+
 			</div><!-- /.container-fluid -->
 		</section>
 		<!-- /.content -->

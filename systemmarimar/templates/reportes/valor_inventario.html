@@ -1,0 +1,429 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Inventario</title>
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
+
+	<!-- Main Sidebar Container -->
+	{%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+            <div class="container-fluid">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <h1 class="m-0 text-dark font-weight-bold">
+                                    <i class="fas fa-boxes text-success mr-2"></i>Reporte de Valor de Inventario
+                                </h1>
+                                <small class="text-muted">Valoración actualizada al {% now "d/m/Y H:i" %}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <ol class="breadcrumb float-md-right">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-file-alt"></i> Reportes</a></li>
+                            <li class="breadcrumb-item active text-success font-weight-bold">Valor Inventario</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+				<div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row align-items-end">
+                            <div class="col-md-2 form-group">
+                                <select name="categoria" class="form-control mr-2">
+                                    <option value="">Todas las categorías</option>
+                                    {% for cat in todas_categorias %}
+                                    <option value="{{ cat.id }}" 
+                                            {% if categoria_seleccionada == cat.id %}selected{% endif %}>
+                                        {{ cat.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2 form-group">
+                                <input type="text" name="producto" class="form-control mr-2" 
+                                placeholder="Buscar producto..." value="{{ request.GET.producto }}">
+                            </div>
+
+                            <!--div class="col-md-2 form-group">
+                                <label for="fecha_inicio" class="mr-2">Desde:</label>
+                                <input type="date" name="fecha_inicio" class="form-control" 
+                                    value="{{ request.GET.fecha_inicio }}">
+                            </div>
+                            
+                            <div class="col-md-2 form-group">
+                                <label for="fecha_fin" class="mr-2">Hasta:</label>
+                                <input type="date" name="fecha_fin" class="form-control" 
+                                    value="{{ request.GET.fecha_fin }}">
+                            </div-->
+
+                            <div class="col-md-2 form-group">
+                                <!-- Botón para limpiar filtros -->
+                                <a href="{% url 'valor_inventario' %}" class="btn btn-secondary ml-2">
+                                    Limpiar
+                                </a>
+
+                                <button type="submit" class="btn btn-primary">Filtrar</button>
+
+                            </div>
+                        </form>
+                        <!-- Botón para abrir el modal (puede ir en cualquier parte de tu template) -->
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalVerGrafico" title="Ver gráfico">
+                            <i class="fas fa-chart-pie"></i>Grafico
+                        </button>
+
+                        <a href="{% url 'exportar_inventario_pdf' %}?{{ request.GET.urlencode }}" 
+                        class="btn btn-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+               
+
+                <!-- Resumen -->
+                <div class="alert alert-info">
+                    <strong>Valor total del inventario:</strong> 
+                    {{ total_general|floatformat:0 }} GS (Costo) | 
+                    {{ total_venta|floatformat:0 }} GS (Venta)
+                </div>
+
+                <!-- Tabla de Productos -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Detalle de Inventario</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="tabla-inventario">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th>Categoría</th>
+                                        <th>Producto</th>
+                                        <th>Stock Actual</th>
+                                        <th>Precio Costo</th>
+                                        <th>Precio Venta</th>
+                                        <th>Valor Costo Total</th>
+                                        <th>Valor Venta Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in productos %}
+                                    <tr>
+                                        <td>{{ p.categoria.nombre|default:"-" }}</td>
+                                        <td>{{ p.nombre }}</td>
+                                        <td>{{ p.cantidad_en_stock }}</td>
+                                        <td>{{ p.precio_compra|floatformat:0 }} GS</td>
+                                        <td>{{ p.precio_venta|floatformat:0 }} GS</td>
+                                        <td>{{ p.valor_costo|floatformat:0 }} GS</td>
+                                        <td>{{ p.valor_venta|floatformat:0 }} GS</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="font-weight-bold">
+                                    <tr>
+                                        <td colspan="5">Total General</td>
+                                        <td>{{ total_general|floatformat:0 }} GS</td>
+                                        <td>{{ total_venta|floatformat:0 }} GS</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+				<!-- /.row -->
+                
+                <!-- Modal del gráfico -->
+                <div class="modal fade" id="modalVerGrafico" tabindex="-1" role="dialog" aria-labelledby="modalVerGraficoLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Distribución del Inventario por Categoría</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-lg-8">
+                                        <div class="chart-container" style="position: relative; height: 300px;">
+                                            <canvas id="inventoryChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>Categoría</th>
+                                                        <th class="text-right">Valor Costo Total</th>
+                                                        <th class="text-right">Valor Venta Total</th>
+                                                        <th class="text-right">%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in datos_grafico %}
+                                                    <tr>
+                                                        <td>{{ item.nombre }}</td>
+                                                        <td class="text-right">{{ item.valor_costo|floatformat:0}}</td>
+                                                        <td class="text-right">{{ item.valor_venta|floatformat:0}}</td>
+                                                        <td class="text-right">{{ item.porcentaje }}%</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr class="table-info">
+                                                        <td><strong>Total</strong></td>
+                                                        <td class="text-right"><strong>{{ total_costo_grafico|floatformat:0 }}</strong></td>
+                                                        <td class="text-right"><strong>{{ total_venta_grafico|floatformat:0 }}</strong></td>
+                                                        <td class="text-right"><strong>100%</strong></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <i class="fas fa-times"></i> Cerrar
+                                </button>
+                                <a href="{% url 'exportar_grafico_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-primary">
+                                    <i class="fas fa-file-pdf"></i> Exportar a PDF
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			<!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
+	<!-- Control Sidebar -->
+
+
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+<!-- Agregar en el <head> o antes del cierre de </body> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fechaInicio = document.querySelector('[name="fecha_inicio"]').value;
+    const fechaFin = document.querySelector('[name="fecha_fin"]').value;
+    
+    if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+        alert('La fecha de inicio no puede ser mayor a la fecha final');
+        e.preventDefault();
+    }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- JavaScript para el gráfico -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Convertir datos de Django a JSON seguro para JavaScript
+    const datosGrafico = JSON.parse('{{ datos_grafico_json|escapejs }}');
+    const totalCosto = parseFloat('{{ total_costo_grafico|escapejs }}');
+    
+    $('#modalVerGrafico').on('shown.bs.modal', function () {
+        var ctx = document.getElementById('inventoryChart').getContext('2d');
+        
+        if (window.inventoryChart instanceof Chart) {
+            window.inventoryChart.destroy();
+        }
+        
+        window.inventoryChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: datosGrafico.map(item => item.nombre),
+                datasets: [{
+                    data: datosGrafico.map(item => item.valor_costo),
+                    backgroundColor: datosGrafico.map(item => item.color),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const item = datosGrafico[context.dataIndex];
+                                const costo = item.valor_costo;
+                                const venta = item.valor_venta;
+                                const percentage = (costo / totalCosto) * 100;
+              
+                                return [
+                                    `${item.nombre}:`,
+                                    `Costo: ${costo.toFixed(2)} (${percentage.toFixed(1)}%)`,
+                                    `Venta: ${venta.toFixed(2)}`,
+                                    `Margen: ${(venta - costo).toFixed(2)}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    });
+    
+    $('#modalVerGrafico').on('hidden.bs.modal', function () {
+        if (window.inventoryChart instanceof Chart) {
+            window.inventoryChart.destroy();
+        }
+    });
+});
+</script>
+
+<!-- En tu sección de scripts o al final del body -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // Para usar jsPDF con importación por CDN
+    window.jsPDF = window.jspdf.jsPDF;
+</script>
+<script>
+function exportToPDF() {
+    // Mostrar spinner de carga
+    const loadingSpinner = `<div class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Generando PDF...</span>
+        </div>
+        <p class="mt-2">Generando PDF, por favor espere...</p>
+    </div>`;
+    
+    // Crear un modal temporal para mostrar el spinner
+    const tempModal = `
+    <div class="modal fade" id="pdfLoadingModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    ${loadingSpinner}
+                </div>
+            </div>
+        </div>
+    </div>`;
+    
+    $('body').append(tempModal);
+    $('#pdfLoadingModal').modal('show');
+    
+    // Elemento a exportar (puedes ajustar el selector según lo que quieras exportar)
+    const element = document.getElementById('tabla-inventario');
+    
+    // Configuración del PDF
+    const opt = {
+        margin: 10,
+        filename: 'inventario_${new Date().toLocaleDateString()}.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            allowTaint: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Retraso para asegurar que el modal se muestre antes de generar el PDF
+    setTimeout(() => {
+        html2canvas(element, opt.html2canvas).then(canvas => {
+            const imgData = canvas.toDataURL('image/jpeg');
+            const pdf = new jsPDF(opt.jsPDF);
+            
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(opt.filename);
+            
+            // Cerrar el modal de carga
+            $('#pdfLoadingModal').modal('hide');
+            $('#pdfLoadingModal').remove();
+        }).catch(err => {
+            console.error('Error al generar PDF:', err);
+            $('#pdfLoadingModal').modal('hide');
+            $('#pdfLoadingModal').remove();
+            alert('Error al generar el PDF. Por favor intente nuevamente.');
+        });
+    }, 500);
+}
+</script>
+
+</body>
+</html>

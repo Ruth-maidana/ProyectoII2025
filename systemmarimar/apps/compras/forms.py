@@ -332,6 +332,13 @@ class CompraCabForm(forms.ModelForm):
         
 class CompraDetForm(forms.ModelForm):
     
+    '''def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.producto:
+            self.fields['precio_compra'].initial = self.instance.producto.precio_compra
+            self.fields['unidad_medida'].initial = self.instance.producto.unidad_medida
+            self.fields['descripcion'].initial = self.instance.producto.descripcion'''
+    
     producto = forms.ModelChoiceField(
         queryset=Producto.objects.filter(activo=True),  # Filtrar solo los activos
         widget=forms.Select(attrs={'class': 'form-control'}),
@@ -406,3 +413,310 @@ class FiltroComprasForm(forms.Form):
     fecha_inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     fecha_fin = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     proveedor = forms.ModelChoiceField(queryset=Proveedor.objects.all(), required=False)
+
+
+class FormRegCompraCabecera(forms.ModelForm):
+    
+    iva_diez = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="IVA 10%",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    iva_cinco = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="IVA 5%",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    proveedor = forms.ModelChoiceField(
+        queryset=Proveedor.objects.filter(activo=True),
+        empty_label="Seleccione un proveedor",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Proveedor",
+        to_field_name="id"  # Ensure the correct field is used for the value
+    )
+    
+    descuento = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Descuento",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    total = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Total",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    class Meta:
+        model = OrdenCompraCab
+        
+        
+        fields = [
+                'fecha_compra',
+                'nro_comprobante',
+                'proveedor',
+                'total',
+                'iva_diez',
+                'iva_cinco',
+                'descuento',
+                'forma_pago'
+            ]
+        
+        exclude = ['fecha_insercion','activo']
+        
+        labels = {
+            'fecha_compra':'Fecha de Compra',
+            'nro_comprobante':'Nro. Comprobante',
+            'forma_pago':'Forma de Pago',
+        }
+        
+        widgets = {
+            'fecha_compra': forms.DateTimeInput(attrs={'class': 'form-control','type': 'date'}),
+            'forma_pago': forms.Select(attrs={'class': 'form-control'}),
+            'nro_comprobante': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        
+        
+class FormRegCompraDetalle(forms.Form):
+                                    
+    producto_id = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'class': 'form-control'}),
+        label="Producto ID"
+    )
+    
+    descripcion = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Descripción"
+    )
+    
+    
+    cantidad = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'step': '1'
+        }),
+        label="Cantidad",
+        min_value=1,
+        initial=1
+    )
+    
+    unidad_medida = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control ', 'readonly': 'readonly'}),
+        label="Unidad de Medida"
+    )
+    
+    precio_compra = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'readonly': 'readonly',
+            'step': '0.01'
+        }),
+        label="Precio Unitario",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+
+    subtotal = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'readonly': 'readonly',
+            'step': '0.01'
+        }),
+        label="Subtotal",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    def clean(self):
+        
+        cleaned_data = super().clean()
+        cantidad = cleaned_data.get('cantidad')
+        producto_id = cleaned_data.get('producto_id')
+        
+        if cantidad is None or cantidad <= 0:
+            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
+            return cleaned_data  # Retornar aquí para evitar continuar con la validación
+        
+        # Validar producto
+        if not producto_id:
+            self.add_error('producto_id', "Debe seleccionar un producto.")
+            return cleaned_data
+            
+        try:
+            producto = Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            self.add_error('producto_id', "Producto no encontrado.")
+            return cleaned_data
+        
+        if producto.cantidad_en_stock < cantidad:
+            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
+            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
+        return cleaned_data
+    
+    
+    
+class FormEditCompraCabecera(forms.ModelForm):
+    
+    iva_diez = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="IVA 10%",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    iva_cinco = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="IVA 5%",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    proveedor = forms.ModelChoiceField(
+        queryset=Proveedor.objects.filter(activo=True),
+        empty_label="Seleccione un proveedor",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Proveedor",
+        to_field_name="id"  # Ensure the correct field is used for the value
+    )
+    
+    descuento = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Descuento",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    total = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Total",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    class Meta:
+        model = OrdenCompraCab
+        
+        
+        fields = [
+                'fecha_compra',
+                'nro_comprobante',
+                'proveedor',
+                'total',
+                'iva_diez',
+                'iva_cinco',
+                'descuento',
+                'forma_pago'
+            ]
+        
+        exclude = ['fecha_insercion','activo']
+        
+        labels = {
+            'fecha_compra':'Fecha de Compra',
+            'nro_comprobante':'Nro. Comprobante',
+            'forma_pago':'Forma de Pago',
+        }
+        
+        widgets = {
+            'fecha_compra': forms.DateInput(attrs={'class': 'form-control'}),
+            'forma_pago': forms.Select(attrs={'class': 'form-control'}),
+            'nro_comprobante': forms.TextInput(attrs={'class': 'form-control','readonly': 'readonly'}),
+        }
+        
+        
+class FormEditCompraDetalle(forms.Form):
+                                    
+    producto_id = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'class': 'form-control'}),
+        label="Producto ID"
+    )
+    
+    producto_nombre = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Producto"
+    )
+    
+    producto_iva = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="IVA Producto",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    descripcion = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Descripción"
+    )
+    
+    
+    cantidad = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'step': '1'
+        }),
+        label="Cantidad",
+        min_value=1,
+        initial=1
+    )
+    
+    unidad_medida = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control ', 'readonly': 'readonly'}),
+        label="Unidad de Medida"
+    )
+    
+    precio_compra = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'readonly': 'readonly',
+            'step': '0.01'
+        }),
+        label="Precio Unitario",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+
+    subtotal = forms.DecimalField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'readonly': 'readonly',
+            'step': '0.01'
+        }),
+        label="Subtotal",
+        initial=0.0,
+        min_value=0.0
+    )
+    
+    def clean(self):
+        
+        cleaned_data = super().clean()
+        cantidad = cleaned_data.get('cantidad')
+        producto_id = cleaned_data.get('producto_id')
+        
+        if cantidad is None or cantidad <= 0:
+            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
+            return cleaned_data  # Retornar aquí para evitar continuar con la validación
+        
+        # Validar producto
+        if not producto_id:
+            self.add_error('producto_id', "Debe seleccionar un producto.")
+            return cleaned_data
+            
+        try:
+            producto = Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            self.add_error('producto_id', "Producto no encontrado.")
+            return cleaned_data
+        
+        if producto.cantidad_en_stock < cantidad:
+            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
+            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
+        return cleaned_data

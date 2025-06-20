@@ -33,100 +33,302 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Clientes</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<h1 class="m-0 text-dark font-weight-bold">
+								<i class="fas fa-users text-primary mr-2"></i>Gestión de Clientes
+							</h1>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">DataTables</li>
-						</ol>
+					<div class="col-md-4">
+						<div class="d-flex justify-content-end">
+							<a href="{% url 'reg_cliente' %}" class="btn btn-primary ml-2">
+								<i class="fas fa-plus-circle mr-1"></i>Nuevo Cliente
+							</a>
+							<ol class="breadcrumb float-md-right ml-3 mb-0">
+								<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i></a></li>
+								<li class="breadcrumb-item active text-primary font-weight-bold">Clientes</li>
+							</ol>
+						</div>
 					</div>
 				</div>
-			</div><!-- /.container-fluid -->
+			</div>
 		</section>
-		{%if Clientes%}
+		<style>
+            .content-header {
+                padding: 15px 0;
+                border-bottom: 1px solid #eaeaea;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+            }
+            
+            .breadcrumb {
+                background-color: transparent;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+            
+            .breadcrumb-item.active {
+                color: #2c3e50;
+                font-weight: 500;
+            }
+            
+            .btn-outline-secondary {
+                border-color: #dee2e6;
+                color: #495057;
+                transition: all 0.3s ease;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .btn-outline-secondary:hover {
+                background-color: #f8f9fa;
+                border-color: #adb5bd;
+            }
+            
+            .btn-success {
+                background-color: #28a745;
+                border: none;
+                padding: 8px 15px;
+                font-size: 0.875rem;
+                transition: all 0.3s;
+            }
+            
+            .btn-success:hover {
+                background-color: #218838;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                color: #2c3e50;
+            }
+            
+            @media (max-width: 768px) {
+                .content-header {
+                    padding: 10px 0;
+                }
+                
+                h1 {
+                    font-size: 1.5rem;
+                }
+                
+                .breadcrumb {
+                    display: none;
+                }
+            }
+        </style>
+
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-12">
-						<div class="card">
-							<div class="card-header">
-								<h3 class="card-title">Lista de Clientes</h3>
-								<div class="card-tools">
-									<a href="{% url 'reg_cliente' %}" class="btn btn-primary">Agregar Cliente</a>
+						<div class="card card-primary card-outline">
+							<div class="card-header bg-white border-bottom-0 py-3">
+								<h3 class="card-title font-weight-bold">
+									<i class="fas fa-list-ol text-primary mr-2"></i>Registro de Clientes
+								</h3>
+								<div class="card-tools d-flex align-items-center">
+									<div class="input-group input-group-sm mr-3" style="width: 200px;">
+										<input type="text" id="searchInput" class="form-control" placeholder="Buscar cliente...">
+										<div class="input-group-append">
+											<button class="btn btn-outline-secondary" type="button">
+												<i class="fas fa-search"></i>
+											</button>
+										</div>
+									</div>
+									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
+										<i class="fas fa-minus"></i>
+									</button>
 								</div>
-							</div>
+                                
+                            </div>
 							<!-- /.card-header -->
-							<div class="card-body">
-								<table id="example1" class="table table-bordered table-striped">
-									<thead>
-									<tr>
-										<th>Nombre y Apellido</th>
-                                        <th>Nro. Documento</th>
-										<th>Numero Telefono</th>
-                                        <th>Correo</th>
-										<th>Fecha Insercion</th>
-										<th>Acciones</th>
-									</tr>
-									</thead>
-									<tbody>
-										{%for cliente in Clientes%}
+							 <style>
+                                .card-header {
+                                    padding: 1rem 1.25rem;
+                                    background-color: #f8fafc !important;
+                                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                                }
+                                
+                                .card-title {
+                                    font-size: 1.2rem;
+                                    font-weight: 600;
+                                    color: #2d3748;
+                                }
+                                
+                                .btn-tool {
+                                    color: #718096;
+                                    border-radius: 50%;
+                                    width: 32px;
+                                    height: 32px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    transition: all 0.2s;
+                                }
+                                
+                                .btn-tool:hover {
+                                    background-color: #edf2f7;
+                                    color: #4a5568;
+                                }
+                                
+                                #searchInput {
+                                    border-radius: 20px 0 0 20px;
+                                    border-right: none;
+                                }
+                                
+                                .input-group-append .btn {
+                                    border-radius: 0 20px 20px 0;
+                                    border-left: none;
+                                }
+                                
+                                @media (max-width: 576px) {
+                                    .input-group {
+                                        width: 150px !important;
+                                    }
+                                }
+                            </style>
+
+							<div class="card-body p-0">
+								{% if Clientes%}
+								<div class="table-responsive">
+									<table id="clientesTable" class="table table-hover table-bordered table-striped">	
+										<thead class="bg-primary text-white">
 											<tr>
-												<td>{{cliente.nombre}} {{cliente.apellido}}</td>
-                                                <td>{{cliente.nro_documento}}</td>
-                                                <td>{{cliente.num_tel}}</td>
-												<td>{{cliente.correo}}</td>
-												<td>{{cliente.fecha_insercion}}</td>
-												<td>
-													{%if cliente.activo%}
-														<a class="btn btn-primary"   href="{% url 'edit_cliente' cliente.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-														<a href="#" class="btn btn-danger" onclick="confirmarEliminacion(event, '{% url 'inact_cliente' cliente.id %}')"><i class="fas fa-trash-alt"></i></a> 
-													{%endif%}
-													<a href="#" class="btn btn-info" data-toggle="modal" data-target="#modalVerCliente{{ cliente.id }}" title="Ver">
-														<i class="fas fa-eye"></i>
-													</a>
-												</td>  
+												<th class="text-center align-middle">DOCUMENTO</th>
+												<th class="text-center align-middle">CLIENTE</th>
+												<th class="text-center align-middle">TELEFONO</th>
+												<th class="text-center align-middle">CORREO</th>
+												<th class="text-center align-middle">REGISTRO</th>
+												<th class="text-center align-middle" style="width: 140px;">ACCIONES</th>
+											</tr>
+										</thead>
+										<tbody>
+										{%for cliente in Clientes%}
+											<tr class="{% if not cliente.activo %}table-secondary{% endif %}">
+												<td class="text-center font-weight-bold align-middle">{{cliente.nro_documento}}</td>
+                                                <td class="text-center align-middle">{{cliente.nombre}} {{cliente.apellido}}</td>
+                                                <td class="text-center align-middle">{{cliente.num_tel}}</td>
+												<td class="text-center align-middle">{{cliente.correo}}</td>
+												<td class="text-center align-middle">{{cliente.fecha_insercion|date:"d/m/Y"}}</td>
+												<td class="text-center align-middle">
+													<div class="btn-group btn-group-sm" role="group">
+														<button type="button" class="btn btn-info btn-sm px-2" data-toggle="modal" data-target="#modalVerCliente{{ cliente.id }}" title="Ver detalles">
+															<i class="fas fa-eye fa-fw"></i>
+														</button>
+												
+														{%if cliente.activo%}
+														<a class="btn btn-primary"   href="{% url 'edit_cliente' cliente.id %}" title="Editar">
+															<i class="fas fa-edit fa-fw"></i>
+														</a>
+														<button type="button" class="btn btn-danger btn-sm px-2" onclick="confirmarEliminacion(event, '{% url 'inact_cliente' cliente.id %}')" title="Eliminar">
+			   												<i class="fas fa-user-slash fa-fw"></i>
+														</button>
+														{% else %}
+                                                        <span class="badge badge-secondary py-1 px-2">Eliminado</span>						
+														{%endif%} 
+													</div>
+												</td>
 											</tr>
 										{%endfor%}
 									</tbody>
 								</table>
-								{% for item in clientes_forms %}
-                                    <div class="modal fade" id="modalVerCliente{{ item.cliente.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerClienteLabel{{ item.cliente.id }}" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="modalVerClienteLabel{{ item.cliente.id }}">Detalles de Cliente</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form>
-                                                        {{ item.form.as_p }}
-                                                    </form>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-								{%else%}
-										<h1>No existen Clientes registrados!</h1>
-								{%endif%}
 							</div>
-							<!-- /.card-body -->
+
+							{% for item in clientes_forms %}
+							<div class="modal fade" id="modalVerCliente{{ item.cliente.id }}" tabindex="-1" role="dialog" aria-labelledby="modalVerClienteLabel{{ item.cliente.id }}" aria-hidden="true">
+								<div class="modal-dialog modal-lg" role="document">
+									<div class="modal-content">
+										<div class="modal-header bg-primary text-white">
+											<h5 class="modal-title font-weight-bold" id="modalVerClienteLabel{{ item.cliente.id }}">
+												<i class="fas fa-user-circle mr-2"></i>
+												Detalles de Cliente: {{ item.cliente.nombre }} {{ item.cliente.apellido }}
+											</h5>
+											
+											<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">
+											<div class="container-fluid">
+												<div class="row mb-4">
+													<div class="col-md-4 text-center">
+														<div class="mb-3">
+															<i class="fas fa-id-card fa-3x text-primary"></i>
+														</div>
+														<h5 class="font-weight-bold">{{ item.cliente.nro_documento }}</h5>
+														<p class="text-muted">Número de documento</p>
+													</div>
+												
+													<div class="col-md-8">
+														<form>
+															{% for field in item.form %}
+															<div class="form-group row">
+																<label class="col-sm-4 col-form-label font-weight-bold text-right">
+																	
+																	{% if field.label == 'Activo' %} 
+																		Estado
+																	{%else%}
+																		{{ field.label }}
+																	{%endif%}
+																</label>
+																<div class="col-sm-8">
+																	{% if field.label == 'Activo' %}
+																		{% if item.cliente.activo %}
+																		<span class="badge badge-success p-2">Activo</span>
+																		{% else %}
+																		<span class="badge badge-danger p-2">Inactivo</span>
+																		{% endif %}
+																	{% else %}
+																	<input type="text" class="form-control-plaintext" 
+																		value="{% if field.value %}{{ field.value }}{% else %}-{% endif %}" readonly>
+																	{% endif %}
+																</div>
+															</div>
+															{% endfor %}
+														</form>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="modal-footer bg-light">
+											<div class="d-flex justify-content-between w-100">
+												<button type="button" class="btn btn-secondary" data-dismiss="modal">
+													<i class="fas fa-times mr-2"></i> Cerrar
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							{% endfor %}
+
+							{% else %}
+								<div class="alert alert-info text-center py-4">
+									<i class="fas fa-info-circle fa-2x mb-3"></i>
+									<h4 class="font-weight-bold">No hay clientes registrados</h4>
+									<p class="mb-3">Comience agregando nuevas clientes al sistema</p>
+									<a href="{% url 'reg_cliente' %}" class="btn btn-teal">
+										<i class="fas fa-plus-circle mr-1"></i> Agregar Cliente
+									</a>
+								</div>
+							{% endif %}
 						</div>
-						<!-- /.card -->
+						<!-- /.card-body -->
 					</div>
-					<!-- /.col -->
+					<!-- /.card -->
 				</div>
-				<!-- /.row -->
+				<!-- /.col -->
 			</div>
+			<!-- /.row -->
 			<!-- /.container-fluid -->
 		</section>
 		<!-- /.content -->
@@ -239,6 +441,19 @@
 				}
 		});
 }
+</script>
+
+<script>
+    // Función para búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#clientesTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
 </script>
 
 </body>

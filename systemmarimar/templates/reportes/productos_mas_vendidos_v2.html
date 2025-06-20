@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Reportes</title>
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+	<link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
+</head>
+
+<body class="hold-transition sidebar-mini">
+    
+<div class="wrapper">
+
+	<!-- Navbar -->
+	{%include 'navbar/navbar.html'%}
+	<!-- /.navbar -->
+
+	<!-- Main Sidebar Container -->
+	{%include 'navbar/sidebar.html'%}
+	<!-- /.sidebar -->
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+			<div class="container-fluid">
+				<div class="row mb-2">
+					<div class="col-sm-6">
+						
+					</div>
+					<div class="col-sm-6">            
+                        <!-- Botón de Exportación -->
+                        <button id="exportar-pdf" class="btn btn-danger mt-3">
+                            <i class="fas fa-file-pdf"></i> Exportar a PDF
+                        </button>
+					</div>
+				</div>
+			</div><!-- /.container-fluid -->
+		</section>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+                <div class="pagina-pdf">
+                    <h2>Detalle de Productos</h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Cantidad</th>
+                                                <th>Ingresos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for producto in productos %}
+                                            <tr>
+                                                <td>{{ producto.producto__nombre }}</td>
+                                                <td>{{ producto.total_vendido }}</td>
+                                                <td>${{ producto.total_ingresos|default:0 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                            <!-- Tabla (misma estructura que antes) -->
+                        </table>
+                    </div>
+                </div>
+                 <!-- Página 1: Gráfico -->
+                <div class="pagina-pdf">
+                    <h2>Productos Más Vendidos</h2>
+                    <div id="grafico-productos" class="grafico-container"></div>
+                </div>
+				 <!-- Página 2: Tabla -->
+			</div>
+         
+			<!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+         
+	</div>
+	<!-- /.content-wrapper -->
+
+	<!-- FOOTER -->
+	{% include 'footer/footer.html'%}
+	<!-- Control Sidebar -->
+
+
+	<aside class="control-sidebar control-sidebar-dark">
+		<!-- Control sidebar content goes here -->
+	</aside>
+	<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- DataTables  & Plugins -->
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/jszip/jszip.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/pdfmake.min.js' %}"></script>
+<script src="{% static 'plugins/pdfmake/vfs_fonts.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'js/adminlte.min.js' %}"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="{% static 'js/demo.js' %}"></script>
+<!-- Page specific script -->
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+<!-- Agregar en el <head> o antes del cierre de </body> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<!-- html2pdf -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Agrega esto justo antes del cierre de </body> -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración del gráfico Plotly
+    const nombres = {{ nombres|safe }};
+    const cantidades = {{ cantidades|safe }};
+    
+    Plotly.newPlot('grafico-productos', [{
+        x: nombres,
+        y: cantidades,
+        type: 'bar',
+        marker: { color: '#4e73df' }
+    }], {
+        title: 'Productos Más Vendidos',
+        xaxis: { title: 'Producto' },
+        yaxis: { title: 'Cantidad Vendida' }
+    });
+
+    // Configuración mejorada para exportar PDF
+    document.getElementById('exportar-pdf').addEventListener('click', function() {
+        // Mostrar mensaje de espera
+        Swal.fire({
+            title: 'Generando PDF',
+            html: 'Por favor espere...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Seleccionar el contenedor principal
+        const element = document.querySelector('.content');
+        
+        // Opciones de configuración mejoradas
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: 'reporte_productos_mas_vendidos.pdf',
+            image: { 
+                type: 'jpeg', 
+                quality: 0.98 
+            },
+            html2canvas: { 
+                scale: 2,
+                logging: true,
+                useCORS: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: 0
+            },
+            jsPDF: { 
+                unit: 'mm',
+                format: 'a3',
+                orientation: 'portrait',
+                compress: true
+            },
+            pagebreak: {
+                mode: ['avoid-all', 'css'],
+                before: '.pagina-pdf'
+            }
+        };
+
+        // Generar PDF
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
+            // Cerrar el mensaje de espera cuando termine
+            Swal.close();
+        }).save();
+    });
+});
+</script>
+
+</body>
+</html>

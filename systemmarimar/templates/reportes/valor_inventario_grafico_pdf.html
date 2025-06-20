@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: A4; margin: 1cm; }
+        body { font-family: Arial; font-size: 12pt; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .grafico-container { text-align: center; margin: 20px 0; }
+        .grafico-img { max-width: 100%; height: auto; }
+        .tabla-datos { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .tabla-datos th, .tabla-datos td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .tabla-datos th { background-color: #f2f2f2; }
+        .footer { margin-top: 30px; text-align: right; font-size: 10pt; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Reporte Gráfico del Valor Actual del Inventario</h1>
+        <p>Generado el: {{ fecha }}</p>
+    </div>
+    
+    <div class="grafico-container">
+        <img class="grafico-img" src="data:image/png;base64,{{ grafico_img }}" alt="Gráfico de Inventario">
+    </div>
+    
+    <table class="tabla-datos">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Valor Costo (GS)</th>
+                <th>Valor Venta (GS)</th>
+                <th>% Participación</th>
+            </tr>
+        </thead>
+        <tbody>
+           {% for categoria, costo, venta, color, porcentaje in categorias_data %}
+                <tr>
+                    <td>{{ categoria }}</td>
+                    <td>{{ costo|floatformat:0 }}</td>
+                    <td>{{ venta|floatformat:0 }}</td>
+                    <td>{{ porcentaje|floatformat:2 }}%</td>
+                </tr>
+                {% endfor %}
+            <tr style="font-weight: bold; background-color: #e9ecef;">
+                <td>TOTAL</td>
+                <td>{{ total_costo|floatformat:0 }}</td>
+                <td>{{ total_venta|floatformat:0 }}</td>
+                <td>100%</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        Sistema de Gestión de Inventarios - © {% now "Y" %}
+    </div>
+</body>
+</html>

@@ -9,8 +9,8 @@ from apps.ventas.models import VentaCabecera
 
 
 class ConfiguracionStock(models.Model):
-    cantidad_maxima = models.IntegerField()
-    descripcion = models.CharField(max_length=255)
+    cantidad_maxima = models.IntegerField(default=3)
+    descripcion = models.CharField(max_length=255,default='Configuración de stock')
     fecha_configuracion = models.DateTimeField(default=timezone.now)
     frecuencia_notificacion = models.PositiveIntegerField(default=1800)
     
@@ -18,7 +18,11 @@ class ConfiguracionStock(models.Model):
     @classmethod
     def get_config(cls):
         """Devuelve la configuración existente o crea una por defecto."""
-        return cls.objects.first()
+        return cls.objects.first() or cls.objects.create(
+            cantidad_maxima=3,
+            descripcion='Configuración de stock',
+            frecuencia_notificacion=1800
+        )
     
     def __str__(self):
         return '{}'.format(self.cantidad_maxima,self.descripcion,self.fecha_configuracion,self.frecuencia_notificacion)

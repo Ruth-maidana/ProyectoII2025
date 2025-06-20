@@ -37,11 +37,10 @@
 		  <!-- Add icons to the links using the .nav-icon class
 			   with font-awesome or any other icon font library -->
 		  <li class="nav-item">
-			<a href="#" class="nav-link">
+			<a href="{% url 'home' %}" class="nav-link">
 			  <i class="nav-icon fas fa-tachometer-alt"></i>
 			  <p>
 				Dashboard
-				<i class=""></i>
 			  </p>
 			</a>
 		  </li>
@@ -55,13 +54,36 @@
 			</a>
 			<ul class="nav nav-treeview">
 			  <li class="nav-item">
-				<a href="../layout/top-nav.html" class="nav-link">
+				<a href="{% url 'list_users' %}" class="nav-link">
 				  <i class="far fa-circle nav-icon"></i>
 				  <p>Usuario</p>
 				</a>
 			  </li>
+			  <li class="nav-item">
+				<a href="{% url 'list_groups' %}" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Roles</p>
+				</a>
+			  </li>
 			</ul>
 		  </li>
+		  <li class="nav-item">
+			<a href="#" class="nav-link">
+			  <!--i class="nav-icon fas fa-columns"></i-->
+			  <i class="nav-icon fas fa-chart-bar"></i>
+			  <p>
+				Configuracion
+				<i class="fas fa-angle-left right"></i>
+			  </p>
+			</a>
+			<ul class="nav nav-treeview">
+				<li class="nav-item">
+					<a href="{% url 'config_timbrado_num' %}" class="nav-link">
+					<i class="far fa-circle nav-icon"></i>
+					<p>Timbrado y Numeracion</p>
+					</a>
+				</li>
+			</ul>
 		  <li class="nav-header">COMERCIAL</li>
 		  <li class="nav-item">
 			<a href="#" class="nav-link">
@@ -173,27 +195,45 @@
 			</a>
 			<ul class="nav nav-treeview">
 			  <li class="nav-item">
-				<a href="../examples/invoice.html" class="nav-link">
+				<a href="{% url 'valor_inventario' %}" class="nav-link">
 				  <i class="far fa-circle nav-icon"></i>
-				  <p>Reporte de Compras</p>
+				  <p>Inventario Actual</p>
 				</a>
 			  </li>
 			  <li class="nav-item">
-				<a href="../examples/profile.html" class="nav-link">
+				<a href="{% url 'inventario_historico' %}" class="nav-link">
 				  <i class="far fa-circle nav-icon"></i>
-				  <p>Reporte de Ventas</p>
+				  <p>Inventario Historico</p>
 				</a>
 			  </li>
 			  <li class="nav-item">
-				<a href="../examples/e-commerce.html" class="nav-link">
+				<a href="{% url 'reporte_ventas' %}" class="nav-link">
 				  <i class="far fa-circle nav-icon"></i>
-				  <p>Reporte de Movimientos de Stock</p>
+				  <p>Ventas</p>
+				</a>
+			  </li>
+			  <li class="nav-item">
+				<a href="{% url 'reporte_compras' %}" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Compras</p>
 				</a>
 			  </li>
 			   <li class="nav-item">
-				<a href="../examples/e-commerce.html" class="nav-link">
+				<a href="{% url 'mas_vendidos' %}" class="nav-link">
 				  <i class="far fa-circle nav-icon"></i>
-				  <p>Reporte de Stock</p>
+				  <p>Productos Mas Vendidos</p>
+				</a>
+			  </li>
+			  <li class="nav-item">
+				<a href="{% url 'reporte_venta_men_anual' %}" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Mensuales y Anuales de Ventas</p>
+				</a>
+			  </li>
+			   <li class="nav-item">
+				<a href="{% url 'reporte_compra_men_anual' %}" class="nav-link">
+				  <i class="far fa-circle nav-icon"></i>
+				  <p>Mensuales y Anuales de Compras</p>
 				</a>
 			  </li>
 			</ul>

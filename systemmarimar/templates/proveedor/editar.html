@@ -29,112 +29,198 @@
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<div class="container-fluid">
-				<div class="row mb-2">
-					<div class="col-sm-6">
-						<h1>Editar Proveedor</h1>
+				<div class="row align-items-center mb-3">
+					<div class="col-md-8">
+						<div class="d-flex align-items-center">
+							<a type="button" class="btn btn-outline-secondary mr-3" href="{% url 'list_proveedores' %}">
+								<i class="fas fa-arrow-left mr-2"></i>Volver
+							</a>
+							<div class="d-flex flex-column">
+								<h1 class="m-0 text-dark font-weight-bold">
+									<i class="fas fa-truck text-indigo mr-2"></i>Editar Proveedor
+								</h1>
+								<small class="text-muted">Actualice la información del proveedor</small>
+							</div>
+						</div>
 					</div>
-					<div class="col-sm-6">
-						<ol class="breadcrumb float-sm-right">
-							<li class="breadcrumb-item"><a href="#">Home</a></li>
-							<li class="breadcrumb-item active">Validation</li>
+					<div class="col-md-4">
+						<ol class="breadcrumb float-md-right">
+							<li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Inicio</a></li>
+							<li class="breadcrumb-item"><a href="{% url 'list_proveedores' %}"><i class="fas fa-truck-loading"></i> Proveedores</a></li>
+							<li class="breadcrumb-item active text-indigo font-weight-bold">Edicion</li>
 						</ol>
 					</div>
 				</div>
 			</div><!-- /.container-fluid -->
 		</section>
+
+		<style>
+			.text-indigo {
+				color: #6610f2 !important;
+			}
+			.btn-outline-secondary {
+				border: 1px solid #ced4da;
+				transition: all 0.3s ease;
+			}
+			.btn-outline-secondary:hover {
+				background-color: #f8f9fa;
+			}
+			.content-header {
+				padding: 15px 0.5rem;
+				background-color: #f8f9fa;
+				border-bottom: 1px solid #dee2e6;
+			}
+			.breadcrumb {
+				background-color: transparent;
+				padding: 0.25rem 0;
+			}
+		</style>
 		<!-- /.content-header -->
 
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
 				<div class="row">
-					<!-- left column -->
 					<div class="col-md-12">
-						<!-- jquery validation -->
-						<div class="card card-primary">
-							<div class="card-header">
-								<h3 class="card-title">Datos</h3>
+						<div class="card card-indigo shadow-lg">
+							<div class="card-header bg-indigo text-white">
+								<h3 class="card-title font-weight-bold">
+									<i class="fas fa-user-edit mr-2"></i>Editar Proveedor: {{ form_proveedor.instance.razon_social }}
+								</h3>
 							</div>
-							<!-- /.card-header -->
-							<!-- form start -->
-							<form id="quickForm" method="post">
+							
+							<form id="editProviderForm" method="post" novalidate>
 								{% csrf_token %}
 								<div class="card-body">
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												<!--label for="exampleInputEmail1">Email address</label>
-												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
-													{{ form_proveedor.razon_social|as_crispy_field}}
+									<!-- Sección 1: Información Básica -->
+									<div class="mb-4 border-bottom pb-3">
+										<h5 class="text-indigo mb-3"><i class="fas fa-id-card mr-2"></i>Datos Principales</h5>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_proveedor.razon_social|as_crispy_field }}
+													<small class="form-text text-muted">Razón social o nombre legal</small>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													{{ form_proveedor.tipo_documento|as_crispy_field }}
+													<small class="form-text text-muted">Tipo de documento</small>
+												</div>
+											</div>
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													{{ form_proveedor.nro_documento|as_crispy_field }}
+													<small class="form-text text-muted">Número de documento</small>
+												</div>
 											</div>
 										</div>
 									</div>
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												<!--label for="exampleInputPassword1">Password</label>
-												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-												{{ form_proveedor.nro_documento|as_crispy_field}}
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												<!--label for="exampleInputPassword1">Password</label>
-												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-												{{ form_proveedor.tipo_documento|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-md-6">
-											<div class="form-group">
-												<!--label for="exampleInputEmail1">Email address</label>
-												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
-													{{ form_proveedor.num_tel|as_crispy_field}}
-											</div>
-										</div>
 
-										<div class="col-md-6">
-											<div class="form-group">
-												<!--label for="exampleInputPassword1">Password</label>
-												<input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Password"-->
-												{{ form_proveedor.correo|as_crispy_field}}
+									<!-- Sección 2: Información de Contacto -->
+									<div class="mb-4 border-bottom pb-3">
+										<h5 class="text-indigo mb-3"><i class="fas fa-address-book mr-2"></i>Contacto</h5>
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													{{ form_proveedor.num_tel|as_crispy_field }}
+													<small class="form-text text-muted">Teléfono principal</small>
+												</div>
+											</div>
+											<div class="col-md-6">
+												<div class="form-group mb-4">
+													{{ form_proveedor.correo|as_crispy_field }}
+													<small class="form-text text-muted">Correo electrónico</small>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_proveedor.direccion|as_crispy_field }}
+													<small class="form-text text-muted">Dirección completa</small>
+												</div>
 											</div>
 										</div>
 									</div>
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												{{ form_proveedor.direccion|as_crispy_field}}
+
+									<!-- Sección 3: Información Adicional -->
+									<div class="mb-4">
+										<h5 class="text-indigo mb-3"><i class="fas fa-info-circle mr-2"></i>Datos Complementarios</h5>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_proveedor.descripcion|as_crispy_field }}
+													<small class="form-text text-muted">Información adicional relevante</small>
+												</div>
 											</div>
 										</div>
 									</div>
-									<div class="row">
-										<div class="col-md-12">
-											<div class="form-group">
-												<!--label for="exampleInputEmail1">Email address</label>
-												<input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email"-->
-													{{ form_proveedor.descripcion|as_crispy_field}}
-											</div>
-										</div>
-									</div>
-									
 								</div>
-								<!-- /.card-body -->
-								<div class="card-footer">
-									<button type="submit" class="btn btn-success">Guardar</button>
+
+								<!-- Pie de Tarjeta - Botones -->
+								<div class="card-footer bg-white border-top py-3">
+									<div class="d-flex justify-content-between">
+										<a type="button" class="btn btn-outline-secondary px-4" href="{% url 'list_proveedores' %}">
+											<i class="fas fa-times mr-2"></i>Cancelar
+										</a>
+										<button type="submit" class="btn btn-indigo px-4 mr-2">
+											<i class="fas fa-save mr-2"></i>Guardar Cambios
+										</button>
+									</div>
 								</div>
 							</form>
 						</div>
-						<!-- /.card -->
-						</div>
-					<!--/.col (left) -->
-					<!-- right column -->
-					<div class="col-md-6">
-
 					</div>
-					<!--/.col (right) -->
 				</div>
+
+				<style>
+					.card-indigo {
+						border-color: #6610f2;
+					}
+					
+					.card-indigo .card-header {
+						background-color: #6610f2;
+					}
+					
+					.btn-indigo {
+						background-color: #6610f2;
+						border-color: #6610f2;
+						transition: all 0.3s ease;
+					}
+					
+					.btn-indigo:hover {
+						background-color: #5a0dd8;
+						transform: translateY(-1px);
+						box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+					}
+					
+					.shadow-lg {
+						box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+					}
+					
+					.border-bottom {
+						border-bottom: 1px solid #dee2e6 !important;
+					}
+					
+					.input-group-text {
+						background-color: #f8f9fa;
+					}
+					
+					.input-group-prepend .input-group-text {
+						border-right: 0;
+					}
+					
+					.input-group .form-control {
+						border-left: 0;
+					}
+					
+					.modal-header {
+						border-bottom: 1px solid rgba(255,255,255,0.1);
+					}
+				</style>
 				<!-- /.row -->
 			</div><!-- /.container-fluid -->
 		</section>
