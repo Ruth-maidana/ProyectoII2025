@@ -63,7 +63,7 @@ Este es un Sistema de Inventario completo desarrollado para gestionar eficientem
 
     Clona el repositorio:
 
-git clone https://github.com/tu-usuario/tu-repo.git
+git clone Ruth-maidana/ProyectoII2025
 
 Instala las dependencias:
 
