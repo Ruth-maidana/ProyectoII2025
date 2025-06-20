@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['systemmarimar.onrender.com']
 
 
 # Application definition
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'systemmarimar.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
+'''DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'db_marimar',
@@ -91,6 +92,14 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '5432'
     }
+}'''
+
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgres://admin:systemMarimar.2025@localhost:5432/db_marimar',
+        conn_max_age=600
+    )
 }
 
 
