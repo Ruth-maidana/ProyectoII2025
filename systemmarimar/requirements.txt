@@ -73,3 +73,4 @@ xhtml2pdf==0.2.17
 zopfli==0.2.3.post1
 dj-database-url
 gunicorn
+whitenoise
