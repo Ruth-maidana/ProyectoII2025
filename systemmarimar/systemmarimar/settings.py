@@ -77,7 +77,7 @@ TEMPLATES = [
 
 #Se agregar porque vamos a personalizar usuario no vamos a usar lo que ofrece DJANGO
 #AUTH_USER_MODEL = 'control_panel.Usuario'
-WSGI_APPLICATION = 'systemmarimar.systemmarimar.wsgi.application'
+WSGI_APPLICATION = 'systemmarimar.wsgi.application'
 
 
 # Database
