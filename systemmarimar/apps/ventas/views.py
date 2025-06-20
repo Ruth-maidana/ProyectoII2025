@@ -34,7 +34,7 @@ def registrar_config_tim_num(request):
         form = FormConfigTimbradoNumeracion(request.POST, instance=config)
         if form.is_valid():
             form.save()
-            return redirect('configuracion:ver_configuracion')  # o a ventas, según flujo
+            return redirect('home')  # o a ventas, según flujo
     else:
         form = FormConfigTimbradoNumeracion(instance=config)
 

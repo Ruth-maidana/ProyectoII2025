@@ -1,5 +1,5 @@
 from itertools import count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.template.loader import render_to_string, get_template
@@ -169,6 +169,8 @@ def ajustar_stock(request):
                     )
                 
                     messages.success(request, 'Ajuste de stock registrado correctamente.')
+                    return redirect('list_movimientos')
+                    
             except Exception as e:
                 messages.error(request, f'Error al registrar el ajuste: {str(e)}')
                 print('Error al registrar el ajuste:', e)
