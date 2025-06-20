@@ -98,7 +98,8 @@ WSGI_APPLICATION = 'systemmarimar.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / "db_marimar.sqlite3",
+        'NAME': os.path.join(BASE_DIR, "db_marimar.sqlite3"),
+        #'NAME': BASE_DIR / "db_marimar.sqlite3",
     }
 }
 
