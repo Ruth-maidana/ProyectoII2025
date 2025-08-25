@@ -17,7 +17,7 @@
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
 	<!-- Navbar -->
@@ -94,14 +94,6 @@
 									<i class="fas fa-truck-loading mr-2 text-indigo"></i>Registro de Proveedores
 								</h3>
 								 <div class="card-tools d-flex align-items-center">
-                                    <div class="input-group input-group-sm mr-3" style="width: 200px;">
-										<input type="text" id="searchInput" class="form-control" placeholder="Buscar proveedor...">
-										<div class="input-group-append">
-											<button class="btn btn-indigo" type="button">
-												<i class="fas fa-search"></i>
-											</button>
-										</div>
-									</div>
 									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
 										<i class="fas fa-minus"></i>
 									</button>
@@ -369,10 +361,10 @@
 {% endif %}
 <script>
 	$(function () {
-		$("#example1").DataTable({
+		$("#providersTable").DataTable({
 			"responsive": true, "lengthChange": false, "autoWidth": false,
 			"buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-		}).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+		}).buttons().container().appendTo('#providersTable_wrapper .col-md-6:eq(0)');
 		$('#example2').DataTable({
 			"paging": true,
 			"lengthChange": false,
@@ -403,20 +395,6 @@
 				}
 		});
 }
-</script>
-
-
-<script>
-    // Función para búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#providersTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(input) ? '' : 'none';
-        });
-    });
 </script>
 </body>
 </html>

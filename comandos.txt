@@ -7,3 +7,8 @@ python ..\\manage.py test apps.compras.test_unitario
 Marimar.2025
 
 luzm marimar.2025
+
+
+
+
+(env) C:\Users\rutie\Proyecto II\systemmarimar\apps>pytest tests\test_categoria.py -v

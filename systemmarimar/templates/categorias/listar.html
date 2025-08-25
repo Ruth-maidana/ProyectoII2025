@@ -17,7 +17,7 @@
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
 	<!-- Navbar -->
@@ -43,7 +43,7 @@
 					</div>
 					<div class="col-md-4">
 						<div class="d-flex justify-content-end">
-							<a href="{% url 'reg_categoria' %}" class="btn btn-purple ml-2">
+							<a href="{% url 'reg_categoria' %}" class="btn btn-purple ml-2 text-white">
 								<i class="fas fa-plus-circle mr-2"></i>Nueva Categoría
 							</a>
 							<ol class="breadcrumb float-md-right ml-3 mb-0">
@@ -80,16 +80,16 @@
 						<div class="card card-purple card-outline">
 							<div class="card-header bg-white border-bottom-0 py-3">
 								<h3 class="card-title font-weight-bold">
-									<i class="fas fa-list-ol mr-2 text-purple"></i>Registro de Categorías
+									<i class="fas fa-list-ol mr-2"></i>Registro de Categorías
 								</h3>
 								<div class="card-tools d-flex align-items-center">
-									<div class="input-group input-group-sm mr-3" style="width: 200px;">
-										<input type="text" id="searchInput" class="form-control" placeholder="Buscar categoria...">
+									<div class="input-group input-group-sm" style="width: 200px;">
+										<!--input type="text" id="searchInput" class="form-control" placeholder="Buscar categoria...">
 										<div class="input-group-append">
 											<button class="btn btn-outline-secondary" type="button">
 												<i class="fas fa-search"></i>
 											</button>
-										</div>
+										</div-->
 									</div>
 									<button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
 										<i class="fas fa-minus"></i>
@@ -111,43 +111,13 @@
                                     color: #2d3748;
                                 }
                                 
-                                .btn-tool {
-                                    color: #718096;
-                                    border-radius: 50%;
-                                    width: 32px;
-                                    height: 32px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    transition: all 0.2s;
-                                }
                                 
-                                .btn-tool:hover {
-                                    background-color: #edf2f7;
-                                    color: #4a5568;
-                                }
-                                
-                                #searchInput {
-                                    border-radius: 20px 0 0 20px;
-                                    border-right: none;
-                                }
-                                
-                                .input-group-append .btn {
-                                    border-radius: 0 20px 20px 0;
-                                    border-left: none;
-                                }
-                                
-                                @media (max-width: 576px) {
-                                    .input-group {
-                                        width: 150px !important;
-                                    }
-                                }
                             </style>
 							
 							<div class="card-body pt-0">
 								{% if Categorias %}
 								<div class="table-responsive">
-									<table id="categoriasTable" class="table table-hover table-bordered table-striped">
+									<table id="categoriasTable" class="table table-hover table-bordered" style="width:100%">
 										<thead class="bg-purple text-white">
 											<tr>
 												<th class="text-center" style="width: 25%;">Nombre</th>
@@ -191,7 +161,6 @@
 									</table>
 								</div>
 								
-								<!-- Modales para ver detalles -->
 								<!-- Modales para ver detalles -->
 								{% for item in categorias_forms %}
 								<div class="modal fade" id="modalVerCategoria{{ item.categoria.id }}" tabindex="-1" role="dialog" aria-hidden="true">
@@ -378,9 +347,42 @@
 <script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
 <!-- Agregar en el <head> o antes del cierre de </body> -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'error' %}
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'warning' %}
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
+{% endif %}
 <script>
 	$(function () {
-		$("#categoriasTables").DataTable({
+		$("#categoriasTable").DataTable({
 			"responsive": true, "lengthChange": false, "autoWidth": false,
 			"buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
 		}).buttons().container().appendTo('#categoriasTable_wrapper .col-md-6:eq(0)');
@@ -416,18 +418,6 @@
 }
 </script>
 
-<script>
-    // Función para búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#categoriasTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(input) ? '' : 'none';
-        });
-    });
-</script>
 
 </body>
 </html>

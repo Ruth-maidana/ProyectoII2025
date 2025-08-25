@@ -14,7 +14,7 @@
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 	<!-- Navbar -->
 	{%include 'navbar/navbar.html'%}
@@ -125,11 +125,19 @@
 										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group mb-4">
+													{{ form_proveedor.codigo_pais|as_crispy_field }}
+													<small class="form-text text-muted">Prefijo Teléfono</small>
+												</div>
+											</div>
+											<div class="col-md-6">
+												<div class="form-group mb-4">
 													{{ form_proveedor.num_tel|as_crispy_field }}
 													<small class="form-text text-muted">Teléfono principal</small>
 												</div>
 											</div>
-											<div class="col-md-6">
+										</div>
+										<div class="row">
+											<div class="col-md-12">
 												<div class="form-group mb-4">
 													{{ form_proveedor.correo|as_crispy_field }}
 													<small class="form-text text-muted">Correo electrónico</small>

@@ -14,7 +14,7 @@
 	<!-- Theme style -->
 	<link rel="stylesheet" href="{% static 'css/adminlte.min.css'%}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 	<!-- Navbar -->
 	{%include 'navbar/navbar.html'%}
@@ -139,10 +139,8 @@
 						margin-bottom: 1.5rem;
 					}
 				</style>
-
-			</div><!-- /.container-fluid -->
+			</div>
 		</section>
-		<!-- /.content -->
 	</div>
 	<!-- /.content-wrapper -->
 	
@@ -159,38 +157,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% if messages %}
-		<script>
-				document.addEventListener('DOMContentLoaded', function() {
-						{% for message in messages %}
-								{% if message.tags == 'success' %}
-										Swal.fire({
-												icon: 'success',
-												title: '¡Éxito!',
-												text: '{{ message }}',
-												timer: 3000,
-												showConfirmButton: false
-										});
-								{% elif message.tags == 'error' %}
-										Swal.fire({
-												icon: 'error',
-												title: '¡Error!',
-												text: '{{ message }}',
-												timer: 3000,
-												showConfirmButton: false
-										});
-								{% elif message.tags == 'warning' %}
-										Swal.fire({
-												icon: 'warning',
-												title: 'Advertencia',
-												text: '{{ message }}',
-												timer: 3000,
-												showConfirmButton: false
-										});
-								{% endif %}
-						{% endfor %}
-				});
-		</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'error' %}
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'warning' %}
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
 {% endif %}
+
 <!-- jQuery -->
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 <!-- Bootstrap 4 -->
@@ -202,9 +201,5 @@
 <script src="{% static 'js/adminlte.min.js' %}"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="{% static 'js/demo.js' %}"></script>
-<!-- Page specific script -->
-<script>
-
-</script>
 </body>
 </html>

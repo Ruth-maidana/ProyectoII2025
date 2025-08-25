@@ -33,6 +33,7 @@ class FormRegistrarCliente(forms.ModelForm):
 			'apellido',
             'nacionalidad',
             'estado_civil',
+            'codigo_pais',
             'num_tel',
             'correo',
             'direccion',
@@ -47,6 +48,7 @@ class FormRegistrarCliente(forms.ModelForm):
             'nacionalidad':'Nacionalidad',
             'estado_civil':'Estado Civil',
             'num_tel':'Num.Telefono',
+            'codigo_pais':'Código País',
             'correo':'Correo',
             'direccion':'Direccion',
             'tipo_documento':'Tipo de Documento'
@@ -58,7 +60,8 @@ class FormRegistrarCliente(forms.ModelForm):
             'tipo_documento':forms.Select(attrs={'class':'form-control'}),
             'nacionalidad':forms.TextInput(attrs={'class':'form-control'}),
             'estado_civil':forms.Select(attrs={'class':'form-control'}),
-            'num_tel':forms.TextInput(attrs={'class':'form-control'}),
+            'num_tel':forms.TextInput(attrs={'class':'form-control','placeholder': 'Ejemplo: 981234567'}),
+            'codigo_pais':forms.Select(attrs={'class':'form-control','placeholder': '+595'}),
             'correo':forms.EmailInput(attrs={'class':'form-control'}),
             'direccion':forms.TextInput(attrs={'class':'form-control'}),
 		}

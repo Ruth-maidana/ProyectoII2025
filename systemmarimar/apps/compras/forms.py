@@ -1,47 +1,29 @@
+from decimal import Decimal
 from django import forms
 from django.forms import inlineformset_factory
 from .models import Producto, OrdenCompraCab, OrdenCompraDet, Categoria, Proveedor
 from apps.compras.utils import validar_stock_compra
 from django.core.exceptions import ValidationError
-
-
+from django.core.validators import RegexValidator
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
         fields = ['nombre', 'descripcion']
-        exclude = ['fecha_insercion', 'activo']  # Excluir el campo fecha_insercion
-
-        
-        '''def clean_nombre(self):
-            nombre = self.cleaned_data['nombre'].strip().upper()  # Convertir a mayúsculas
-            print('Entro en el form '+nombre)
-            if Categoria.objects.filter(nombre=nombre).exists():
-                raise forms.ValidationError("Ya existe una categoría con este nombre.")
-            return nombre'''
-            
-        '''def clean_nombre(self):
-            nombre = self.cleaned_data['nombre']
-            if Categoria.objects.filter(nombre__iexact=nombre).exists():
-                raise forms.ValidationError('Este nombre ya existe (sin distinguir mayúsculas o minúsculas).')
-            return nombre'''
-
 
 class CategoriaEditForm(forms.ModelForm):
     class Meta:
         model = Categoria
         fields = ['nombre', 'descripcion']
-        exclude = ['fecha_insercion', 'activo']  # Excluir el campo fecha_insercion
 
 class CategoriaViewForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ['nombre', 'descripcion', 'fecha_insercion', 'activo']
+        fields = ['nombre', 'descripcion', 'activo']
         
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'disabled': True}),
-            'fecha_insercion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'activo': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
         }
 
@@ -72,7 +54,6 @@ class ProductoForm(forms.ModelForm):
             'precio_venta',
             'unidad_medida',
         ]
-        exclude = ['fecha_insercion', 'activo']  # Excluir el campo fecha_insercion
         
         labels = {
             'nombre':'Nombre del Producto',
@@ -91,18 +72,15 @@ class ProductoForm(forms.ModelForm):
             'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
             'cantidad_en_stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'precio_compra': forms.NumberInput(attrs={'class': 'form-control'}),
-            'iva': forms.NumberInput(attrs={'class': 'form-control'}),
+            'iva': forms.Select(attrs={'class': 'form-control'}),
             'precio_venta': forms.NumberInput(attrs={'class': 'form-control'}),
-            'unidad_medida': forms.Select(attrs={'class': 'form-control'}),
-            #'activo': forms.CheckboxInput(attrs={'class': 'form-control'}),
-            #'categoria': forms.Select(attrs={'class': 'form-control'}),
-            #'proveedor': forms.Select(attrs={'class': 'form-control'}),
+            'unidad_medida': forms.Select(attrs={'class': 'form-control'})
         }
         
 class ProductoViewForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['categoria','proveedor', 'nombre', 'descripcion', 'cantidad_en_stock','activo', 'fecha_insercion']   
+        fields = ['categoria','proveedor', 'nombre', 'descripcion', 'cantidad_en_stock','activo']   
         
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
@@ -110,7 +88,6 @@ class ProductoViewForm(forms.ModelForm):
             'cantidad_en_stock': forms.NumberInput(attrs={'class': 'form-control','disabled': True}),
             'categoria': forms.Select(attrs={'class': 'form-control','disabled': True}),
             'proveedor': forms.Select(attrs={'class': 'form-control','disabled': True}),
-            'fecha_insercion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'activo': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
         }
         
@@ -119,17 +96,19 @@ class ProductoViewForm(forms.ModelForm):
 
 
 class ProveedorForm(forms.ModelForm):
-    #nro_documento = forms.CharField(widget=forms.HiddenInput(), required=False)
+    
     documento = forms.CharField(
         max_length=30,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Documento'}),
-        label="Documento"
+        label="Documento",
+        help_text="Solo números, sin el dígito verificador"
     )
     digito_verificador = forms.ChoiceField(
         choices=[(str(i), str(i)) for i in range(10)],
         widget=forms.Select(attrs={'class': 'form-control'}),
         label="DV",
-        required=False  # No obligatorio por defecto
+        required=False,  # No obligatorio por defecto
+        help_text="Solo requerido para RUC"
     )
 
     class Meta:
@@ -137,28 +116,34 @@ class ProveedorForm(forms.ModelForm):
         fields = [
             'razon_social', 
             'direccion', 
+            'codigo_pais',
             'num_tel',
             'correo',
             'descripcion',
             'tipo_documento',
         ]
-        exclude = ['fecha_insercion', 'activo','nro_documento']  # Excluir nro_documento porque será calculado
+        
+        # SonarQube: exclude es necesario aquí porque nro_documento se calcula 
+        # dinámicamente en base a documento + digito_verificador
+        exclude = ['nro_documento'] 
         
         labels = {
             'razon_social': 'Nombre del Proveedor',
             'descripcion': 'Descripción',
             'direccion': 'Dirección',
+            'codigo_pais': 'Prefijo Tel.',
             'num_tel': 'Teléfono',
             'correo': 'Email',
             'tipo_documento': 'Tipo de Documento'
         }
         
         widgets = {
-            'razon_social': forms.TextInput(attrs={'class': 'form-control'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
-            'num_tel': forms.TextInput(attrs={'class': 'form-control'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'razon_social': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón social'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows': 3,'placeholder': 'Descripción del proveedor'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Dirección completa'}),
+            'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
+            'num_tel': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: 981234567'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'correo@ejemplo.com'}),
             'tipo_documento': forms.Select(attrs={'class': 'form-control', 'onchange': 'toggleDigitoVerificador(this)'}),
         }
 
@@ -167,6 +152,9 @@ class ProveedorForm(forms.ModelForm):
         documento = cleaned_data.get('documento')
         digito_verificador = cleaned_data.get('digito_verificador')
         tipo_documento = cleaned_data.get('tipo_documento')
+
+        if not documento:
+            raise forms.ValidationError({'documento': 'Este campo es obligatorio.'})
 
         # Concatenar documento y dígito verificador solo si el tipo de documento es RUC
         if tipo_documento == 'RUC':
@@ -188,7 +176,10 @@ class ProveedorForm(forms.ModelForm):
         # Sobrescribir el método save para guardar nro_documento
         instance = super().save(commit=False)
         cleaned_data = self.cleaned_data
-        instance.nro_documento = cleaned_data.get('nro_documento')  # Asignar el valor calculado
+        
+        # Asignar el valor calculado
+        instance.nro_documento = cleaned_data.get('nro_documento')  
+        
         if commit:
             instance.save()
         return instance
@@ -196,7 +187,7 @@ class ProveedorForm(forms.ModelForm):
 class ProveedorViewForm(forms.ModelForm):
     class Meta:
         model = Proveedor
-        fields = ['razon_social','nro_documento', 'direccion', 'num_tel', 'correo', 'descripcion','activo', 'fecha_insercion']   
+        fields = ['razon_social','nro_documento', 'direccion', 'num_tel', 'correo', 'descripcion','activo']   
         
         widgets = {
             'razon_social': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
@@ -205,7 +196,6 @@ class ProveedorViewForm(forms.ModelForm):
             'direccion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'num_tel': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'correo': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
-            'fecha_insercion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'activo': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
         }
 
@@ -216,6 +206,7 @@ class ProveedorEditForm(forms.ModelForm):
         fields = [
             'razon_social', 
             'direccion', 
+            'codigo_pais',
             'num_tel',
             'correo',
             'descripcion',
@@ -223,12 +214,12 @@ class ProveedorEditForm(forms.ModelForm):
             'tipo_documento'
             
         ]
-        exclude = ['fecha_insercion', 'activo']  # Excluir nro_documento porque será calculado
         
         labels = {
             'razon_social': 'Nombre del Proveedor',
             'descripcion': 'Descripción',
             'direccion': 'Dirección',
+            'codigo_pais': 'Prefijo Tel.',
             'num_tel': 'Teléfono',
             'correo': 'Email',
             'tipo_documento': 'Tipo de Documento',
@@ -239,196 +230,54 @@ class ProveedorEditForm(forms.ModelForm):
             'razon_social': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
             'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
             'num_tel': forms.TextInput(attrs={'class': 'form-control'}),
             'correo': forms.EmailInput(attrs={'class': 'form-control'}),
             'nro_documento': forms.TextInput(attrs={'class': 'form-control','readonly': True}),
             'tipo_documento': forms.TextInput(attrs={'class': 'form-control','readonly': True}),  
         }
-
-
-class CompraCabEditForm(forms.ModelForm):
-        
-    class Meta:
-        model = OrdenCompraCab
-        
-        fields = [
-            'nro_comprobante', 
-            'fecha_compra', 
-            'proveedor',  
-            'total',
-            'forma_pago',
-            'descuento',
-            'iva_diez',
-            'iva_cinco'
-        ]
-        
-        exclude = ['activo', 'fecha_insercion']  # Excluir el campo fecha_insercion
-        
-        labels = {
-            'nro_comprobante':'Numero de Comprobante',
-            'fecha_compra':'Fecha de Compra',
-            'proveedor':'Proveedor',
-            'total':'Total Gral.',
-            'forma_pago':'Forma de Pago',
-            'descuento':'Descuento',
-            'iva_diez':'IVA 10%',
-            'iva_cinco':'IVA 5%'
-        }
-        
-        widgets = {
-            'nro_comprobante':forms.TextInput(attrs={'class':'form-control'}),
-            'fecha_compra':forms.DateInput(attrs={'class':'form-control'}),
-            'proveedor':forms.Select(attrs={'class':'form-control'}),
-            'total':forms.NumberInput(attrs={'class':'form-control'}),
-            'forma_pago':forms.Select(attrs={'class':'form-control'}),
-            'descuento':forms.NumberInput(attrs={'class':'form-control'}),
-            'iva_diez':forms.NumberInput(attrs={'class':'form-control'}),
-            'iva_cinco':forms.NumberInput(attrs={'class':'form-control'}),
-        }
-        
-
-
-
-class CompraCabForm(forms.ModelForm):
-        
-    class Meta:
-        model = OrdenCompraCab
-        
-        fields = [
-            'nro_comprobante', 
-            'fecha_compra', 
-            'proveedor',  
-            'total',
-            'forma_pago',
-            'descuento',
-            'iva_diez',
-            'iva_cinco'
-        ]
-        
-        exclude = ['activo', 'fecha_insercion']  # Excluir el campo fecha_insercion
-        
-        labels = {
-            'nro_comprobante':'Numero de Comprobante',
-            'fecha_compra':'Fecha de Compra',
-            'proveedor':'Proveedor',
-            'total':'Total Gral.',
-            'forma_pago':'Forma de Pago',
-            'descuento':'Descuento',
-            'iva_diez':'IVA 10%',
-            'iva_cinco':'IVA 5%'
-        }
-        
-        widgets = {
-            'nro_comprobante':forms.TextInput(attrs={'class':'form-control','required':'El campo nro. orden es requerido'}),
-            'fecha_compra':forms.DateInput(attrs={'class':'form-control','type':'date','required':'El campo fecha de compra es requerido'}),
-            'proveedor':forms.Select(attrs={'class':'form-control','required':'El campo proveedor es requerido'}),
-            'total':forms.NumberInput(attrs={'class':'form-control'}),
-            'forma_pago':forms.Select(attrs={'class':'form-control','required':'El campo forma de pago es requerido'}),
-            'descuento':forms.NumberInput(attrs={'class':'form-control','required':'El campo descuento es requerido'}),
-            'iva_diez':forms.NumberInput(attrs={'class':'form-control','required':'El campo iva es requerido'}),
-            'iva_cinco':forms.NumberInput(attrs={'class':'form-control','required':'El campo iva es requerido'}),
-        }
         
         
-class CompraDetForm(forms.ModelForm):
-    
-    '''def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.producto:
-            self.fields['precio_compra'].initial = self.instance.producto.precio_compra
-            self.fields['unidad_medida'].initial = self.instance.producto.unidad_medida
-            self.fields['descripcion'].initial = self.instance.producto.descripcion'''
-    
-    producto = forms.ModelChoiceField(
-        queryset=Producto.objects.filter(activo=True),  # Filtrar solo los activos
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        empty_label="Seleccione un producto",  # Puedes personalizar el texto del placeholder
-    )
-    
-    '''cantidad = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
-        initial=0,
-        min_value=0
-    )'''
-    
-    class Meta:
-        model = OrdenCompraDet
         
-        fields = [
-            'producto',
-            'cantidad',
-            'precio_compra',
-            'unidad_medida',
-            #'descuento',
-            'total_producto',
-            'descripcion'
-        ]
-        
-        label = {
-            #'producto':'Producto',
-            'cantidad':'Cantidad',
-            'precio_compra':'Precio Compra',
-            'unidad_medida':'Unidad de Medida',
-            #'descuento':'Descuento',
-            'total_producto':'Total',
-            'descripcion':'Descripcion'
-        }
-        
-        widgets = {
-            #'producto':forms.Select(attrs={'class':'form-control','required':'El campo producto es requerido'}),
-            'cantidad':forms.NumberInput(attrs={'class':'form-control','required':'El campo precio de compra es requerido'}),
-            'precio_compra':forms.NumberInput(attrs={'class':'form-control','required':'El campo precio de compra es requerido'}),
-            'unidad_medida':forms.Select(attrs={'class':'form-control','required':'El campo unidad de medida es requerido'}),
-            #'descuento':forms.NumberInput(attrs={'class':'form-control','required':'El campo descuento es requerido'}),
-            'total_producto':forms.NumberInput(attrs={'class':'form-control','required':'El campo total es requerido'}),
-            'descripcion':forms.TextInput(attrs={'class':'form-control','required':'El campo descripcion es requerido'}),
-        }
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        producto = cleaned_data.get('producto')
-        cantidad = cleaned_data.get('cantidad')  # Valor por defecto si no se proporciona cantidad
+        # Si estamos editando, separar el número existente
+        if self.instance and self.instance.pk and self.instance.num_tel:
+            tel_completo = self.instance.num_tel
             
-        if producto and cantidad:
-            try:
-                validar_stock_compra(producto, cantidad)  # Función de utils.py
-            except ValidationError as e:
-                self.add_error('cantidad', e)  # ¡Error vinculado al campo!
-            
-            # Calcular el total del producto
-        '''precio_compra = cleaned_data.get('precio_compra')
-            total_producto = precio_compra * cantidad
-            cleaned_data['total_producto'] = total_producto'''
-       
-        return cleaned_data
-   
-#inlienformset_factory es una funcion que permite crear un formulario de detalle de una cabecera
-#en este caso se esta creando un formulario de detalle de una orden de compra   
-CompraFormset = inlineformset_factory(OrdenCompraCab, OrdenCompraDet, form=CompraDetForm, extra=1,can_delete=True)
+            # Buscar el prefijo en el número completo
+            for prefijo, _ in self.PREFIJO_CHOICES:
+                if tel_completo.startswith(prefijo):
+                    self.fields['prefijo_tel'].initial = prefijo
+                    self.fields['numero_tel'].initial = tel_completo.replace(prefijo, '')
+                    break
 
+    
 
-
-
-class FiltroComprasForm(forms.Form):
+'''class FiltroComprasForm(forms.Form):
     fecha_inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     fecha_fin = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
-    proveedor = forms.ModelChoiceField(queryset=Proveedor.objects.all(), required=False)
+    proveedor = forms.ModelChoiceField(queryset=Proveedor.objects.all(), required=False)'''
 
 
 class FormRegCompraCabecera(forms.ModelForm):
     
     iva_diez = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly','step': '0.01'}),
         label="IVA 10%",
         initial=0.0,
-        min_value=0.0
+        decimal_places=2,
+        min_value=0.0,
+        max_digits=10
     )
     
     iva_cinco = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly','step': '0.01'}),
         label="IVA 5%",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=10
     )
     
     proveedor = forms.ModelChoiceField(
@@ -440,17 +289,21 @@ class FormRegCompraCabecera(forms.ModelForm):
     )
     
     descuento = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01','min': '0'}),
         label="Descuento",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=10
     )
     
     total = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly','step': '0.01'}),
         label="Total",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
     )
     
     class Meta:
@@ -468,10 +321,8 @@ class FormRegCompraCabecera(forms.ModelForm):
                 'forma_pago'
             ]
         
-        exclude = ['fecha_insercion','activo']
-        
         labels = {
-            'fecha_compra':'Fecha de Compra',
+            'fecha_compra':'Fecha',
             'nro_comprobante':'Nro. Comprobante',
             'forma_pago':'Forma de Pago',
         }
@@ -479,11 +330,67 @@ class FormRegCompraCabecera(forms.ModelForm):
         widgets = {
             'fecha_compra': forms.DateTimeInput(attrs={'class': 'form-control','type': 'date'}),
             'forma_pago': forms.Select(attrs={'class': 'form-control'}),
-            'nro_comprobante': forms.TextInput(attrs={'class': 'form-control'}),
+            'nro_comprobante': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: OC-2025-001'}),
         }
         
+    def clean_nro_comprobante(self):
+        """Validar que el número de comprobante sea único"""
+        nro_comprobante = self.cleaned_data.get('nro_comprobante')
+        
+        if not nro_comprobante:
+            raise ValidationError("El número de comprobante es obligatorio.")
+        
+        # Verificar unicidad
+        existing = OrdenCompraCab.objects.filter(nro_comprobante__iexact=nro_comprobante)
+        
+        # Si estamos editando, excluir el registro actual
+        if self.instance and self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        if existing.exists():
+            raise ValidationError("Ya existe una orden con este número de comprobante.")
+        
+        return nro_comprobante.upper()  
+    
+    def clean_descuento(self):
+        """Validar que el descuento no sea mayor al total"""
+        descuento = self.cleaned_data.get('descuento', Decimal('0.0'))
+        total = self.cleaned_data.get('total', Decimal('0.0'))
+        
+        if descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
+        
+        if total > 0 and descuento > total:
+            raise ValidationError("El descuento no puede ser mayor al total.")
+        
+        return descuento
+    
+    
+    def clean(self):
+        """Validaciones adicionales de la orden"""
+        cleaned_data = super().clean()
+        proveedor = cleaned_data.get('proveedor')
+        total = cleaned_data.get('total', Decimal('0.0'))
+        
+        # Verificar que el proveedor esté activo
+        if proveedor and not proveedor.activo:
+            raise ValidationError({
+                'proveedor': 'No se puede crear una orden para un proveedor desactivado.'
+            })
+            
+        # Validar que el total sea mayor a 0 (para órdenes nuevas)
+        if not self.instance.pk and total <= 0:
+            raise ValidationError({
+                'total': 'El total de la orden debe ser mayor a cero.'
+            })
+            
+        return cleaned_data
         
 class FormRegCompraDetalle(forms.Form):
+    """
+    Formulario para el detalle de la orden de compra
+    Usa Form en lugar de ModelForm para mayor flexibilidad
+    """
                                     
     producto_id = forms.IntegerField(
         widget=forms.HiddenInput(attrs={'class': 'form-control'}),
@@ -492,7 +399,8 @@ class FormRegCompraDetalle(forms.Form):
     
     descripcion = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Descripción"
+        label="Descripción",
+        required=False
     )
     
     
@@ -520,7 +428,9 @@ class FormRegCompraDetalle(forms.Form):
         }),
         label="Precio Unitario",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
     )
     
 
@@ -532,10 +442,38 @@ class FormRegCompraDetalle(forms.Form):
         }),
         label="Subtotal",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
     )
     
-    def clean(self):
+    
+    def clean_cantidad(self):
+        """Validar cantidad"""
+        cantidad = self.cleaned_data.get('cantidad')
+        
+        if cantidad is None or cantidad <= 0:
+            raise ValidationError("La cantidad debe ser un número entero mayor a cero.")
+        
+        return cantidad
+    
+    def clean_producto_id(self):
+        """Validar que el producto existe y está activo"""
+        producto_id = self.cleaned_data.get('producto_id')
+        
+        if not producto_id:
+            raise ValidationError("Debe seleccionar un producto.")
+        
+        try:
+            producto = Producto.objects.get(id=producto_id)
+            if not producto.activo:
+                raise ValidationError("No se puede agregar un producto desactivado.")
+            return producto_id
+        except Producto.DoesNotExist:
+            raise ValidationError("Producto no encontrado.")
+    
+    
+    '''def clean(self):
         
         cleaned_data = super().clean()
         cantidad = cleaned_data.get('cantidad')
@@ -559,7 +497,9 @@ class FormRegCompraDetalle(forms.Form):
         if producto.cantidad_en_stock < cantidad:
             mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
             self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
-        return cleaned_data
+        return cleaned_data'''
+        
+    
     
     
     
@@ -616,10 +556,8 @@ class FormEditCompraCabecera(forms.ModelForm):
                 'forma_pago'
             ]
         
-        exclude = ['fecha_insercion','activo']
-        
         labels = {
-            'fecha_compra':'Fecha de Compra',
+            'fecha_compra':'Fecha',
             'nro_comprobante':'Nro. Comprobante',
             'forma_pago':'Forma de Pago',
         }
@@ -629,6 +567,25 @@ class FormEditCompraCabecera(forms.ModelForm):
             'forma_pago': forms.Select(attrs={'class': 'form-control'}),
             'nro_comprobante': forms.TextInput(attrs={'class': 'form-control','readonly': 'readonly'}),
         }
+        
+    def clean_nro_comprobante(self):
+        """Validar que el número de comprobante sea único"""
+        nro_comprobante = self.cleaned_data.get('nro_comprobante')
+        
+        if not nro_comprobante:
+            raise ValidationError("El número de comprobante es obligatorio.")
+        
+        # Verificar unicidad
+        existing = OrdenCompraCab.objects.filter(nro_comprobante__iexact=nro_comprobante)
+        
+        # Si estamos editando, excluir el registro actual
+        if self.instance and self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        if existing.exists():
+            raise ValidationError("Ya existe una orden con este número de comprobante.")
+        
+        return nro_comprobante.upper()      
         
         
 class FormEditCompraDetalle(forms.Form):
@@ -700,23 +657,44 @@ class FormEditCompraDetalle(forms.Form):
         cleaned_data = super().clean()
         cantidad = cleaned_data.get('cantidad')
         producto_id = cleaned_data.get('producto_id')
-        
-        if cantidad is None or cantidad <= 0:
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data  # Retornar aquí para evitar continuar con la validación
-        
+                
+        # Validar cantidad
+        if not self._validar_cantidad(cantidad, cleaned_data):
+            return cleaned_data
+          
         # Validar producto
+        producto = self._validar_producto(producto_id, cleaned_data)
+        if not producto:
+            return cleaned_data
+        
+        # Validar stock
+        self._validar_stock(producto, cantidad)
+        
+        return cleaned_data
+    
+    
+    def _validar_cantidad(self, cantidad, cleaned_data):
+        """Valida que la cantidad sea válida."""
+        if cantidad is None or cantidad <= 0:
+            self.add_error('cantidad', "La cantidad debe ser un número entero mayor a cero.")
+            return False
+        return True
+    
+    def _validar_producto(self, producto_id, cleaned_data):
+        """Valida que el producto exista."""
         if not producto_id:
             self.add_error('producto_id', "Debe seleccionar un producto.")
-            return cleaned_data
+            return None
             
         try:
-            producto = Producto.objects.get(id=producto_id)
+            return Producto.objects.get(id=producto_id)
         except Producto.DoesNotExist:
             self.add_error('producto_id', "Producto no encontrado.")
-            return cleaned_data
-        
+            return None
+            
+    
+    def _validar_stock(self, producto, cantidad):
+        """Valida que haya suficiente stock."""
         if producto.cantidad_en_stock < cantidad:
             mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
-            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
-        return cleaned_data
+            self.add_error('cantidad', mensaje) # ¡Error vinculado al campo!

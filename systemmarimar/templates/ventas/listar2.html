@@ -17,7 +17,7 @@
     <!-- Theme style -->
     <link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
     <!-- Navbar -->
@@ -67,14 +67,6 @@
                                     <i class="fas fa-list-ol mr-2"></i>Registro de Ventas
                                 </h3>
                                 <div class="card-tools d-flex align-items-center">
-                                    <div class="input-group input-group-sm mr-3" style="width: 200px;">
-                                        <input type="text" id="searchInput" class="form-control" placeholder="Buscar venta...">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="button">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
-                                    </div>
                                     <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Minimizar">
                                         <i class="fas fa-minus"></i>
                                     </button>
@@ -301,23 +293,10 @@
 </script>
 <script>
     $(function () {
-        $("#example1").DataTable({
+        $("#ventasTable").DataTable({
             "responsive": true, "lengthChange": false, "autoWidth": false,
             "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-        }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-    });
-</script>
-
-<script>
-    // Función para búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#ventasTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(input) ? '' : 'none';
-        });
+        }).buttons().container().appendTo('#ventasTable_wrapper .col-md-6:eq(0)');
     });
 </script>
 </body>

@@ -61,8 +61,46 @@ class Cliente(models.Model):
         ( 'Soltero/a','Soltero/a'),
     )
     estado_civil = models.CharField(max_length=30,null=False,choices=TIPO_COMP)
-    num_regex = RegexValidator(regex = r"^\+?1?\d{8,15}$",message="Ingrese un numero de telefono valido.")
-    num_tel = models.CharField(validators = [num_regex], max_length = 30, unique = True)
+
+    CODIGOS_PAIS = (
+        ('+595', 'Paraguay (+595)'),
+        ('+54', 'Argentina (+54)'),
+        ('+55', 'Brasil (+55)'),
+        ('+1', 'Estados Unidos/Canadá (+1)'),
+        ('+34', 'España (+34)'),
+        ('+49', 'Alemania (+49)'),
+        ('+33', 'Francia (+33)'),
+        ('+39', 'Italia (+39)'),
+        ('+81', 'Japón (+81)'),
+        ('+86', 'China (+86)'),
+        ('+91', 'India (+91)'),
+        ('+52', 'México (+52)'),
+        ('+56', 'Chile (+56)'),
+        ('+57', 'Colombia (+57)'),
+        ('+58', 'Venezuela (+58)'),
+        ('+51', 'Perú (+51)'),
+        ('+598', 'Uruguay (+598)'),
+        ('+591', 'Bolivia (+591)'),
+    )
+    
+    codigo_pais = models.CharField(
+        max_length=5, 
+        choices=CODIGOS_PAIS, 
+        default='+595',
+        help_text="Código de país para el teléfono"
+    )
+    
+    # Validador básico (ya suficiente para la mayoría de casos)
+    num_regex = RegexValidator(
+        regex=r"^\d{6,12}$",
+        message="Ingrese solo números, entre 6 y 12 dígitos."
+    )
+    #num_regex = RegexValidator(regex = r"^\+?1?\d{8,15}$",message="Ingrese un numero de telefono valido.")
+    num_tel = models.CharField(
+        validators=[num_regex], 
+        max_length=15,
+        help_text="Número de teléfono sin código de país"
+    )
     correo = models.EmailField(max_length=100,null=False,unique=True)
     direccion = models.CharField(max_length=200,null=False)
     #fecha_insercion = models.DateTimeField(auto_now_add=True)
@@ -76,6 +114,9 @@ class Cliente(models.Model):
     tipo_documento = models.CharField(max_length=100, choices=TIPO_DOC)
     #fecha_modificacion = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        # Combinación única de código de país + número
+        unique_together = [['codigo_pais', 'num_tel']]
     
     '''def clean(self):
         # Convertir el nombre a mayúsculas para la validación
@@ -90,6 +131,32 @@ class Cliente(models.Model):
         self.apellido = self.apellido.upper()
         self.nacionalidad = self.nacionalidad.upper()
         super(Cliente, self).save(*args, **kwargs)'''
+        
+        
+    def clean(self):
+        """Validaciones BÁSICAS - suficientes para empezar"""
+        super().clean()
+        
+        # Solo validaciones esenciales
+        if self.codigo_pais == '+595':  # Paraguay
+            if len(self.num_tel) < 8:
+                raise ValidationError({
+                    'num_tel': 'Para Paraguay, mínimo 8 dígitos.'
+                })
+        elif self.codigo_pais == '+1':  # USA/Canadá
+            if len(self.num_tel) != 10:
+                raise ValidationError({
+                    'num_tel': 'Para USA/Canadá, exactamente 10 dígitos.'
+                })
+        elif self.codigo_pais in ['+54', '+55', '+56', '+57']:  # Latinoamérica
+            if len(self.num_tel) < 8 or len(self.num_tel) > 11:
+                raise ValidationError({
+                    'num_tel': 'Entre 8 y 11 dígitos para este país.'
+                })
+    
+    @property
+    def telefono_completo(self):
+        return f"{self.codigo_pais} {self.num_tel}"
         
     def __str__(self):
         return '{}'.format(self.nombre,self.apellido,self.nro_documento,self.fecha_insercion,self.activo)
