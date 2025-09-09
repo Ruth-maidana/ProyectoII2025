@@ -39,7 +39,7 @@ def registrar_categoria(request):
 					categoria = form.save()
 					messages.success(
 						request, 
-						f"Categoría '{categoria.nombre}' creada correctamente"
+						f"Categoría creada correctamente"
 					)
 	 
 					logger.info(f"Categoría creada: {categoria.nombre}")
@@ -53,7 +53,7 @@ def registrar_categoria(request):
 				messages.error(request, "Error interno del servidor")
 				logger.error(f"Error al crear categoría: {e}")
 		else:
-			messages.error(request, 'Por favor corrija los errores del formulario')
+			messages.error(request, 'Error en el formulario al crear categoría')
 	else:
 		form = CategoriaForm()
   
@@ -119,18 +119,18 @@ def inactivar_categoria(request,id_categoria):
 	categoria.save()'''
  
 	if not categoria.activo:
-		messages.info(request, f"La categoría '{categoria.nombre}' ya está inactiva.")
+		messages.info(request, f"La categoría ya está inactiva.")
 		return redirect('list_categorias')
 
 	# Validar ANTES de intentar guardar
 	productos_activos = categoria.producto_set.filter(activo=True)
-	productos_count = categoria.productos_activos.count()
+	productos_count = productos_activos.count()
  
 	if productos_count > 0:
 		messages.error(
 			request, 
 			f"No se puede desactivar la categoría "
-			f"porque tiene {productos_count} producto(s) asignado(s)."
+			f"porque tiene producto(s) asignado(s)."
 		)
 		logger.warning(f"Intento de desactivar categoría con productos: {categoria.nombre}")
 		return redirect('list_categorias')
@@ -197,12 +197,12 @@ def registrar_producto(request):
 				
 		else:
 			logger.warning(f"Formulario inválido para registro de producto: {form.errors}")
-			messages.error(request, "Por favor corrige los errores en el formulario")
+			messages.error(request, "Error en el formulario al registrar producto")
 			
 			# Agregar errores específicos a los messages
-			for field, errors in form.errors.items():
-				for error in errors:
-					messages.error(request, f"{field}: {error}")
+			#for field, errors in form.errors.items():
+				#for error in errors:
+					#messages.error(request, f"{field}: {error}")
 	else:
 		form = ProductoForm()
 	context = {'form_producto': form}
@@ -321,9 +321,9 @@ def registrar_proveedor(request):
 					proveedor = form.save()
 					messages.success(
 						request, 
-						f"Proveedor '{proveedor.nombre}' creado correctamente"
+						f"Proveedor creado correctamente"
 					)
-					logger.info(f"Proveedor creado: {proveedor.nombre}")
+					logger.info(f"Proveedor creado: {proveedor.razon_social}")
 					return redirect('list_proveedores')
 			except ValidationError as e:
 				messages.error(request, f"Error de validación: {e}")
@@ -331,7 +331,7 @@ def registrar_proveedor(request):
 				messages.error(request, "Error interno del servidor")
 				logger.error(f"Error al crear proveedor: {e}")
 		else:
-			messages.error(request, "Por favor corrija los errores del formulario")
+			messages.error(request, "Error en el formulario al registrar proveedor")
 	else:
 		form = ProveedorForm()
 	context = {'form_proveedor': form}
@@ -357,7 +357,7 @@ def editar_proveedor(request, id_proveedor):
 					proveedor_actualizado = form.save()
 					messages.success(
 						request, 
-						f"Proveedor '{proveedor_actualizado.nombre}' actualizado correctamente"
+						f"Proveedor actualizado correctamente"
 					)
 					logger.info(f"Proveedor creado: {proveedor_actualizado.nombre}")
 					return redirect('list_proveedores')
@@ -380,7 +380,7 @@ def inactivar_proveedor(request,id_proveedor):
 	proveedor = get_object_or_404(Proveedor, id=id_proveedor)
  
 	if not proveedor.activo:
-		messages.info(request, f"El proveedor '{proveedor.nombre}' ya está inactivo.")
+		messages.info(request, f"El proveedor ya está inactivo.")
 		return redirect('list_proveedores')
 
 	# Validar si tiene productos activos asignados
@@ -389,7 +389,7 @@ def inactivar_proveedor(request,id_proveedor):
 	if productos_count > 0:
 		
 		mensaje_error = (
-			f"No se puede desactivar el proveedor '{proveedor.nombre}' "
+			f"No se puede desactivar el proveedor "
 			f"porque tiene {productos_count} producto(s) activo(s) asignado(s)"
 		)
 		logger.warning(f"Intento de desactivar proveedor con productos activos: {proveedor.nombre}")
@@ -401,7 +401,7 @@ def inactivar_proveedor(request,id_proveedor):
 			
 			messages.success(
 				request, 
-				f"El proveedor '{proveedor.nombre}' fue desactivado correctamente"
+				f"El proveedor fue desactivado correctamente"
 			)
 			logger.info(f"Proveedor desactivado exitosamente: {proveedor.nombre}")
 			  
@@ -464,14 +464,14 @@ def registrar_compra_cab_det_version_act_v2(request):
 					else:
 						messages.warning(request, "Detalle inválido - campos obligatorios faltantes")
 						logger.warning("Detalle inválido - campos obligatorios faltantes")
-      
+	  
 			logger.info(f"Total de detalles válidos: {len(detalles_validos)}")
    			
 			# Si no hay detalles válidos, mostrar error y no guardar nada
 			if len(detalles_validos) == 0:
 				messages.warning(request, "Debe ingresar al menos un detalle de compra válido.")
 				logger.warning("No se encontraron detalles válidos")
-    
+	
 				context = {
 					'form_compra_cab': form_compra_cab,
 					'form_compra_det': form_compra_det,
@@ -483,11 +483,11 @@ def registrar_compra_cab_det_version_act_v2(request):
 			try:
 				with transaction.atomic():
 					
-     				# AHORA SÍ guardar la cabecera (después de validar que hay detalles)
+	 				# AHORA SÍ guardar la cabecera (después de validar que hay detalles)
 					cabecera = form_compra_cab.save()
 					logger.info(f"Cabecera de compra guardada: {cabecera.nro_comprobante}")					
 					
-     				# Guardar los detalles válidos
+	 				# Guardar los detalles válidos
 					detalles_guardados = 0
 					for form_det in detalles_validos:
 						logger.debug(f"Procesando detalle: {form_det.cleaned_data}")
@@ -506,8 +506,8 @@ def registrar_compra_cab_det_version_act_v2(request):
 							logger.error(f"Producto con ID {producto_id} no existe. Saltando detalle.")
 							continue
 						
-      					
-           				# Crear y guardar el detalle						
+	  					
+		   				# Crear y guardar el detalle						
 						detalle = OrdenCompraDet(
 							orden_compra_cab=cabecera,
 							producto=producto_instance,
@@ -519,7 +519,7 @@ def registrar_compra_cab_det_version_act_v2(request):
 						)
 						
 						logger.debug(f"Guardando detalle: {detalle}")
-      
+	  
 						detalle.save()
 						detalles_guardados += 1
 						
@@ -533,7 +533,7 @@ def registrar_compra_cab_det_version_act_v2(request):
 							compra_cab=cabecera,
 							venta_cab=None
 						)
-      
+	  
 					logger.debug(f"Movimiento de stock registrado para producto {detalle.producto.nombre}")					
 					
 					messages.success(request, f"Compra registrada exitosamente con {detalles_guardados} detalle(s)")
@@ -553,12 +553,12 @@ def registrar_compra_cab_det_version_act_v2(request):
 			for i, form in enumerate(form_compra_det, start=1):
 				for field, field_errors in form.errors.items():
 					for error in field_errors:
-						errores.append(f"Detalle #{i}, Campo [{field}]: {error}")
+						errores.append(f"Error en el Detalle #{i}, Campo [{field}]: {error}")
 
 			# Errores de cabecera
 			for field, field_errors in form_compra_cab.errors.items():
 				for error in field_errors:
-					errores.append(f"Cabecera, Campo [{field}]: {error}")
+					errores.append(f"Error en la cabecera: Campo [{field}]: {error}")
 
 			# Mostrar errores
 			if errores:
@@ -588,6 +588,190 @@ def registrar_compra_cab_det_version_act_v2(request):
 
 
 
+'''def create_orden_compra(request):
+	# ... código anterior ...
+	
+	if request.method == 'POST':
+		# Validaciones previas antes del procesamiento del formulario
+		validation_errors = validate_form_data_before_processing(request.POST)
+		if validation_errors:
+			# Si hay errores de validación previa, mostrarlos y retornar
+			for error in validation_errors:
+				messages.error(request, error)
+			# Recrear formularios para mostrar datos ingresados
+			form_compra_cab = FormRegCompraCabecera(request.POST, prefix='cab')
+			form_compra_det = [
+				FormRegCompraDetalle(request.POST, prefix=f'det-{i}') 
+				for i in range(int(request.POST.get('det-TOTAL_FORMS', 0)))
+			]
+			context = {
+				'form_compra_cab': form_compra_cab,
+				'form_compra_det': form_compra_det,
+				'form_compra_det_prefix': 'det',
+			}
+			return render(request, 'compras/crear_orden.html', context)
+			
+		# Continuar con el procesamiento normal
+		form_compra_cab = FormRegCompraCabecera(request.POST, prefix='cab')
+		formset = OrdenCompraDetFormSet(request.POST, prefix='det')
+		
+		if form_compra_cab.is_valid() and formset.is_valid():
+			# ... procesamiento exitoso ...
+			pass
+		else:
+			logger.warning("Formularios inválidos")
+			
+			# Mejorar el manejo de errores
+			errores_amigables = format_user_friendly_errors(form_compra_cab, formset)
+			
+			# Mostrar errores de forma más amigable
+			for error in errores_amigables:
+				messages.error(request, error)
+				
+				# Mostrar errores
+			if errores:
+				messages.error(request, "\\n".join(errores))
+
+			logger.debug(f"Errores encontrados: {errores}")
+
+		# Renderizar el template con los errores (tanto para formularios inválidos como para falta de detalles)
+		context = {
+			'form_compra_cab': form_compra_cab,
+			'form_compra_det': form_compra_det,
+			'form_compra_det_prefix': form_compra_det.prefix
+		}
+		return render(request, 'compras/registrar3_v2.html', context)
+			
+	else:
+		form_compra_cab = FormRegCompraCabecera()
+		# CORRECCIÓN: También usar el mismo prefijo para GET
+		form_compra_det = formset_compra(prefix='form')
+
+	context = {
+		'form_compra_cab': form_compra_cab,
+		'form_compra_det': form_compra_det,
+		'form_compra_det_prefix': form_compra_det.prefix
+	}
+	return render(request, 'compras/registrar3_v2.html', context)
+
+
+def validate_form_data_before_processing(post_data):
+    """Validaciones previas antes del procesamiento del formulario"""
+    errors = []
+    
+    # Validar datos del detalle
+    total_forms = int(post_data.get('det-TOTAL_FORMS', 0))
+    
+    if total_forms == 0:
+        errors.append("Debe agregar al menos un producto a la orden de compra.")
+        return errors
+    
+    productos_validos = 0
+    for i in range(total_forms):
+        producto_id = post_data.get(f'det-{i}-producto_id')
+        cantidad = post_data.get(f'det-{i}-cantidad')
+        precio = post_data.get(f'det-{i}-precio_compra')
+        
+        # Saltar filas vacías
+        if not producto_id:
+            continue
+            
+        productos_validos += 1
+        
+        # Validar cantidad
+        try:
+            cantidad_val = float(cantidad) if cantidad else 0
+            if cantidad_val <= 0:
+                errors.append(f"Producto #{productos_validos}: La cantidad debe ser mayor a cero (valor actual: {cantidad}).")
+        except (ValueError, TypeError):
+            errors.append(f"Producto #{productos_validos}: La cantidad debe ser un número válido.")
+        
+        # Validar precio
+        try:
+            precio_val = float(precio) if precio else 0
+            if precio_val <= 0:
+                errors.append(f"Producto #{productos_validos}: El precio debe ser mayor a cero (valor actual: {precio}).")
+        except (ValueError, TypeError):
+            errors.append(f"Producto #{productos_validos}: El precio debe ser un número válido.")
+    
+    if productos_validos == 0:
+        errors.append("No se encontraron productos válidos en la orden.")
+    
+    # Validar datos de cabecera
+    total = post_data.get('cab-total')
+    descuento = post_data.get('cab-descuento', '0')
+    
+    try:
+        total_val = float(total) if total else 0
+        descuento_val = float(descuento) if descuento else 0
+        
+        if total_val <= 0:
+            errors.append("El total de la orden debe ser mayor a cero. Verifique las cantidades y precios de los productos.")
+        
+        if descuento_val < 0:
+            errors.append("El descuento no puede ser negativo.")
+            
+        if descuento_val > total_val and total_val > 0:
+            errors.append("El descuento no puede ser mayor al total de la orden.")
+            
+    except (ValueError, TypeError):
+        errors.append("Los valores monetarios deben ser números válidos.")
+    
+    return errors
+
+def format_user_friendly_errors(form_compra_cab, formset):
+    """Formatear errores de forma más amigable para el usuario"""
+    errores_amigables = []
+    
+    # Mapeo de campos a nombres amigables
+    campo_nombres = {
+        'nro_comprobante': 'Número de Comprobante',
+        'fecha': 'Fecha',
+        'proveedor': 'Proveedor',
+        'total': 'Total',
+        'descuento': 'Descuento',
+        'iva_cinco': 'IVA 5%',
+        'iva_diez': 'IVA 10%',
+        'observaciones': 'Observaciones',
+        'producto_id': 'Producto',
+        'cantidad': 'Cantidad',
+        'precio_compra': 'Precio de Compra',
+        'subtotal': 'Subtotal',
+        'descripcion': 'Descripción'
+    }
+    
+    # Errores de cabecera
+    for field, field_errors in form_compra_cab.errors.items():
+        campo_amigable = campo_nombres.get(field, field.replace('_', ' ').title())
+        for error in field_errors:
+            errores_amigables.append(f"{campo_amigable}: {error}")
+    
+    # Errores de detalle
+    for i, form in enumerate(formset.forms):
+        if form.errors:
+            for field, field_errors in form.errors.items():
+                campo_amigable = campo_nombres.get(field, field.replace('_', ' ').title())
+                for error in field_errors:
+                    errores_amigables.append(f"Producto #{i+1} - {campo_amigable}: {error}")
+    
+    # Errores no relacionados con campos específicos
+    for error in form_compra_cab.non_field_errors():
+        errores_amigables.append(f"{error}")
+    
+    for error in formset.non_form_errors():
+        errores_amigables.append(f"{error}")
+    
+    return errores_amigables'''
+
+
+
+
+
+
+
+
+
+
 @login_required(login_url='login/')
 @permission_required('compras.change_ordencompracab', raise_exception=True)
 @permission_required('compras.change_ordencompradet', raise_exception=True)
@@ -597,24 +781,22 @@ def editar_compra(request,id_compra):
 	detalles_originales = OrdenCompraDet.objects.filter(orden_compra_cab=compra)
 	
 	formset_compra = formset_factory(FormEditCompraDetalle, extra=0, can_delete=True)
-	
-	print("Entrando a registrar_compra_cab_det_version_act_v2")
 	#fecha_actual = datetime.now().date()
 
 	if request.method == 'POST':
 		form_compra_cab = FormEditCompraCabecera(request.POST,instance=compra)
 		form_compra_det = formset_compra(request.POST)
 
-		# Imprimir los datos enviados al backend
-		print("Datos enviados al backend:")
-		print(request.POST)
-		print("Detalles de la compra:")
+		
+		logger.debug(f"Datos POST recibidos: {dict(request.POST)}")
+
+  
 		# Imprimir los datos de cada detalle de la venta
 		for i, form_det in enumerate(form_compra_det):
-			print(f"Form Detalle #{i}: {form_det}")
+			logger.debug(f"Detalle #{i+1} datos: {form_det.data}")
 
 		if form_compra_cab.is_valid() and form_compra_det.is_valid():
-			print("Formularios válidos, procediendo a guardar la compra")
+			logger.info("Formularios válidos para edición de compra")
 			try:
 				with transaction.atomic():
 					
@@ -638,7 +820,7 @@ def editar_compra(request,id_compra):
 					for form_det in form_compra_det:
 						if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
 							
-							print("Procesando modificacion del detalle de la compra")
+							logger.debug(f"Procesando detalle para guardar: {form_det.cleaned_data}")
 							
 							producto_id = form_det.cleaned_data.get('producto_id')
 							cantidad = form_det.cleaned_data.get('cantidad')
@@ -648,8 +830,7 @@ def editar_compra(request,id_compra):
 							subtotal = form_det.cleaned_data.get('subtotal')
 							producto_instance = Producto.objects.get(id=producto_id)
 							
-							print(f"Producto ID: {producto_id}, Cantidad: {cantidad}, Descripción: {descripcion}, Unidad de Medida: {unidad_medida}, Precio Unitario: {precio_compra}, Subtotal: {subtotal}")
-							print(f"Creando nuevo detalle")
+							logger.debug(f"Guardando detalle: Producto ID {producto_id}, Cantidad {cantidad}")
 							
 							detalle = OrdenCompraDet(
 								orden_compra_cab=cabecera,
@@ -664,7 +845,8 @@ def editar_compra(request,id_compra):
 							detalle.save()
 							
 							# 5. Registrar movimiento de stock
-							print(f"Registrando movimiento de stock: Producto:{producto_instance.nombre}, Cantidad: {cantidad}")
+							logger.debug(f"Registrando movimiento de stock para producto ID {producto_id}, Cantidad {cantidad}")
+	   
 							registrar_movimiento_stock(
 								producto=producto_instance,
 								cantidad=cantidad,
@@ -681,22 +863,26 @@ def editar_compra(request,id_compra):
 					return redirect('list_compras')
 				
 			except Exception as e:
-				print(f'Error: {e}')  # Log the error
+				logger.error(f"Error al guardar edición de compra: {str(e)}")
 				messages.error(request, '¡Error al guardar en la base de datos!')
-				print('Error de integridad')
 			
 		else:
-			print("Formularios no válidos, mostrando errores")
-			print("-----------------------------------------")
-			print("Errores de cabecera:")
-			print(form_compra_cab.errors)
-			print("Errores de detalles:")
-			for form_det in form_compra_det:
-				print(form_det.errors)
-
+	  
+			logger.warning("Formularios inválidos para edición de compra")
 			messages.error(request, '¡Hubo un error al registrar la compra!')
-			#print('Prefix', form_compra_det.prefix)  # Imprimir el prefijo del formset para depuración
-			
+			# Recopilar errores
+			errores = []
+			# Errores de detalles
+			for i, form in enumerate(form_compra_det, start=1):
+				for field, field_errors in form.errors.items():
+					for error in field_errors:
+						errores.append(f"Detalle #{i}, Campo [{field}]: {error}")
+	
+			# Errores de cabecera
+			for field, field_errors in form_compra_cab.errors.items():
+				for error in field_errors:
+					errores.append(f"Cabecera, Campo [{field}]: {error}")
+	 
 			context = {
 				'form_compra_cab': form_compra_cab,
 				'form_compra_det': form_compra_det,
@@ -747,7 +933,7 @@ def buscar_productos(request):
 			'unidad_medida': p.unidad_medida,
 			'descripcion': p.descripcion[:100] if p.descripcion else p.nombre
 		})
-	print(data)
+	logger.debug(f"Productos encontrados para '{q}': {data}")
 	return JsonResponse(data, safe=False)
 
 def obtener_datos_producto(request):

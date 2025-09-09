@@ -95,27 +95,35 @@
 									<div class="mb-4 border-bottom pb-3">
 										<h5 class="text-indigo mb-3"><i class="fas fa-id-card mr-2"></i>Información Legal</h5>
 										<div class="row">
-											<div class="col-md-6">
+											<div class="col-md-12">
 												<div class="form-group mb-4">
 													{{ form_proveedor.razon_social|as_crispy_field }}
-													<small class="form-text text-muted">Nombre legal o razón social</small>
+													<small class="form-text text-muted">Razon Social</small>
 												</div>
 											</div>
-											<div class="col-md-6">
+										</div>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_proveedor.representante|as_crispy_field }}
+													<small class="form-text text-muted">Nombre del Representante Legal</small>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-3">
 												<div class="form-group mb-4">
 													{{ form_proveedor.tipo_documento|as_crispy_field }}
 													<small class="form-text text-muted">Tipo de documento legal</small>
 												</div>
 											</div>
-										</div>
-										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group mb-4">
 														{{ form_proveedor.documento|as_crispy_field }}
 													<small class="form-text text-muted">Número de documento</small>
 												</div>
 											</div>
-											<div class="col-md-6">
+											<div class="col-md-3">
 												<div class="form-group mb-4">
 													{{ form_proveedor.digito_verificador|as_crispy_field }}
 													<small class="form-text text-muted">Dígito verificador (si aplica)</small>
@@ -139,34 +147,29 @@
 											<div class="col-md-12">
 												<div class="form-group mb-4">
 													{{ form_proveedor.direccion|as_crispy_field }}
-													<small class="form-text text-muted">Dirección completa</small>
+													<small class="form-text text-muted">Direccion completa</small>
 												</div>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-md-4">
+											<div class="col-md-6">
 												<div class="form-group">
-													<label for="{{ form_proveedor.prefijo_tel.id_for_label }}">{{ form_proveedor.prefijo_tel.label }}</label>
-													{{ form_proveedor.prefijo_tel }}
-													{% if form_proveedor.prefijo_tel.errors %}
-														<div class="text-danger">{{ form_proveedor.prefijo_tel.errors }}</div>
+													{{ form_proveedor.codigo_pais.label_tag }}
+													{{ form_proveedor.codigo_pais }}
+													<small class="form-text text-muted">Prefijo Numero Telefonico</small>
+													{% if form_proveedor.codigo_pais.errors %}
+														<div class="text-danger">{{ form_proveedor.codigo_pais.errors }}</div>
 													{% endif %}
 												</div>
 											</div>
-											<div class="col-md-4">
+											<div class="col-md-6">
 												<div class="form-group">
-													<label for="{{ form_proveedor.numero_tel.id_for_label }}">{{ form_proveedor.numero_tel.label }}</label>
-													{{ form_proveedor.numero_tel }}
-													{% if form_proveedor.numero_tel.errors %}
-														<div class="text-danger">{{ form_proveedor.numero_tel.errors }}</div>
+													{{ form_proveedor.num_tel.label_tag }}
+													{{ form_proveedor.num_tel }}
+													<small class="form-text text-muted">Número de Teléfono</small>
+													{% if form_proveedor.num_tel.errors %}
+														<div class="text-danger">{{ form_proveedor.num_tel.errors }}</div>
 													{% endif %}
-												</div>
-											</div>
-											<div class="col-md-4">
-												<div class="form-group">
-													<label>Número Completo</label>
-													<input type="text" class="form-control" id="telefono_preview" readonly 
-														style="background-color: #f8f9fa;" placeholder="Previsualización">
 												</div>
 											</div>
 										</div>
@@ -313,19 +316,6 @@
 <!-- Page specific script -->
 <script>
 
-	// Función para actualizar la previsualización del teléfono
-    function updateTelefonoPreview() {
-        const prefijo = $('#id_prefijo_tel').val();
-        const numero = $('#id_numero_tel').val();
-        const preview = prefijo + numero;
-        $('#telefono_preview').val(preview);
-    }
-
-    // Función para validar solo números en el campo número
-    function validarSoloNumeros(input) {
-        input.value = input.value.replace(/[^0-9]/g, '');
-    }
-
 	// Función para mostrar/ocultar dígito verificador
     function toggleDigitoVerificador(selectElement) {
         const digitoVerificadorField = document.querySelector('[name="digito_verificador"]');
@@ -336,59 +326,6 @@
             digitoVerificadorField.value = ''; // Limpiar el valor si está deshabilitado
         }
     }
-
-	// Event listeners
-    $('#id_prefijo_tel, #id_numero_tel').on('input change', updateTelefonoPreview);
-    
-    // Validar solo números en el campo número de teléfono
-    $('#id_numero_tel').on('input', function() {
-        validarSoloNumeros(this);
-        updateTelefonoPreview();
-    });
-
-    // Limitar longitud del número según el prefijo
-    $('#id_prefijo_tel').on('change', function() {
-        const prefijo = $(this).val();
-        const numeroInput = $('#id_numero_tel');
-        
-        // Ajustar maxlength según el tipo de línea
-        if (prefijo === '021') {
-            // Líneas fijas: 8 dígitos
-            numeroInput.attr('maxlength', '8');
-            numeroInput.attr('placeholder', 'XXXXXXXX');
-        } else {
-            // Celulares: 9 dígitos
-            numeroInput.attr('maxlength', '9');
-            numeroInput.attr('placeholder', 'XXXXXXXXX');
-        }
-        
-        updateTelefonoPreview();
-    });
-
-    // Inicializar la previsualización
-    updateTelefonoPreview();
-
-	// Validación del formulario antes de enviar
-    $('#proveedorForm').on('submit', function(e) {
-        const numero = $('#id_numero_tel').val();
-        const prefijo = $('#id_prefijo_tel').val();
-        
-        if (!numero || numero.length < 8) {
-            e.preventDefault();
-            toastr.error('El número de teléfono debe tener al menos 8 dígitos.');
-            return false;
-        }
-        
-        // Validar longitud según el prefijo
-        const esLineaFija = prefijo === '021';
-        const longitudEsperada = esLineaFija ? 8 : 9;
-        
-        if (numero.length !== longitudEsperada) {
-            e.preventDefault();
-            toastr.error(`El número debe tener exactamente ${longitudEsperada} dígitos para este prefijo.`);
-            return false;
-        }
-    });
 
     // Ejecutar al cargar la página para establecer el estado inicial
     document.addEventListener('DOMContentLoaded', function () {

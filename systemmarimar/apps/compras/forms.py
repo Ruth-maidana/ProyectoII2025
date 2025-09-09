@@ -115,6 +115,7 @@ class ProveedorForm(forms.ModelForm):
         model = Proveedor
         fields = [
             'razon_social', 
+            'representante',
             'direccion', 
             'codigo_pais',
             'num_tel',
@@ -134,13 +135,15 @@ class ProveedorForm(forms.ModelForm):
             'codigo_pais': 'Prefijo Tel.',
             'num_tel': 'Teléfono',
             'correo': 'Email',
-            'tipo_documento': 'Tipo de Documento'
+            'tipo_documento': 'Tipo de Documento',
+            'representante': 'Representante Legal'
         }
         
         widgets = {
+            'representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del representante legal'}),
             'razon_social': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón social'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control','rows': 3,'placeholder': 'Descripción del proveedor'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Dirección completa'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
             'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
             'num_tel': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: 981234567'}),
             'correo': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'correo@ejemplo.com'}),
@@ -152,9 +155,6 @@ class ProveedorForm(forms.ModelForm):
         documento = cleaned_data.get('documento')
         digito_verificador = cleaned_data.get('digito_verificador')
         tipo_documento = cleaned_data.get('tipo_documento')
-
-        if not documento:
-            raise forms.ValidationError({'documento': 'Este campo es obligatorio.'})
 
         # Concatenar documento y dígito verificador solo si el tipo de documento es RUC
         if tipo_documento == 'RUC':
@@ -252,12 +252,6 @@ class ProveedorEditForm(forms.ModelForm):
                     self.fields['numero_tel'].initial = tel_completo.replace(prefijo, '')
                     break
 
-    
-
-'''class FiltroComprasForm(forms.Form):
-    fecha_inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
-    fecha_fin = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
-    proveedor = forms.ModelChoiceField(queryset=Proveedor.objects.all(), required=False)'''
 
 
 class FormRegCompraCabecera(forms.ModelForm):
@@ -333,7 +327,7 @@ class FormRegCompraCabecera(forms.ModelForm):
             'nro_comprobante': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: OC-2025-001'}),
         }
         
-    def clean_nro_comprobante(self):
+    '''def clean_nro_comprobante(self):
         """Validar que el número de comprobante sea único"""
         nro_comprobante = self.cleaned_data.get('nro_comprobante')
         
@@ -382,6 +376,66 @@ class FormRegCompraCabecera(forms.ModelForm):
         if not self.instance.pk and total <= 0:
             raise ValidationError({
                 'total': 'El total de la orden debe ser mayor a cero.'
+            })
+            
+        return cleaned_data'''
+        
+    def clean_descuento(self):
+        """Validar que el descuento sea válido"""
+        descuento = self.cleaned_data.get('descuento', Decimal('0.0'))
+        
+        if descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
+        
+        return descuento
+    
+    def clean_total(self):
+        """Validar que el total sea positivo"""
+        total = self.cleaned_data.get('total', Decimal('0.0'))
+        
+        if total < 0:
+            raise ValidationError("El total no puede ser negativo. Verifique las cantidades de los productos.")
+        
+        if total == 0:
+            raise ValidationError("El total debe ser mayor a cero. Agregue productos a la orden.")
+            
+        return total
+    
+    def clean_iva_cinco(self):
+        """Validar IVA 5%"""
+        iva_cinco = self.cleaned_data.get('iva_cinco', Decimal('0.0'))
+        
+        if iva_cinco < 0:
+            raise ValidationError("El IVA 5% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_cinco
+    
+    def clean_iva_diez(self):
+        """Validar IVA 10%"""
+        iva_diez = self.cleaned_data.get('iva_diez', Decimal('0.0'))
+        
+        if iva_diez < 0:
+            raise ValidationError("El IVA 10% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_diez
+    
+    def clean(self):
+        """Validaciones adicionales de la orden"""
+        cleaned_data = super().clean()
+        proveedor = cleaned_data.get('proveedor')
+        total = cleaned_data.get('total', Decimal('0.0'))
+        descuento = cleaned_data.get('descuento', Decimal('0.0'))
+        
+        # Verificar que el proveedor esté activo
+        if proveedor and not proveedor.activo:
+            raise ValidationError({
+                'proveedor': 'No se puede crear una orden para un proveedor inactivo. Seleccione un proveedor activo.'
+            })
+        
+        # Validar relación entre descuento y total
+        if total > 0 and descuento > total:
+            raise ValidationError({
+                'descuento': f'El descuento ({descuento}) no puede ser mayor al total ({total}).'
             })
             
         return cleaned_data
@@ -448,7 +502,7 @@ class FormRegCompraDetalle(forms.Form):
     )
     
     
-    def clean_cantidad(self):
+    '''def clean_cantidad(self):
         """Validar cantidad"""
         cantidad = self.cleaned_data.get('cantidad')
         
@@ -470,39 +524,46 @@ class FormRegCompraDetalle(forms.Form):
                 raise ValidationError("No se puede agregar un producto desactivado.")
             return producto_id
         except Producto.DoesNotExist:
-            raise ValidationError("Producto no encontrado.")
+            raise ValidationError("Producto no encontrado.")'''
     
-    
-    '''def clean(self):
+    def clean_cantidad(self):
+        """Validar cantidad con mensajes más específicos"""
+        cantidad = self.cleaned_data.get('cantidad')
         
-        cleaned_data = super().clean()
-        cantidad = cleaned_data.get('cantidad')
-        producto_id = cleaned_data.get('producto_id')
-        
-        if cantidad is None or cantidad <= 0:
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data  # Retornar aquí para evitar continuar con la validación
-        
-        # Validar producto
-        if not producto_id:
-            self.add_error('producto_id', "Debe seleccionar un producto.")
-            return cleaned_data
+        if cantidad is None:
+            raise ValidationError("La cantidad es obligatoria.")
             
-        try:
-            producto = Producto.objects.get(id=producto_id)
-        except Producto.DoesNotExist:
-            self.add_error('producto_id', "Producto no encontrado.")
-            return cleaned_data
+        if cantidad <= 0:
+            raise ValidationError(f"La cantidad debe ser mayor a cero. Valor ingresado: {cantidad}")
         
-        if producto.cantidad_en_stock < cantidad:
-            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
-            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
-        return cleaned_data'''
+        # Validar que sea un número entero positivo
+        if not isinstance(cantidad, int) and not cantidad.is_integer():
+            raise ValidationError("La cantidad debe ser un número entero.")
         
+        return cantidad
     
+    def clean_precio_compra(self):
+        """Validar precio de compra"""
+        precio = self.cleaned_data.get('precio_compra')
+        
+        if precio is None:
+            raise ValidationError("El precio de compra es obligatorio.")
+            
+        if precio <= 0:
+            raise ValidationError(f"El precio debe ser mayor a cero. Valor ingresado: {precio}")
+            
+        return precio
     
+    def clean_subtotal(self):
+        """Validar subtotal"""
+        subtotal = self.cleaned_data.get('subtotal')
+        
+        if subtotal is not None and subtotal < 0:
+            raise ValidationError("El subtotal no puede ser negativo. Verifique la cantidad y el precio.")
+            
+        return subtotal
     
-    
+
 class FormEditCompraCabecera(forms.ModelForm):
     
     iva_diez = forms.DecimalField(

@@ -1,0 +1,170 @@
+/* Estilos para campos con errores */
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.is-valid {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+/* Mensajes de error personalizados */
+.invalid-feedback {
+    display: block !important;
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+}
+
+/* Estilos para los mensajes de Django */
+.messages {
+    margin-bottom: 1rem;
+}
+
+.messages .alert {
+    margin-bottom: 0.5rem;
+    border-left: 4px solid;
+    padding-left: 1rem;
+}
+
+.messages .alert-error {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.messages .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.messages .alert-success {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+/* Animación sutil para campos con error */
+.is-invalid {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Estilos para filas de tabla con errores */
+tr.has-error {
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+tr.has-error td {
+    border-left: 3px solid #dc3545;
+}
+
+/* Mejorar la apariencia de Select2 con errores */
+.select2-container--bootstrap-5 .select2-selection--single.is-invalid,
+.select2-container--bootstrap-5 .select2-selection--multiple.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+/* Tooltip personalizado para errores */
+.error-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.error-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #dc3545;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    font-size: 12px;
+}
+
+.error-tooltip:hover .tooltip-text {
+    visibility: visible;
+}
+
+/* Estilos para el resumen de errores */
+.error-summary {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+    border-left: 4px solid #dc3545;
+}
+
+.error-summary h4 {
+    color: #dc3545;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.error-summary ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.error-summary li {
+    margin-bottom: 0.25rem;
+}
+
+/* Mejoras para SweetAlert2 */
+.swal2-popup {
+    font-family: inherit;
+}
+
+.swal2-title {
+    color: #dc3545 !important;
+}
+
+.swal2-html-container ul {
+    list-style-type: disc;
+    text-align: left;
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.swal2-html-container li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+/* Indicadores visuales para campos requeridos */
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Estilos responsivos para errores */
+@media (max-width: 768px) {
+    .error-summary {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.8rem;
+    }
+    
+    .swal2-popup {
+        width: 90% !important;
+        margin: 0 auto;
+    }
+}

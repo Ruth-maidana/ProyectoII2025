@@ -49,10 +49,10 @@ class Categoria(models.Model):
 
 class Proveedor(models.Model):
     razon_social = models.CharField(max_length=50,unique=True, null=False)
-    representante = models.CharField(max_length=50, null=True, blank=True)
+    representante = models.CharField(max_length=50, blank=True)
     nro_documento = models.CharField(max_length=30, null=False, unique=True)
     direccion = models.CharField(max_length=100, null=True,blank=True)
-    CODIGOS_PAIS = (
+    CODIGOS_NUM_PAIS = (
         ('+595', 'Paraguay (+595)'),
         ('+54', 'Argentina (+54)'),
         ('+55', 'Brasil (+55)'),
@@ -75,7 +75,7 @@ class Proveedor(models.Model):
     
     codigo_pais = models.CharField(
         max_length=5, 
-        choices=CODIGOS_PAIS, 
+        choices=CODIGOS_NUM_PAIS, 
         default='+595',
         help_text="Código de país para el teléfono"
     )
@@ -94,7 +94,7 @@ class Proveedor(models.Model):
     
     correo = models.EmailField(max_length=30, null=False, unique=True)
     fecha_insercion = models.DateTimeField(auto_now_add=True)
-    descripcion = models.CharField(max_length=30)
+    descripcion = models.CharField(max_length=100, null=True,blank=True)
     TIPO_DOC = (
         ('RUC','RUC'),
         ( 'CI','CI'),
@@ -150,7 +150,7 @@ class Proveedor(models.Model):
         super(Proveedor, self).save(*args, **kwargs)
 
     def __str__(self):
-        return'{}'.format(self.razon_social,self.nro_documento,self.telefono_completo,self.direccion,self.correo,self.descripcion,self.tipo_documento,self.activo)
+        return'{}'.format(self.razon_social,self.nro_documento,self.telefono_completo,self.descripcion,self.tipo_documento)
 
 
 class Producto(models.Model):
