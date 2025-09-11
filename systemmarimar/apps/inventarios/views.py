@@ -1,4 +1,5 @@
 from itertools import count
+import logging
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -29,6 +30,7 @@ from django.utils.safestring import mark_safe
 import json
 # Create your views here.
 
+logger = logging.getLogger(__name__)
 
 #@login_required(login_url='login/')
 #@permission_required('inventarios.view_movimientostock', raise_exception=True)
@@ -80,6 +82,72 @@ def listar_movimientos(request):
 @login_required(login_url='login/')
 @permission_required('inventarios.view_movimientostock', raise_exception=True)
 def listar_movimientos_version_act(request):
+    movimientos = MovimientoStock.objects.all().order_by('-fecha_movimiento')  # Ordenar por fecha del movimiento
+    
+    categoria_id = request.GET.get('categoria')
+    producto_id = request.GET.get('producto')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    nivel_stock = request.GET.get('nivel_stock')
+    
+    # Filtrar por categoría si se proporciona
+    if categoria_id:
+        movimientos = movimientos.filter(producto__categoria__id=categoria_id)
+    
+    # Filtrar por producto si se proporciona
+    if producto_id:
+        movimientos = movimientos.filter(producto__id=producto_id)
+        
+    # Filtrar por rango de fechas si se proporciona
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            
+            # CORRECCIÓN: Usar fecha_movimiento en lugar de fecha
+            movimientos = movimientos.filter(
+                fecha_movimiento__range=[fecha_inicio_dt, fecha_fin_dt]
+            )
+            
+            logger.debug(f"Filtrando movimientos por fecha_movimiento entre {fecha_inicio_dt} y {fecha_fin_dt}")
+            
+        except ValueError:
+            messages.error(request, 'Formato de fecha inválido. Usa YYYY-MM-DD.')
+    
+    # Filtrar por nivel de stock
+    '''if nivel_stock:
+        try:
+            config_stock = ConfiguracionStock.objects.latest('fecha_configuracion')
+            if nivel_stock == 'bajo':
+                movimientos = movimientos.filter(
+                    cantidad_actual__lt=config_stock.cantidad_maxima
+                )
+            elif nivel_stock == 'suficiente':
+                movimientos = movimientos.filter(
+                    cantidad_actual__gte=config_stock.cantidad_maxima
+                )
+        except ConfiguracionStock.DoesNotExist:
+            messages.error(request, 'No se encontró configuración de stock.')'''
+    
+    # Obtener categorías para el formulario
+    categorias = Categoria.objects.all()
+    productos = Producto.objects.all()
+
+    context = {
+        'Movimientos': movimientos, 
+        'categorias': categorias,
+        'productos': productos,
+        'categoria_seleccionada': int(categoria_id) if categoria_id else None,
+        'producto_seleccionado': int(producto_id) if producto_id else None,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'nivel_stock_seleccionado': nivel_stock,
+    }
+    
+    return render(request, 'stock/listar3.html', context)
+
+
+'''def listar_movimientos_version_act(request):
     movimientos = MovimientoStock.objects.all()
     
     categoria_id = request.GET.get('categoria')
@@ -109,22 +177,6 @@ def listar_movimientos_version_act(request):
         except ValueError:
             messages.error(request, 'Formato de fecha inválido. Usa YYYY-MM-DD.')
     
-    
-    # Filtrar por nivel de stock
-    '''if nivel_stock:
-        try:
-            config_stock = ConfiguracionStock.objects.latest('fecha_configuracion')
-            if nivel_stock == 'bajo':
-                movimientos = movimientos.filter(
-                    cantidad_actual__lt=config_stock.cantidad_maxima
-                )
-            elif nivel_stock == 'suficiente':
-                movimientos = movimientos.filter(
-                    cantidad_actual__gte=config_stock.cantidad_maxima
-                )
-        except ConfiguracionStock.DoesNotExist:
-            messages.error(request, 'No se encontró configuración de stock.')'''
-    
     # Obtener categorías para el formulario
     categorias = Categoria.objects.all()
     productos = Producto.objects.all()
@@ -141,7 +193,7 @@ def listar_movimientos_version_act(request):
         'nivel_stock_seleccionado': nivel_stock,
     }
     
-    return render(request, 'stock/listar3.html', context)
+    return render(request, 'stock/listar3.html', context)'''
 
 @login_required(login_url='login/')
 @permission_required('inventarios.add_movimientostock', raise_exception=True)

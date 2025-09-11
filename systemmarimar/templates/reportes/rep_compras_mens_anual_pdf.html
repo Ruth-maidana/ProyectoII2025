@@ -30,7 +30,7 @@
     <div class="resumen">
         <table>
             <tr>
-                <th>{{ tipo_reporte|title }}</th>
+                <th>{{ encabezado_tabla }}</th>
                 <th>Total Compras (Gs)</th>
             </tr>
             {% for categoria, monto in datos %}
@@ -45,12 +45,16 @@
     <div class="resumen">
         <table>
             <tr>
-                <th>Total General:</th>
+                <th>{{ etiqueta_total }}:</th>
                 <td>{{ total_general|floatformat:0 }} Gs</td>
             </tr>
             <tr>
-                <th>Promedio:</th>
+                <th>{{ etiqueta_promedio }}:</th>
                 <td>{{ promedio|floatformat:0 }} Gs</td>
+            </tr>
+            <tr>
+                <th>Cantidad de compras:</th>
+                <td>{{ cantidad_compras }}</td>
             </tr>
         </table>
     </div>

@@ -265,6 +265,42 @@
         });
     }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'error' %}
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% elif message.tags == 'warning' %}
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
+{% endif %}
+
 <script>
     $(function () {
         $("#example1").DataTable({

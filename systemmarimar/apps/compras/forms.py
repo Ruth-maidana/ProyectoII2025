@@ -501,31 +501,6 @@ class FormRegCompraDetalle(forms.Form):
         max_digits=100
     )
     
-    
-    '''def clean_cantidad(self):
-        """Validar cantidad"""
-        cantidad = self.cleaned_data.get('cantidad')
-        
-        if cantidad is None or cantidad <= 0:
-            raise ValidationError("La cantidad debe ser un número entero mayor a cero.")
-        
-        return cantidad
-    
-    def clean_producto_id(self):
-        """Validar que el producto existe y está activo"""
-        producto_id = self.cleaned_data.get('producto_id')
-        
-        if not producto_id:
-            raise ValidationError("Debe seleccionar un producto.")
-        
-        try:
-            producto = Producto.objects.get(id=producto_id)
-            if not producto.activo:
-                raise ValidationError("No se puede agregar un producto desactivado.")
-            return producto_id
-        except Producto.DoesNotExist:
-            raise ValidationError("Producto no encontrado.")'''
-    
     def clean_cantidad(self):
         """Validar cantidad con mensajes más específicos"""
         cantidad = self.cleaned_data.get('cantidad')

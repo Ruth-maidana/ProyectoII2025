@@ -767,11 +767,6 @@ def format_user_friendly_errors(form_compra_cab, formset):
 
 
 
-
-
-
-
-
 @login_required(login_url='login/')
 @permission_required('compras.change_ordencompracab', raise_exception=True)
 @permission_required('compras.change_ordencompradet', raise_exception=True)
@@ -955,19 +950,57 @@ def obtener_datos_producto(request):
 @permission_required('compras.delete_ordencompracab', raise_exception=True)
 @permission_required('compras.delete_ordencompradet', raise_exception=True)
 def inactivar_compra(request, id_compra):
-	# Obtener la cabecera de la compra
-	compra_cab = get_object_or_404(OrdenCompraCab, id=id_compra)
-	
-	# Cambiar el estado a inactivo
-	compra_cab.estado = False
-	compra_cab.save()
-	
-	# Mostrar un mensaje de éxito
-	messages.success(request, "La compra fue inactivada correctamente.")
-	
-	# Redirigir a la lista de compras
-	return redirect('list_compras')
-
+    """
+    Vista para inactivar una compra y reversar los movimientos de stock
+    """
+    
+    compra_cab = get_object_or_404(OrdenCompraCab, id=id_compra)
+    
+    if not compra_cab.activo:
+        messages.warning(request, "Esta compra ya está inactivada.")
+        return redirect('list_compras')
+    
+    try:
+        with transaction.atomic():
+            
+            detalles_compra = OrdenCompraDet.objects.filter(orden_compra_cab=compra_cab)
+            
+            logger.info(f"Inactivando compra {compra_cab.nro_comprobante} con {detalles_compra.count()} detalles")
+            
+            # Reversar los movimientos de stock
+            for detalle in detalles_compra:
+                registrar_movimiento_stock(
+                    producto=detalle.producto,
+                    cantidad=detalle.cantidad,
+                    movimiento='REV_ENT',
+                    descripcion=f"Reversión por inactivación de compra: {compra_cab.nro_comprobante}",
+                    ajuste=None,
+                    fecha_mov_producto=None,
+                    compra_cab=compra_cab,
+                    venta_cab=None
+                )
+                
+                detalle.activo = False
+                detalle.save()
+                
+                logger.debug(f"Stock revertido y detalle inactivado para producto {detalle.producto.nombre}: -{detalle.cantidad}")
+            
+            compra_cab.activo = False
+            compra_cab.save()
+            
+            logger.info(f"Compra {compra_cab.nro_comprobante} inactivada exitosamente")
+            
+            messages.success(
+                request, 
+                f"La compra fue inactivada correctamente. "
+                f"Se revirtieron {detalles_compra.count()} movimientos de stock."
+            )
+    
+    except Exception as e:
+        logger.error(f"Error al inactivar compra {compra_cab.nro_comprobante}: {str(e)}")
+        messages.error(request, f'Error al inactivar la compra: {str(e)}')
+    
+    return redirect('list_compras')
 
 @login_required(login_url='login/')
 @permission_required('compras.view_ordencompracab', raise_exception=True)
@@ -1179,6 +1212,250 @@ def exportar_compras_mensual_anual_pdf(request):
 	tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
 	anio = request.GET.get('anio', datetime.now().year)
 	mes = request.GET.get('mes') if tipo_reporte == 'mensual' else None
+ 
+	print(f"Generando PDF para reporte de compras: tipo={tipo_reporte}, año={anio}, mes={mes}")
+ 
+	logger.info(f"Generando PDF para reporte de compras: tipo={tipo_reporte}, año={anio}, mes={mes}")
+	
+	# Validación básica
+	if not anio:
+		messages.error(request, 'Debe seleccionar al menos el año')
+		#return render(request, 'reportes/rep_compras_mens_anual.html', {})
+
+	# Filtrar compras (igual que en la función original)
+	compras = OrdenCompraCab.objects.filter(activo=True)
+	
+	# Definir nombres de meses una sola vez
+	meses_nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+					 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+	
+	if tipo_reporte == 'mensual' and mes:
+		logger.info(f"Generando reporte mensual para {mes}/{anio}")
+		compras = compras.filter(
+			fecha_compra__year=anio,
+			fecha_compra__month=mes
+		)
+		grupo = 'fecha_compra__day'
+		nombre_mes = meses_nombres[int(mes)-1]
+		titulo_grafico = f'Compras Diarias - {nombre_mes} {anio}'
+		periodo = f"{nombre_mes} {anio}"
+		etiqueta_total = f"Total compras del mes"
+		etiqueta_promedio = f"Promedio diario del mes"
+		encabezado_tabla = "Días del Mes"  # ← AGREGAR ESTA LÍNEA
+	else:
+		logger.info(f"Generando reporte anual para {anio}")
+		compras = compras.filter(fecha_compra__year=anio)
+		grupo = 'fecha_compra__month'
+		titulo_grafico = f'Compras Mensuales - Año {anio}'
+		periodo = f"Año {anio}"
+		etiqueta_total = f"Total compras del año"
+		etiqueta_promedio = f"Promedio mensual del año"
+		encabezado_tabla = "Meses del Año"  # ← AGREGAR ESTA LÍNEA
+
+	# Agrupar datos para el gráfico (igual que en la función original)
+	datos_grafico = compras.values(grupo).annotate(
+		total_compras=Sum('total')
+	).order_by(grupo)
+
+	# Preparar datos para el gráfico
+	if tipo_reporte == 'mensual':
+		categorias = [f'Día {item[grupo]}' for item in datos_grafico]
+	else:
+		categorias = [meses_nombres[item[grupo]-1] for item in datos_grafico]
+	
+	montos = [float(item['total_compras']) for item in datos_grafico]
+
+	# Generar gráfico (similar a la función original)
+	plt.figure(figsize=(10, 5))
+	if tipo_reporte == 'mensual':
+		plt.bar(categorias, montos, color='#4CAF50')
+	else:
+		plt.plot(categorias, montos, marker='o', color='#2196F3', linewidth=2)
+	
+	plt.title(titulo_grafico, pad=20, fontweight='bold')
+	plt.xlabel('Días' if tipo_reporte == 'mensual' else 'Meses')
+	plt.ylabel('Total Compras (Gs)')
+	plt.grid(axis='y', linestyle='--', alpha=0.7)
+	
+	# Formatear eje Y con separadores de miles
+	ax = plt.gca()
+	ax.yaxis.set_major_formatter(plt.matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+	
+	plt.tight_layout()
+	
+	# Convertir gráfico a base64 para el PDF
+	buffer = io.BytesIO()
+	plt.savefig(buffer, format='png', dpi=100)
+	buffer.seek(0)
+	grafico_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+	plt.close()
+
+	# Totales (igual que en la función original)
+	total_general = compras.aggregate(total=Sum('total'))['total'] or 0
+	promedio = total_general / len(montos) if len(montos) > 0 else 0
+
+	# CORRECCIÓN: Agregar información más específica
+	cantidad_compras = compras.count()
+	
+	# Preparar el contexto para el PDF
+	context = {
+		'grafico': grafico_base64,
+		'tipo_reporte': tipo_reporte,
+		'periodo': periodo,
+		'total_general': total_general,
+		'promedio': promedio,
+		'cantidad_compras': cantidad_compras,
+		'etiqueta_total': etiqueta_total,
+		'etiqueta_promedio': etiqueta_promedio,
+		'encabezado_tabla': encabezado_tabla,  # Nueva variable para el encabezado
+		'fecha_generacion': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+		'datos': zip(categorias, montos),  # Para la tabla de datos
+	}
+
+	# Configurar la respuesta PDF
+	template_path = 'reportes/rep_compras_mens_anual_pdf.html'
+	response = HttpResponse(content_type='application/pdf')
+	nombre_archivo = f"compras_{'Mensual' if tipo_reporte == 'mensual' else 'anual'}_{anio}"
+	if mes:
+		nombre_archivo += f"_{mes}"
+	response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}.pdf"'
+
+	# Renderizar el template a PDF
+	template = get_template(template_path)
+	html = template.render(context)
+	
+	pisa_status = pisa.CreatePDF(html, dest=response)
+	
+	if pisa_status.err:
+		return HttpResponse('Error al generar PDF', status=500)
+	
+	return response
+
+
+
+'''def exportar_compras_mensual_anual_pdf(request):
+	# Obtener parámetros (los mismos que en la función original)
+	tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
+	anio = request.GET.get('anio', datetime.now().year)
+	mes = request.GET.get('mes') if tipo_reporte == 'mensual' else None
+	
+	# Validación básica
+	if not anio:
+		messages.error(request, 'Debe seleccionar al menos el año')
+		#return render(request, 'reportes/rep_compras_mens_anual.html', {})
+
+	# Filtrar compras (igual que en la función original)
+	compras = OrdenCompraCab.objects.filter(activo=True)
+	
+	if tipo_reporte == 'mensual' and mes:
+		compras = compras.filter(
+			fecha_compra__year=anio,
+			fecha_compra__month=mes
+		)
+		grupo = 'fecha_compra__day'
+		titulo_grafico = f'Compras Diarias - {mes}/{anio}'
+		# CORRECCIÓN: Ser más específico con el período
+		meses_nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+						 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+		nombre_mes = meses_nombres[int(mes)-1]
+		periodo = f"{nombre_mes} {anio}"
+		etiqueta_total = f"Total compras del mes"
+		etiqueta_promedio = f"Promedio diario del mes"
+	else:
+		compras = compras.filter(fecha_compra__year=anio)
+		grupo = 'fecha_compra__month'
+		titulo_grafico = f'Compras Mensuales - Año {anio}'
+		periodo = f"Año {anio}"
+		etiqueta_total = f"Total compras del año"
+		etiqueta_promedio = f"Promedio mensual del año"
+
+	# Agrupar datos para el gráfico (igual que en la función original)
+	datos_grafico = compras.values(grupo).annotate(
+		total_compras=Sum('total')
+	).order_by(grupo)
+
+	# Preparar datos para el gráfico (igual que en la función original)
+	if tipo_reporte == 'mensual':
+		categorias = [f'Día {item[grupo]}' for item in datos_grafico]
+	else:
+		meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+				 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+		categorias = [meses[item[grupo]-1] for item in datos_grafico]
+	
+	montos = [float(item['total_compras']) for item in datos_grafico]
+
+	# Generar gráfico (similar a la función original)
+	plt.figure(figsize=(10, 5))
+	if tipo_reporte == 'mensual':
+		plt.bar(categorias, montos, color='#4CAF50')
+	else:
+		plt.plot(categorias, montos, marker='o', color='#2196F3', linewidth=2)
+	
+	plt.title(titulo_grafico, pad=20, fontweight='bold')
+	plt.xlabel('Días' if tipo_reporte == 'mensual' else 'Meses')
+	plt.ylabel('Total Compras (Gs)')
+	plt.grid(axis='y', linestyle='--', alpha=0.7)
+	
+	# Formatear eje Y con separadores de miles
+	ax = plt.gca()
+	ax.yaxis.set_major_formatter(plt.matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+	
+	plt.tight_layout()
+	
+	# Convertir gráfico a base64 para el PDF
+	buffer = io.BytesIO()
+	plt.savefig(buffer, format='png', dpi=100)
+	buffer.seek(0)
+	grafico_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+	plt.close()
+
+	# Totales (igual que en la función original)
+	total_general = compras.aggregate(total=Sum('total'))['total'] or 0
+	promedio = total_general / len(montos) if len(montos) > 0 else 0
+
+	# CORRECCIÓN: Agregar información más específica
+	cantidad_compras = compras.count()
+	
+	# Preparar el contexto para el PDF
+	context = {
+		'grafico': grafico_base64,
+		'tipo_reporte': tipo_reporte,
+		'periodo': periodo,
+		'total_general': total_general,
+		'promedio': promedio,
+		'cantidad_compras': cantidad_compras,
+		'etiqueta_total': etiqueta_total,
+		'etiqueta_promedio': etiqueta_promedio,
+		'fecha_generacion': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+		'datos': zip(categorias, montos),  # Para la tabla de datos
+	}
+
+	# Configurar la respuesta PDF
+	template_path = 'reportes/rep_compras_mens_anual_pdf.html'
+	response = HttpResponse(content_type='application/pdf')
+	nombre_archivo = f"compras_{'mensual' if tipo_reporte == 'mensual' else 'anual'}_{anio}"
+	if mes:
+		nombre_archivo += f"_{mes}"
+	response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}.pdf"'
+
+	# Renderizar el template a PDF
+	template = get_template(template_path)
+	html = template.render(context)
+	
+	pisa_status = pisa.CreatePDF(html, dest=response)
+	
+	if pisa_status.err:
+		return HttpResponse('Error al generar PDF', status=500)
+	
+	return response'''
+
+
+
+'''def exportar_compras_mensual_anual_pdf(request):
+	# Obtener parámetros (los mismos que en la función original)
+	tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
+	anio = request.GET.get('anio', datetime.now().year)
+	mes = request.GET.get('mes') if tipo_reporte == 'mensual' else None
 	
 	# Validación básica
 	if not anio:
@@ -1274,4 +1551,4 @@ def exportar_compras_mensual_anual_pdf(request):
 	if pisa_status.err:
 		return HttpResponse('Error al generar PDF', status=500)
 	
-	return response
+	return response'''

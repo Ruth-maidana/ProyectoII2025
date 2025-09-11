@@ -21,7 +21,7 @@ urlpatterns = [
     path("categoria/inactivar/<id_categoria>/", views.inactivar_categoria, name="inact_categoria"),
     path("proveedor/inactivar/<id_proveedor>/", views.inactivar_proveedor, name="inact_proveedor"),
     path("producto/inactivar/<id_producto>/", views.inactivar_producto, name="inact_producto"),
-    path("compra/inactivar/<id_producto>/", views.inactivar_producto, name="inact_compra"),
+    path("compra/inactivar/<id_compra>/", views.inactivar_compra, name="inact_compra"),
     #path('obtener_datos_producto/', views.obtener_datos_producto, name='obtener_datos_producto'),
     
     #----------------------------------------------------------------

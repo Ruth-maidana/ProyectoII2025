@@ -230,24 +230,6 @@
 <!-- AdminLTE for demo purposes -->
 <script src="{% static 'js/demo.js' %}"></script>
 <!-- Page specific script -->
-<script>
-    function toggleDigitoVerificador(selectElement) {
-        const digitoVerificadorField = document.querySelector('[name="digito_verificador"]');
-        if (selectElement.value === 'RUC') {
-            digitoVerificadorField.disabled = false;
-        } else {
-            digitoVerificadorField.disabled = true;
-            digitoVerificadorField.value = ''; // Limpiar el valor si está deshabilitado
-        }
-    }
-
-    // Ejecutar al cargar la página para establecer el estado inicial
-    document.addEventListener('DOMContentLoaded', function () {
-        const tipoDocumentoField = document.querySelector('[name="tipo_documento"]');
-        toggleDigitoVerificador(tipoDocumentoField);
-    });
-</script>
-
 
 </body>
 </html>
