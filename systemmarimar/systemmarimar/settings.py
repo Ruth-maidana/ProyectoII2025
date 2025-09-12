@@ -10,21 +10,32 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+# Configuracion para despliegue en render.com
+import dj_database_url
+
 from pathlib import Path
 import os
 import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-#BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
+#BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f'
+#SECRET_KEY = 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f'
+
+# Configuracion para despliegue en render.com
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
+
+# Configuracion para despliegue en render.com
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
 
 ALLOWED_HOSTS = ['systemmarimar.onrender.com','proyectoii2025.onrender.com','127.0.0.1']
 
@@ -62,8 +73,8 @@ ROOT_URLCONF = 'systemmarimar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        #'DIRS': ['templates'],
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': ['templates'],  # Configuracion para el despliegue en render.com
+        #'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -96,12 +107,24 @@ WSGI_APPLICATION = 'systemmarimar.wsgi.application'
     }
 }'''
 
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, "db_marimar.sqlite3"),
-        #'NAME': BASE_DIR / "db_marimar.sqlite3",
+        #'NAME': os.path.join(BASE_DIR, "db_marimar.sqlite3"),
+        'NAME': BASE_DIR / "db_marimar.sqlite3",
     }
+}
+'''
+
+
+# Configuracion para despliegue en render.com
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 
@@ -150,7 +173,10 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 #STATIC_URL = 'static/'
+
+
 STATIC_URL = '/static/'
+
 # Donde se guardarán los archivos collectstatic (para producción)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -159,11 +185,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# Directory for collected static files during deployment
-#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Additional directories where Django will look for static files in development
-#STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
