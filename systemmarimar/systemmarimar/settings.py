@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-# Configuracion para despliegue en render.com
+# Configuracion para despliegue en render.com y railway.app
 import dj_database_url
 
 from pathlib import Path
@@ -27,8 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #SECRET_KEY = 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f'
 
 # Configuracion para despliegue en render.com
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+#SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
+# Configuracion para despliegue en railway.app
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = True
@@ -37,7 +39,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
-ALLOWED_HOSTS = ['systemmarimar.onrender.com','proyectoii2025.onrender.com','127.0.0.1']
+#ALLOWED_HOSTS = ['systemmarimar.onrender.com','proyectoii2025.onrender.com','127.0.0.1']
+
+# Configuracion para despliegue en railway.app
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -59,13 +64,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'systemmarimar.urls'
@@ -123,7 +128,8 @@ DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
-        ssl_require=True
+        conn_health_checks=True
+        #ssl_require=True
     )
 }
 
@@ -185,6 +191,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+
+# WhiteNoise configuration para Railway
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
