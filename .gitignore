@@ -1,15 +1,35 @@
-# Entorno Virtual
+# =========================
+# Entorno virtual
+# =========================
 env/
-# Migraciones
-**/migrations/*
-!**/migrations/__init__.py
-# Archivos compilados de Python
-*.pyc
+venv/
 __pycache__/
-# Archivos de configuración y bases de datos locales
+*.pyc
+
+# =========================
+# Archivos locales de Django
+# =========================
 db.sqlite3
-.env
-# Archivos de log
 *.log
-# Archivos del entorno
+.env
+
+# =========================
+# Migraciones
+# =========================
+# Ignora carpetas __pycache__ dentro de migrations
+**/migrations/__pycache__/
+# Incluye todos los archivos .py de migraciones (0001_initial.py, 0002_auto_*.py, etc.)
+!**/migrations/*.py
+
+# =========================
+# Configuraciones del IDE / editor
+# =========================
 .vscode/
+.idea/
+
+# =========================
+# Archivos compilados / temporales
+# =========================
+*.swp
+*.swo
+*.DS_Store
