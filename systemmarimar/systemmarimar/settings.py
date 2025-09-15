@@ -82,6 +82,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://proyectoii2025-production.up.railway.app"
+]
+
+
 ROOT_URLCONF = 'systemmarimar.urls'
 
 TEMPLATES = [
