@@ -15,7 +15,6 @@ import dj_database_url
 
 from pathlib import Path
 import os
-import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 #BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,19 +29,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 # Configuracion para despliegue en railway.app
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f')
+#SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7$luh7@r^ep9q%vs4iw1swd1h27=4$e=8z1kfveuk-nt*at$0f')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = True
 
 # Configuracion para despliegue en render.com
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
 #ALLOWED_HOSTS = ['systemmarimar.onrender.com','proyectoii2025.onrender.com','127.0.0.1']
 
 # Configuracion para despliegue en railway.app
-ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['*']
+
+
+
+# =========================
+# 🔐 Seguridad
+# =========================
+SECRET_KEY = os.environ.get("SECRET_KEY")  # definido en Railway
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 
 # Application definition
@@ -78,7 +86,7 @@ ROOT_URLCONF = 'systemmarimar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],  # Configuracion para el despliegue en render.com
+        'DIRS': [BASE_DIR / 'templates'],  # Configuracion para el despliegue en render.com
         #'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -101,26 +109,6 @@ WSGI_APPLICATION = 'systemmarimar.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-'''DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_marimar',
-        'USER': 'admin',
-        'PASSWORD': 'systemMarimar.2025',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
-}'''
-
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': os.path.join(BASE_DIR, "db_marimar.sqlite3"),
-        'NAME': BASE_DIR / "db_marimar.sqlite3",
-    }
-}
-'''
 
 
 # Configuracion para despliegue en render.com
@@ -134,12 +122,6 @@ DATABASES = {
 }
 
 
-'''DATABASES = {
-    'default': dj_database_url.config(
-        default='postgres://admin:systemMarimar.2025@localhost:5432/db_marimar',
-        conn_max_age=600
-    )
-}'''
 
 
 # Password validation
@@ -184,13 +166,13 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 # Donde se guardarán los archivos collectstatic (para producción)
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # En desarrollo, dónde buscar archivos estáticos además de los apps
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+#STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
 
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # WhiteNoise configuration para Railway
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
