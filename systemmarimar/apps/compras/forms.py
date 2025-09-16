@@ -95,7 +95,7 @@ class ProductoViewForm(forms.ModelForm):
 #-------------------------------------------------------------------
 
 
-class ProveedorForm(forms.ModelForm):
+'''class ProveedorForm(forms.ModelForm):
     
     documento = forms.CharField(
         max_length=30,
@@ -182,6 +182,241 @@ class ProveedorForm(forms.ModelForm):
         
         if commit:
             instance.save()
+        return instance'''
+        
+        
+'''class ProveedorForm(forms.ModelForm):
+    
+    documento = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Documento'}),
+        label="Documento",
+        help_text="Solo números, sin el dígito verificador"
+    )
+    digito_verificador = forms.ChoiceField(
+        choices=[(str(i), str(i)) for i in range(10)],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="DV",
+        required=False,
+        help_text="Solo requerido para RUC"
+    )
+
+    class Meta:
+        model = Proveedor
+        fields = [
+            'razon_social', 
+            'representante',
+            'direccion', 
+            'codigo_pais',
+            'num_tel',
+            'correo',
+            'descripcion',
+            'tipo_documento',
+        ]
+        exclude = ['nro_documento'] 
+        
+        labels = {
+            'razon_social': 'Nombre del Proveedor',
+            'descripcion': 'Descripción',
+            'direccion': 'Dirección',
+            'codigo_pais': 'Prefijo Tel.',
+            'num_tel': 'Teléfono',
+            'correo': 'Email',
+            'tipo_documento': 'Tipo de Documento',
+            'representante': 'Representante Legal'
+        }
+        
+        widgets = {
+            'representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del representante legal'}),
+            'razon_social': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón social'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows': 3,'placeholder': 'Descripción del proveedor'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
+            'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
+            'num_tel': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: 981234567'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'correo@ejemplo.com'}),
+            'tipo_documento': forms.Select(attrs={'class': 'form-control', 'onchange': 'toggleDigitoVerificador(this)'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        """Inicializar el formulario y manejar modo edición"""
+        super().__init__(*args, **kwargs)
+        
+        # Si estamos editando (instance existe), poblar los campos documento y dv
+        if self.instance and self.instance.pk and self.instance.nro_documento:
+            if self.instance.tipo_documento == 'RUC' and '-' in self.instance.nro_documento:
+                # Separar documento y dígito verificador para RUC
+                partes = self.instance.nro_documento.split('-')
+                self.fields['documento'].initial = partes[0]
+                self.fields['digito_verificador'].initial = partes[1]
+            else:
+                # Para CI, solo el documento
+                self.fields['documento'].initial = self.instance.nro_documento
+
+    def clean(self):
+        cleaned_data = super().clean()
+        documento = cleaned_data.get('documento')
+        digito_verificador = cleaned_data.get('digito_verificador')
+        tipo_documento = cleaned_data.get('tipo_documento')
+
+        if not documento:
+            raise forms.ValidationError({'documento': 'Este campo es obligatorio.'})
+
+        # Concatenar documento y dígito verificador según el tipo
+        if tipo_documento == 'RUC':
+            if not digito_verificador:
+                raise forms.ValidationError("Debe seleccionar un dígito verificador para el RUC.")
+            nro_documento = f"{documento}-{digito_verificador}"
+        else:
+            nro_documento = documento
+
+        # Validar duplicados (excluir la instancia actual en modo edición)
+        queryset = Proveedor.objects.filter(nro_documento__iexact=nro_documento)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        
+        if queryset.exists():
+            raise forms.ValidationError({
+                'documento': 'Ya existe un proveedor con este número de documento.'
+            })
+
+        cleaned_data['nro_documento'] = nro_documento
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Guardar la instancia con el número de documento calculado"""
+        instance = super().save(commit=False)
+        instance.nro_documento = self.cleaned_data.get('nro_documento')
+        
+        if commit:
+            instance.save()
+        return instance'''
+        
+        
+class ProveedorForm(forms.ModelForm):
+    
+    # Campos adicionales que NO están en el modelo
+    documento = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Documento'}),
+        label="Documento",
+        help_text="Solo números, sin el dígito verificador"
+    )
+    digito_verificador = forms.ChoiceField(
+        choices=[('', '---------')] + [(str(i), str(i)) for i in range(10)],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="DV",
+        required=False,
+        help_text="Solo requerido para RUC"
+    )
+
+    class Meta:
+        model = Proveedor
+        fields = [
+            'razon_social', 
+            'representante',
+            'direccion', 
+            'codigo_pais',
+            'num_tel',
+            'correo',
+            'descripcion',
+            'tipo_documento',
+        ]
+        # nro_documento se excluye porque se maneja manualmente
+        exclude = ['nro_documento'] 
+        
+        labels = {
+            'razon_social': 'Nombre del Proveedor',
+            'descripcion': 'Descripción',
+            'direccion': 'Dirección',
+            'codigo_pais': 'Prefijo Tel.',
+            'num_tel': 'Teléfono',
+            'correo': 'Email',
+            'tipo_documento': 'Tipo de Documento',
+            'representante': 'Representante Legal'
+        }
+        
+        widgets = {
+            'representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del representante legal'}),
+            'razon_social': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón social'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows': 3,'placeholder': 'Descripción del proveedor'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
+            'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
+            'num_tel': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: 981234567'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'correo@ejemplo.com'}),
+            'tipo_documento': forms.Select(attrs={'class': 'form-control', 'onchange': 'toggleDigitoVerificador(this)'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        """Inicializar el formulario y manejar modo edición"""
+        super().__init__(*args, **kwargs)
+        
+        # Si estamos editando (instance existe), separar nro_documento en los campos virtuales
+        if self.instance and self.instance.pk:
+            try:
+                nro_doc = getattr(self.instance, 'nro_documento', '')
+                tipo_doc = getattr(self.instance, 'tipo_documento', '')
+                
+                if nro_doc:
+                    if tipo_doc == 'RUC' and '-' in nro_doc:
+                        # Separar documento y dígito verificador para RUC
+                        partes = nro_doc.split('-', 1)
+                        if len(partes) == 2:
+                            self.fields['documento'].initial = partes[0].strip()
+                            self.fields['digito_verificador'].initial = partes[1].strip()
+                        else:
+                            # RUC mal formateado, usar todo como documento
+                            self.fields['documento'].initial = nro_doc
+                    else:
+                        # Para CI, usar todo el nro_documento
+                        self.fields['documento'].initial = nro_doc
+                        
+            except Exception as e:
+                # Si hay algún error, continuar sin poblar los campos
+                pass
+
+    def clean(self):
+        cleaned_data = super().clean()
+        documento = cleaned_data.get('documento')
+        digito_verificador = cleaned_data.get('digito_verificador')
+        tipo_documento = cleaned_data.get('tipo_documento')
+
+        if not documento:
+            raise forms.ValidationError({'documento': 'Este campo es obligatorio.'})
+
+        # Construir nro_documento según el tipo
+        if tipo_documento == 'RUC':
+            if not digito_verificador:
+                raise forms.ValidationError({
+                    'digito_verificador': 'Debe seleccionar un dígito verificador para el RUC.'
+                })
+            nro_documento = f"{documento}-{digito_verificador}"
+        else:
+            nro_documento = documento
+
+        # Validar duplicados (excluir la instancia actual en modo edición)
+        queryset = Proveedor.objects.filter(nro_documento__iexact=nro_documento)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        
+        if queryset.exists():
+            raise forms.ValidationError({
+                'documento': 'Ya existe un proveedor con este número de documento.'
+            })
+
+        # Guardar el nro_documento calculado para usarlo en save()
+        cleaned_data['nro_documento'] = nro_documento
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Guardar la instancia con el número de documento calculado"""
+        instance = super().save(commit=False)
+        
+        # Asignar el nro_documento calculado desde clean()
+        if 'nro_documento' in self.cleaned_data:
+            instance.nro_documento = self.cleaned_data['nro_documento']
+        
+        if commit:
+            instance.save()
         return instance
 
 class ProveedorViewForm(forms.ModelForm):
@@ -200,7 +435,7 @@ class ProveedorViewForm(forms.ModelForm):
         }
 
 
-class ProveedorEditForm(forms.ModelForm):
+'''class ProveedorEditForm(forms.ModelForm):
     class Meta:
         model = Proveedor
         fields = [
@@ -235,22 +470,85 @@ class ProveedorEditForm(forms.ModelForm):
             'correo': forms.EmailInput(attrs={'class': 'form-control'}),
             'nro_documento': forms.TextInput(attrs={'class': 'form-control','readonly': True}),
             'tipo_documento': forms.TextInput(attrs={'class': 'form-control','readonly': True}),  
+        }'''
+        
+        
+'''class ProveedorEditForm(forms.ModelForm):
+
+
+    class Meta:
+        model = Proveedor
+        fields = [
+            'razon_social', 
+            'representante',
+            'direccion', 
+            'codigo_pais',
+            'num_tel',
+            'correo',
+            'descripcion',
+            'tipo_documento',
+        ]
+        
+        # SonarQube: exclude es necesario aquí porque nro_documento se calcula 
+        # dinámicamente en base a documento + digito_verificador
+        exclude = ['nro_documento'] 
+        
+        labels = {
+            'razon_social': 'Nombre del Proveedor',
+            'descripcion': 'Descripción',
+            'direccion': 'Dirección',
+            'codigo_pais': 'Prefijo Tel.',
+            'num_tel': 'Teléfono',
+            'correo': 'Email',
+            'tipo_documento': 'Tipo de Documento',
+            'representante': 'Representante Legal'
         }
         
+        widgets = {
+            'representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del representante legal'}),
+            'razon_social': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón social'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows': 3,'placeholder': 'Descripción del proveedor'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
+            'codigo_pais': forms.Select(attrs={'class': 'form-control'}),
+            'num_tel': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Ej: 981234567'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'correo@ejemplo.com'}),
+            'tipo_documento': forms.Select(attrs={'class': 'form-control', 'onchange': 'toggleDigitoVerificador(this)'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        documento = cleaned_data.get('documento')
+        digito_verificador = cleaned_data.get('digito_verificador')
+        tipo_documento = cleaned_data.get('tipo_documento')
+
+        # Concatenar documento y dígito verificador solo si el tipo de documento es RUC
+        if tipo_documento == 'RUC':
+            if not digito_verificador:
+                raise forms.ValidationError("Debe seleccionar un dígito verificador para el RUC.")
+            nro_documento = f"{documento}-{digito_verificador}"
+        else:
+            nro_documento = documento  # Solo el documento para CI
+
+        # Validar si el número de documento ya existe
+        if Proveedor.objects.filter(nro_documento__iexact=nro_documento).exists():
+            raise forms.ValidationError({'documento': 'Ya existe un proveedor con este número de documento.'})
+
+        # Asignar el número de documento calculado al cleaned_data
+        cleaned_data['nro_documento'] = nro_documento
+        return cleaned_data
+
+    def save(self, commit=True):
+        # Sobrescribir el método save para guardar nro_documento
+        instance = super().save(commit=False)
+        cleaned_data = self.cleaned_data
         
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # Asignar el valor calculado
+        instance.nro_documento = cleaned_data.get('nro_documento')  
         
-        # Si estamos editando, separar el número existente
-        if self.instance and self.instance.pk and self.instance.num_tel:
-            tel_completo = self.instance.num_tel
-            
-            # Buscar el prefijo en el número completo
-            for prefijo, _ in self.PREFIJO_CHOICES:
-                if tel_completo.startswith(prefijo):
-                    self.fields['prefijo_tel'].initial = prefijo
-                    self.fields['numero_tel'].initial = tel_completo.replace(prefijo, '')
-                    break
+        if commit:
+            instance.save()
+        return instance'''
+        
 
 
 

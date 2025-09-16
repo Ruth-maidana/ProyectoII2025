@@ -104,7 +104,15 @@
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-md-6">
+											<div class="col-md-12">
+												<div class="form-group mb-4">
+													{{ form_proveedor.representante|as_crispy_field }}
+													<small class="form-text text-muted">Representante legal</small>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-4">
 												<div class="form-group mb-4">
 													{{ form_proveedor.tipo_documento|as_crispy_field }}
 													<small class="form-text text-muted">Tipo de documento</small>
@@ -112,8 +120,14 @@
 											</div>
 											<div class="col-md-6">
 												<div class="form-group mb-4">
-													{{ form_proveedor.nro_documento|as_crispy_field }}
+													{{ form_proveedor.documento|as_crispy_field }}
 													<small class="form-text text-muted">Número de documento</small>
+												</div>
+											</div>
+											<div class="col-md-2">
+												<div class="form-group mb-4" id="dv-container" style="display: none;">
+													{{ form_proveedor.digito_verificador|as_crispy_field }}
+													<small class="form-text text-muted">DV</small>
 												</div>
 											</div>
 										</div>
@@ -294,7 +308,28 @@
 <script src="{% static 'js/demo.js' %}"></script>
 <!-- Page specific script -->
 <script>
+// JavaScript para mostrar/ocultar el dígito verificador
+function toggleDigitoVerificador(selectElement) {
+    const dvContainer = document.getElementById('dv-container');
+    const dvSelect = document.querySelector('#id_digito_verificador');
+    
+    if (selectElement.value === 'RUC') {
+        dvContainer.style.display = 'block';
+        dvSelect.required = true;
+    } else {
+        dvContainer.style.display = 'none';
+        dvSelect.required = false;
+        dvSelect.value = '';
+    }
+}
 
+// Ejecutar cuando carga la página para manejar el estado inicial
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoDocSelect = document.querySelector('#id_tipo_documento');
+    if (tipoDocSelect) {
+        toggleDigitoVerificador(tipoDocSelect);
+    }
+});
 </script>
 </body>
 </html>

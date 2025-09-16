@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required,permission_required
 from datetime import datetime
 from .models import Categoria, OrdenCompraCab, OrdenCompraDet, Producto, Proveedor
-from .forms import CategoriaViewForm, FormEditCompraCabecera, FormEditCompraDetalle, FormRegCompraCabecera, FormRegCompraDetalle, ProductoForm, CategoriaForm, ProductoViewForm, ProveedorEditForm, ProveedorForm, ProveedorViewForm
+from .forms import CategoriaViewForm, FormEditCompraCabecera, FormEditCompraDetalle, FormRegCompraCabecera, FormRegCompraDetalle, ProductoForm, CategoriaForm, ProductoViewForm, ProveedorForm, ProveedorViewForm
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.forms import ValidationError, formset_factory, inlineformset_factory
@@ -344,12 +344,21 @@ def editar_proveedor(request, id_proveedor):
 	
 	# Recuperamos la instancia del proyecto
 	proveedor = get_object_or_404(Proveedor, id=id_proveedor)
+	logger.debug(f"Proveedor a editar: {proveedor}")
+	print(f"DEBUG: Proveedor: {proveedor}")
+	print(f"DEBUG: nro_documento: {proveedor.nro_documento}")
+	print(f"DEBUG: tipo_documento: {proveedor.tipo_documento}")
 
 	if request.method == "GET":
 		# Actualizamos el formulario con los datos recibidos
-		form = ProveedorEditForm(instance=proveedor)
+		print("DEBUG: Creando formulario...")
+		form = ProveedorForm(instance=proveedor)
+		print("DEBUG: Formulario creado exitosamente")
+		logger.debug(f"Formulario inicializado para proveedor {id_proveedor}")
 	else:
-		form = ProveedorEditForm(request.POST,instance=proveedor)
+		form = ProveedorForm(request.POST,instance=proveedor)
+		logger.debug(f"Datos POST recibidos para proveedor {id_proveedor}: {request.POST}")
+
 		if form.is_valid():
 	  
 			try:
@@ -359,7 +368,7 @@ def editar_proveedor(request, id_proveedor):
 						request, 
 						f"Proveedor actualizado correctamente"
 					)
-					logger.info(f"Proveedor creado: {proveedor_actualizado.nombre}")
+					logger.info(f"Proveedor creado: {proveedor_actualizado.razon_social}")
 					return redirect('list_proveedores')
  
 			except ValidationError as e:
@@ -392,7 +401,7 @@ def inactivar_proveedor(request,id_proveedor):
 			f"No se puede desactivar el proveedor "
 			f"porque tiene {productos_count} producto(s) activo(s) asignado(s)"
 		)
-		logger.warning(f"Intento de desactivar proveedor con productos activos: {proveedor.nombre}")
+		logger.warning(f"Intento de desactivar proveedor con productos activos: {proveedor.razon_social}")
 		return redirect('list_proveedores')
 	try:
 		with transaction.atomic():
@@ -403,7 +412,7 @@ def inactivar_proveedor(request,id_proveedor):
 				request, 
 				f"El proveedor fue desactivado correctamente"
 			)
-			logger.info(f"Proveedor desactivado exitosamente: {proveedor.nombre}")
+			logger.info(f"Proveedor desactivado exitosamente: {proveedor.razon_social}")
 			  
 	except Exception as general_error:
 		messages.error(request, "Error interno del servidor. Intente nuevamente.")
