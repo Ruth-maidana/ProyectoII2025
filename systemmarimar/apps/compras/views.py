@@ -401,6 +401,7 @@ def inactivar_proveedor(request,id_proveedor):
 			f"No se puede desactivar el proveedor "
 			f"porque tiene {productos_count} producto(s) activo(s) asignado(s)"
 		)
+		messages.error(request, mensaje_error)
 		logger.warning(f"Intento de desactivar proveedor con productos activos: {proveedor.razon_social}")
 		return redirect('list_proveedores')
 	try:
