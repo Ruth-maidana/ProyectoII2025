@@ -429,7 +429,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    /*document.addEventListener('DOMContentLoaded', function() {
             // Definir el prefijo de los formularios de detalle
             //var formCompraDetPrefix = "{{ form_compra_det.prefix }}";
             var formCompraDetPrefix = "{{ form_compra_det_prefix }}";
@@ -778,6 +778,606 @@
             descuentoField?.addEventListener('input', function() {
                 calcularTotalGeneral(); // Recalculate total general when discount changes
             });
+    });*/
+
+    // ===============================
+    // FUNCIONES DE VALIDACIÓN
+    // ===============================
+    
+    // Función para validar una fila específica
+    function validarFila(row) {
+        const errores = [];
+        
+        const cantidadInput = row.querySelector('[name$="-cantidad"]');
+        const precioInput = row.querySelector('[name$="-precio_compra"]');
+        const productoIdInput = row.querySelector('[name$="-producto_id"]');
+        
+        // Validar producto
+        if (!productoIdInput || !productoIdInput.value) {
+            errores.push("Debe seleccionar un producto");
+        }
+        
+        // Validar cantidad
+        if (cantidadInput) {
+            const cantidad = parseFloat(cantidadInput.value);
+            if (isNaN(cantidad)) {
+                errores.push("La cantidad debe ser un número válido");
+                cantidadInput.classList.add('is-invalid');
+            } else if (cantidad <= 0) {
+                errores.push(`La cantidad debe ser mayor a cero (valor actual: ${cantidad})`);
+                cantidadInput.classList.add('is-invalid');
+            } else {
+                cantidadInput.classList.remove('is-invalid');
+                cantidadInput.classList.add('is-valid');
+            }
+        }
+        
+        // Validar precio
+        if (precioInput) {
+            const precio = parseFloat(precioInput.value);
+            if (isNaN(precio)) {
+                errores.push("El precio debe ser un número válido");
+                precioInput.classList.add('is-invalid');
+            } else if (precio <= 0) {
+                errores.push(`El precio debe ser mayor a cero (valor actual: ${precio})`);
+                precioInput.classList.add('is-invalid');
+            } else {
+                precioInput.classList.remove('is-invalid');
+                precioInput.classList.add('is-valid');
+            }
+        }
+        
+        return errores;
+    }
+
+    // Función para validar todo el formulario antes de enviar
+    function validarFormularioCompleto() {
+        const errores = [];
+        const filas = document.querySelectorAll('#detalleBody tr.formset_row');
+        
+        // Validar que hay al menos una fila
+        if (filas.length === 0) {
+            errores.push("Debe mantener al menos un producto en la orden de compra");
+            return errores;
+        }
+        
+        // Validar cada fila
+        filas.forEach((fila, index) => {
+            const erroresFila = validarFila(fila);
+            if (erroresFila.length > 0) {
+                errores.push(`Producto #${index + 1}: ${erroresFila.join(', ')}`);
+            }
+        });
+        
+        // Validar campos de cabecera
+        const totalField = document.querySelector('[name="{{ form_compra_cab.total.name }}"]');
+        const descuentoField = document.querySelector('[name="{{ form_compra_cab.descuento.name }}"]');
+        const proveedorField = document.querySelector('[name="{{ form_compra_cab.proveedor.name }}"]');
+        
+        // Validar proveedor
+        if (!proveedorField || !proveedorField.value) {
+            errores.push("Debe seleccionar un proveedor");
+            if (proveedorField) proveedorField.classList.add('is-invalid');
+        } else {
+            proveedorField.classList.remove('is-invalid');
+        }
+        
+        // Validar total
+        if (totalField) {
+            const total = parseFloat(totalField.value);
+            if (isNaN(total) || total <= 0) {
+                errores.push("El total debe ser mayor a cero");
+                totalField.classList.add('is-invalid');
+            } else {
+                totalField.classList.remove('is-invalid');
+            }
+        }
+        
+        // Validar descuento
+        if (descuentoField) {
+            const descuento = parseFloat(descuentoField.value || 0);
+            const total = parseFloat(totalField?.value || 0);
+            
+            if (descuento < 0) {
+                errores.push("El descuento no puede ser negativo");
+                descuentoField.classList.add('is-invalid');
+            } else if (descuento > total && total > 0) {
+                errores.push("El descuento no puede ser mayor al total");
+                descuentoField.classList.add('is-invalid');
+            } else {
+                descuentoField.classList.remove('is-invalid');
+            }
+        }
+        
+        return errores;
+    }
+
+    // Función mejorada para mostrar errores con SweetAlert2
+    function mostrarErroresValidacion(errores) {
+        if (errores.length === 0) return false;
+        
+        const listaErrores = errores.map(error => `<li style="text-align: left; margin: 5px 0;">${error}</li>`).join('');
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Errores de Validación',
+            html: `
+                <div style="text-align: left;">
+                    <p><strong>Por favor, corrija los siguientes errores:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${listaErrores}
+                    </ul>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#d33',
+            width: '600px'
+        });
+        
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Definir el prefijo de los formularios de detalle
+        var formCompraDetPrefix = "{{ form_compra_det_prefix }}";
+        
+        // Referencias a elementos del DOM
+        const formCompra = document.getElementById('compraForm');
+        const detalleTable = document.getElementById('detalle-table').querySelector('tbody');
+        const descuentoField = document.querySelector('[name="{{ form_compra_cab.descuento.name }}"]');
+        
+        // ===============================
+        // CONFIGURACIÓN DEL FORMULARIO
+        // ===============================
+        
+        formCompra.addEventListener('submit', function(event) {
+            // Validar antes de procesar
+            const errores = validarFormularioCompleto();
+            if (errores.length > 0) {
+                event.preventDefault();
+                mostrarErroresValidacion(errores);
+                return false;
+            }
+            
+            // Si no hay errores, proceder con la limpieza
+            const filas = $('#detalleBody tr.formset_row');
+            let totalForms = $('#id_' + formCompraDetPrefix + '-TOTAL_FORMS');
+            let formCount = 0;
+
+            filas.each(function() {
+                const productoIdInput = $(this).find(`input[name$='-producto_id']`);
+                const cantidadInput = $(this).find(`input[name$='-cantidad']`);
+
+                const productoId = productoIdInput.val();
+                const cantidad = parseFloat(cantidadInput.val());
+
+                // Si el producto no está seleccionado o cantidad no válida, eliminar fila
+                if (!productoId || isNaN(cantidad) || cantidad <= 0) {
+                    $(this).remove();
+                } else {
+                    // Actualizar los índices de los formularios
+                    $(this).find('input, select, textarea').each(function() {
+                        let name = $(this).attr('name');
+                        if (name) {
+                            let newName = name.replace(/-\d+-/, '-' + formCount + '-');
+                            $(this).attr('name', newName);
+                            $(this).attr('id', 'id_' + newName);
+                        }
+                    });
+                    formCount++;
+                }
+            });
+
+            // Actualizar el número total de formularios
+            totalForms.val(formCount);
+            
+            // Mostrar confirmación
+            event.preventDefault();
+            Swal.fire({
+                title: '¿Confirmar Edición?',
+                text: `Se actualizará la compra con ${formCount} detalle(s). Esta acción afectará el stock de productos.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, Actualizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Actualizando...',
+                        text: 'Por favor espere mientras se procesa la edición.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    formCompra.submit();
+                }
+            });
+        });
+
+        // ===============================
+        // CONFIGURACIÓN DE SELECT2
+        // ===============================
+        
+        $('#productoSearch').select2({
+            theme: 'bootstrap-5',
+            placeholder: "Buscar producto para agregar...",
+            minimumInputLength: 2,
+            ajax: {
+                url: '{% url "buscar_productos" %}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return { q: params.term };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data, function(item) {
+                            return {
+                                text: item.nombre,
+                                id: item.id,
+                                precio: item.precio_compra || 0,
+                                iva: item.iva || 10,
+                                unidad: item.unidad_medida || '-',
+                                descripcion: item.descripcion || item.nombre
+                            }
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+        // ===============================
+        // FUNCIONES DE CÁLCULO
+        // ===============================
+        
+        // Función para calcular el total_producto
+        function calcularTotalProducto(row) {
+            const cantidadInput = row.querySelector('[name$="-cantidad"]');
+            const precioInput = row.querySelector('[name$="-precio_compra"]');
+            const totalProductoField = row.querySelector('[name$="-subtotal"]');
+
+            if (cantidadInput && precioInput && totalProductoField) {
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const precio = parseFloat(precioInput.value) || 0;
+                const totalProducto = cantidad * precio;
+                totalProductoField.value = totalProducto.toFixed(2);
+            }
+        }
+
+        // Function to calculate IVA for a row
+        function calcularIVA(row) {
+            const precioInput = row.querySelector('[name$="-precio_compra"]');
+            const cantidadInput = row.querySelector('[name$="-cantidad"]');
+            const ivaCell = row.querySelector('.iva-producto');
+            const subtotalInput = row.querySelector('[name$="-subtotal"]');
+
+            if (precioInput && cantidadInput && ivaCell && subtotalInput) {
+                const precioUnitario = parseFloat(precioInput.value) || 0;
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+
+                let ivaValor = 0;
+                if (ivaPorcentaje === 10) {
+                    ivaValor = (precioUnitario / 11) * cantidad;
+                } else if (ivaPorcentaje === 5) {
+                    ivaValor = (precioUnitario / 21) * cantidad;
+                }
+
+                subtotalInput.value = (precioUnitario * cantidad).toFixed(2);
+                return ivaValor;
+            }
+            return 0;
+        }
+
+        // Function to calculate total IVA and update fields
+        function calcularTotalIVA() {
+            let totalIvaDiez = 0;
+            let totalIvaCinco = 0;
+
+            detalleTable.querySelectorAll('tr.formset_row').forEach(function(row) {
+                const ivaCell = row.querySelector('.iva-producto');
+                if (ivaCell) {
+                    const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+                    const ivaValor = calcularIVA(row);
+
+                    if (ivaPorcentaje === 10) {
+                        totalIvaDiez += ivaValor;
+                    } else if (ivaPorcentaje === 5) {
+                        totalIvaCinco += ivaValor;
+                    }
+                }
+            });
+
+            // Update IVA fields
+            const ivaDiezField = document.querySelector('[name="{{ form_compra_cab.iva_diez.name }}"]');
+            const ivaCincoField = document.querySelector('[name="{{ form_compra_cab.iva_cinco.name }}"]');
+            if (ivaDiezField) ivaDiezField.value = totalIvaDiez.toFixed(2);
+            if (ivaCincoField) ivaCincoField.value = totalIvaCinco.toFixed(2);
+        }
+
+        // Función para calcular el total general
+        function calcularTotalGeneral() {
+            let totalGeneral = 0;
+            detalleTable.querySelectorAll('tr.formset_row').forEach(function(row) {
+                const subtotalInput = row.querySelector('[name$="-subtotal"]');
+                if (subtotalInput) {
+                    totalGeneral += parseFloat(subtotalInput.value) || 0;
+                }
+            });
+
+            // Aplicar el descuento si está presente
+            const descuento = parseFloat(descuentoField?.value) || 0;
+            totalGeneral -= descuento;
+
+            const totalGeneralField = document.querySelector('[name="{{ form_compra_cab.total.name }}"]');
+            if (totalGeneralField) {
+                totalGeneralField.value = totalGeneral.toFixed(2);
+            }
+        }
+
+        // ===============================
+        // AGREGAR PRODUCTOS AL DETALLE
+        // ===============================
+        
+        $('#agregarProducto').on('click', function() {
+            const productoData = $('#productoSearch').select2('data')[0];
+            
+            if (!productoData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: 'Por favor, selecciona un producto.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
+            var productoId = productoData.id;
+            var productoText = productoData.text;
+            var precioUnitario = productoData.precio;
+            var ivaProducto = productoData.iva;
+            var unidadMedida = productoData.unidad;
+            var descripcion = productoData.descripcion;
+            var cantidad = 1;
+            var subtotal = (precioUnitario * cantidad).toFixed(2);
+
+            // Verificar si el producto ya está en la tabla
+            var exists = false;
+            $('#detalleBody tr.formset_row').each(function() {
+                const productoIdExistente = $(this).find('input[name$="-producto_id"]').val();
+                if (productoIdExistente == productoId) {
+                    exists = true;
+                    return false;
+                }
+            });
+
+            if (exists) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: 'El producto ya está agregado.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
+            var totalForms = $('#id_' + formCompraDetPrefix + '-TOTAL_FORMS');
+            var formIdx = parseInt(totalForms.val());
+
+            // Crear una nueva fila en la tabla
+            var newRow = `<tr class="formset_row">
+                <td>
+                    <strong>${productoText}</strong>
+                    <input type="hidden" name="${formCompraDetPrefix}-${formIdx}-producto_id" value="${productoId}" />
+                </td>
+                <td>
+                    <input type="text" name="${formCompraDetPrefix}-${formIdx}-descripcion" value="${descripcion}" class="form-control form-control-sm" />
+                </td>
+                <td>
+                    <input type="number" name="${formCompraDetPrefix}-${formIdx}-cantidad" value="${cantidad}" class="form-control form-control-sm cantidad" step="0.01" min="0.01" />
+                </td>
+                <td>
+                    <input type="text" name="${formCompraDetPrefix}-${formIdx}-unidad_medida" value="${unidadMedida}" class="form-control form-control-sm" readonly />
+                </td>
+                <td>
+                    <input type="number" name="${formCompraDetPrefix}-${formIdx}-precio_compra" value="${precioUnitario}" class="form-control form-control-sm precio_compra" step="0.01" min="0" />
+                </td>
+                <td class="iva-producto text-center">
+                    <span class="badge bg-info">${ivaProducto}%</span>
+                </td>
+                <td>
+                    <input type="number" name="${formCompraDetPrefix}-${formIdx}-subtotal" value="${subtotal}" class="form-control form-control-sm subtotal" readonly />
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm remover-fila" title="Eliminar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            </tr>`;
+
+            $('#detalleBody').append(newRow);
+            $('#productoSearch').val(null).trigger('change');
+            totalForms.val(formIdx + 1);
+
+            // Calcular totales después de agregar la fila
+            const newRowElement = $('#detalleBody tr:last')[0];
+            calcularTotalProducto(newRowElement);
+            calcularTotalIVA();
+            calcularTotalGeneral();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Producto Agregado',
+                text: 'El producto se agregó correctamente al detalle.',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+
+        // ===============================
+        // ELIMINAR FILAS DEL DETALLE
+        // ===============================
+        
+        $('#detalleBody').on('click', '.remover-fila', function() {
+            const fila = $(this).closest('tr');
+            const productoNombre = fila.find('td:first strong').text();
+            
+            Swal.fire({
+                title: '¿Eliminar Producto?',
+                text: `Se eliminará "${productoNombre}" del detalle de compra.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, Eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fila.remove();
+                    
+                    // Actualizar contador
+                    var totalForms = $('#id_' + formCompraDetPrefix + '-TOTAL_FORMS');
+                    var currentFormCount = $('#detalleBody tr.formset_row').length;
+                    totalForms.val(currentFormCount);
+                    
+                    // Reindexar formularios
+                    reindexarFormularios();
+                    
+                    // Recalcular totales
+                    calcularTotalIVA();
+                    calcularTotalGeneral();
+                }
+            });
+        });
+        
+        function reindexarFormularios() {
+            $('#detalleBody tr.formset_row').each(function(index) {
+                $(this).find('input, select, textarea').each(function() {
+                    const name = $(this).attr('name');
+                    if (name) {
+                        const newName = name.replace(/-\d+-/, '-' + index + '-');
+                        $(this).attr('name', newName);
+                        $(this).attr('id', 'id_' + newName);
+                    }
+                });
+            });
+        }
+
+        // ===============================
+        // EVENT LISTENERS PARA CÁLCULOS
+        // ===============================
+        
+        // Escuchar cambios en los campos cantidad, precio_compra y descuento
+        detalleTable.addEventListener('input', function(event) {
+            const row = event.target.closest('tr');
+            if (row && row.classList.contains('formset_row')) {
+                calcularTotalProducto(row);
+                calcularTotalIVA();
+                calcularTotalGeneral();
+            }
+        });
+
+        // Escuchar cambios en el descuento
+        descuentoField?.addEventListener('input', function() {
+            calcularTotalGeneral();
+        });
+
+        // ===============================
+        // VALIDACIONES EN TIEMPO REAL
+        // ===============================
+        
+        // Validación en tiempo real para los campos de cantidad
+        $(document).on('input', '[name$="-cantidad"]', function() {
+            const cantidad = parseFloat($(this).val());
+            const fila = $(this).closest('tr')[0];
+            
+            if (isNaN(cantidad) || cantidad <= 0) {
+                $(this).addClass('is-invalid').removeClass('is-valid');
+                
+                if (!$(this).next('.invalid-feedback').length) {
+                    $(this).after(`
+                        <div class="invalid-feedback">
+                            La cantidad debe ser un número mayor a cero
+                        </div>
+                    `);
+                }
+            } else {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+                $(this).next('.invalid-feedback').remove();
+                
+                calcularTotalProducto(fila);
+                calcularTotalIVA();
+                calcularTotalGeneral();
+            }
+        });
+        
+        // Validación en tiempo real para campos de precio
+        $(document).on('input', '[name$="-precio_compra"]', function() {
+            const precio = parseFloat($(this).val());
+            const fila = $(this).closest('tr')[0];
+            
+            if (isNaN(precio) || precio <= 0) {
+                $(this).addClass('is-invalid').removeClass('is-valid');
+            } else {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+                
+                calcularTotalProducto(fila);
+                calcularTotalIVA();
+                calcularTotalGeneral();
+            }
+        });
+        
+        // Validación en tiempo real para descuento
+        descuentoField?.addEventListener('input', function() {
+            const descuento = parseFloat(this.value || 0);
+            const totalField = document.querySelector('[name="{{ form_compra_cab.total.name }}"]');
+            const total = parseFloat(totalField?.value || 0);
+            
+            if (descuento < 0) {
+                this.classList.add('is-invalid');
+            } else if (descuento > total && total > 0) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                calcularTotalGeneral();
+            }
+        });
+
+        // Validación para el proveedor
+        const proveedorField = document.querySelector('[name="{{ form_compra_cab.proveedor.name }}"]');
+        proveedorField?.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+
+        // ===============================
+        // INICIALIZACIÓN
+        // ===============================
+        
+        // Calcular totales iniciales con datos existentes al cargar la página
+        setTimeout(function() {
+            $('#detalleBody tr.formset_row').each(function() {
+                calcularTotalProducto(this);
+            });
+            calcularTotalIVA();
+            calcularTotalGeneral();
+        }, 100);
+        
+        console.log('JavaScript de edición de compras inicializado correctamente');
     });
 </script>
 </body>

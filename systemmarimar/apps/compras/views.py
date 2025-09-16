@@ -544,7 +544,7 @@ def registrar_compra_cab_det_version_act_v2(request):
 							venta_cab=None
 						)
 	  
-					logger.debug(f"Movimiento de stock registrado para producto {detalle.producto.nombre}")					
+						logger.debug(f"Movimiento de stock registrado para producto {detalle.producto.nombre}")					
 					
 					messages.success(request, f"Compra registrada exitosamente con {detalles_guardados} detalle(s)")
 					return redirect('list_compras')
@@ -780,6 +780,177 @@ def format_user_friendly_errors(form_compra_cab, formset):
 @login_required(login_url='login/')
 @permission_required('compras.change_ordencompracab', raise_exception=True)
 @permission_required('compras.change_ordencompradet', raise_exception=True)
+def editar_compra(request, id_compra):
+    
+    compra = get_object_or_404(OrdenCompraCab, id=id_compra)
+    detalles_originales = OrdenCompraDet.objects.filter(orden_compra_cab=compra)
+    
+    formset_compra = formset_factory(FormEditCompraDetalle, extra=0, can_delete=True)
+
+    if request.method == 'POST':
+        form_compra_cab = FormEditCompraCabecera(request.POST, instance=compra)
+        # CORREGIDO: Usar prefijo consistente
+        form_compra_det = formset_compra(request.POST, prefix='form')
+
+        logger.debug(f"Datos POST recibidos: {dict(request.POST)}")
+
+        if form_compra_cab.is_valid() and form_compra_det.is_valid():
+            logger.info("Formularios válidos para edición de compra")
+            
+            # NUEVO: Validar que haya detalles válidos (igual que en registrar)
+            detalles_validos = []
+            
+            for form_det in form_compra_det:
+                if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
+                    producto_id = form_det.cleaned_data.get('producto_id')
+                    cantidad = form_det.cleaned_data.get('cantidad')
+                    
+                    if producto_id and cantidad:
+                        detalles_validos.append(form_det)
+                    else:
+                        messages.warning(request, "Detalle inválido - campos obligatorios faltantes")
+            
+            logger.info(f"Total de detalles válidos: {len(detalles_validos)}")
+            
+            # NUEVO: Validar que hay al menos un detalle
+            if len(detalles_validos) == 0:
+                messages.warning(request, "Debe mantener al menos un detalle de compra válido.")
+                logger.warning("No se encontraron detalles válidos en edición")
+                
+                context = {
+                    'form_compra_cab': form_compra_cab,
+                    'form_compra_det': form_compra_det,
+                    'form_compra_det_prefix': form_compra_det.prefix
+                }
+                return render(request, 'compras/editar3.html', context)
+            
+            try:
+                with transaction.atomic():
+                    # 1. Revertir movimientos de stock de detalles originales
+                    for detalle in detalles_originales:
+                        registrar_movimiento_stock(
+                            producto=detalle.producto,
+                            cantidad=detalle.cantidad,
+                            movimiento='REV_ENT',
+                            descripcion=f"Reverso por edición compra: {compra.nro_comprobante}",
+                            fecha_mov_producto=compra.fecha_compra,
+                            compra_cab=compra
+                        )
+                    
+                    # 2. Actualizar cabecera
+                    cabecera = form_compra_cab.save()
+                    
+                    # 3. Eliminar detalles antiguos
+                    detalles_originales.delete()
+                    
+                    # 4. Crear nuevos detalles válidos
+                    detalles_guardados = 0
+                    for form_det in detalles_validos:
+                        logger.debug(f"Procesando detalle para guardar: {form_det.cleaned_data}")
+                        
+                        producto_id = form_det.cleaned_data.get('producto_id')
+                        cantidad = form_det.cleaned_data.get('cantidad')
+                        descripcion = form_det.cleaned_data.get('descripcion')
+                        unidad_medida = form_det.cleaned_data.get('unidad_medida')
+                        precio_compra = form_det.cleaned_data.get('precio_compra')
+                        subtotal = form_det.cleaned_data.get('subtotal')
+                        
+                        try:
+                            producto_instance = Producto.objects.get(id=producto_id)
+                        except Producto.DoesNotExist:
+                            messages.error(request, f"Producto con ID {producto_id} no existe. Detalle omitido.")
+                            logger.error(f"Producto con ID {producto_id} no existe. Saltando detalle.")
+                            continue
+                        
+                        # Crear y guardar el detalle
+                        detalle = OrdenCompraDet(
+                            orden_compra_cab=cabecera,
+                            producto=producto_instance,
+                            cantidad=cantidad,
+                            descripcion=descripcion,
+                            unidad_medida=unidad_medida,
+                            precio_compra=precio_compra,
+                            total_producto=subtotal,
+                        )
+                        
+                        detalle.save()
+                        detalles_guardados += 1
+                        
+                        # 5. Registrar nuevo movimiento de stock
+                        registrar_movimiento_stock(
+                            producto=producto_instance,
+                            cantidad=cantidad,
+                            movimiento='ENTRADA',
+                            descripcion=f"Compra editada: #{cabecera.nro_comprobante}",
+                            ajuste=None,
+                            fecha_mov_producto=cabecera.fecha_compra,
+                            compra_cab=cabecera,
+                            venta_cab=None
+                        )
+
+                    messages.success(request, f"Compra editada exitosamente con {detalles_guardados} detalle(s)")
+                    return redirect('list_compras')
+                
+            except Exception as e:
+                logger.error(f"Error al guardar edición de compra: {str(e)}")
+                messages.error(request, f'Error al guardar en la base de datos: {str(e)}')
+        
+        else:
+            logger.warning("Formularios inválidos para edición de compra")
+            
+            # MEJORADO: Recopilar errores igual que en registrar
+            errores = []
+            
+            # Errores de detalles
+            for i, form in enumerate(form_compra_det, start=1):
+                for field, field_errors in form.errors.items():
+                    for error in field_errors:
+                        errores.append(f"Error en el Detalle #{i}, Campo [{field}]: {error}")
+
+            # Errores de cabecera
+            for field, field_errors in form_compra_cab.errors.items():
+                for error in field_errors:
+                    errores.append(f"Error en la cabecera: Campo [{field}]: {error}")
+
+            # Mostrar errores
+            if errores:
+                messages.error(request, "\\n".join(errores))
+
+            logger.debug(f"Errores encontrados: {errores}")
+
+        # Renderizar con errores
+        context = {
+            'form_compra_cab': form_compra_cab,
+            'form_compra_det': form_compra_det,
+            'form_compra_det_prefix': form_compra_det.prefix
+        }
+        return render(request, 'compras/editar3.html', context)
+        
+    else:
+        # GET request - cargar datos existentes
+        detalle_inicial = [{
+            'producto_id': det.producto.id,
+            'producto_nombre': det.producto.nombre,
+            'producto_iva': det.producto.iva,
+            'cantidad': det.cantidad,
+            'descripcion': det.descripcion,
+            'unidad_medida': det.unidad_medida,
+            'precio_compra': det.precio_compra,
+            'subtotal': det.total_producto
+        } for det in detalles_originales]
+        
+        form_compra_cab = FormEditCompraCabecera(instance=compra)
+        # CORREGIDO: Usar prefijo consistente también en GET
+        form_compra_det = formset_compra(initial=detalle_inicial, prefix='form')
+
+    context = {
+        'form_compra_cab': form_compra_cab,
+        'form_compra_det': form_compra_det,
+        'form_compra_det_prefix': form_compra_det.prefix
+    }
+    return render(request, 'compras/editar3.html', context)
+
+'''
 def editar_compra(request,id_compra):
 	
 	compra = get_object_or_404(OrdenCompraCab, id=id_compra)
@@ -919,6 +1090,7 @@ def editar_compra(request,id_compra):
 		'form_compra_det_prefix': form_compra_det.prefix  # Pasar el prefijo al template
 	}
 	return render(request, 'compras/editar3.html', context)
+'''
 
 
 def buscar_productos(request):

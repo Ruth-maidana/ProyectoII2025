@@ -854,7 +854,7 @@ class FormEditCompraCabecera(forms.ModelForm):
     )
     
     proveedor = forms.ModelChoiceField(
-        queryset=Proveedor.objects.filter(activo=True),
+        queryset=Proveedor.objects.all(),
         empty_label="Seleccione un proveedor",
         widget=forms.Select(attrs={'class': 'form-control'}),
         label="Proveedor",

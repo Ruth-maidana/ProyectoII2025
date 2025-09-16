@@ -54,6 +54,7 @@ class MovimientoStock(models.Model):
     cantidad_actual = models.IntegerField()
     cantidad = models.IntegerField()
     fecha_movimiento = models.DateTimeField(default=timezone.now)
+    #fecha_modificacion = models.DateTimeField(default=timezone.now)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     descripcion = models.TextField(null=True, blank=True)
     # Agrega estos campos para mejor trazabilidad
