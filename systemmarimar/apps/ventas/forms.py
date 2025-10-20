@@ -1,8 +1,10 @@
+from decimal import Decimal
 from django import forms
 from .models import Cliente,VentaCabecera,VentaDetalle, ConfigTimbradoNumeracion
 from apps.compras.models import Producto  # Importar el modelo Producto
 from apps.compras.utils import validar_stock_venta
 
+from django.core.exceptions import ValidationError
 
 
 
@@ -40,7 +42,7 @@ class FormRegistrarCliente(forms.ModelForm):
             'tipo_documento'
 		]
         
-        exclude = ['fecha_insercion','fecha_modificacion','activo','nro_documento']
+        exclude = ['nro_documento']
         
         labels = {
             'nombre':'Nombre',
@@ -114,10 +116,7 @@ class FormEditarCliente(forms.ModelForm):
             'num_tel',
             'correo',
             'direccion',
-            #'activo',
 		]
-        
-        exclude = ['fecha_insercion','fecha_modificacion','activo']
         
         labels = {
             'nombre':'Nombre',
@@ -146,7 +145,7 @@ class FormEditarCliente(forms.ModelForm):
 class ClienteViewForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nombre', 'apellido', 'nro_documento','nacionalidad','estado_civil','num_tel','correo','fecha_insercion', 'activo']
+        fields = ['nombre', 'apellido', 'nro_documento','nacionalidad','estado_civil','num_tel','correo', 'activo']
         
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
@@ -157,7 +156,7 @@ class ClienteViewForm(forms.ModelForm):
             'num_tel': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'correo': forms.EmailInput(attrs={'class': 'form-control', 'disabled': True}),
             'direccion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
-            'fecha_insercion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
+            #'fecha_insercion': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
             'activo': forms.TextInput(attrs={'class': 'form-control', 'disabled': True}),
         }
 
@@ -167,14 +166,18 @@ class FormRegVentaCabecera(forms.ModelForm):
         widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
         label="IVA 10%",
         initial=0.0,
-        min_value=0.0
+        decimal_places=2,
+        min_value=0.0,
+        max_digits=10
     )
     
     iva_cinco = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly','step': '0.01'}),
         label="IVA 5%",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=10
     )
     
     cliente = forms.ModelChoiceField(
@@ -189,20 +192,28 @@ class FormRegVentaCabecera(forms.ModelForm):
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label="Descuento",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=10
     )
     
     total = forms.DecimalField(
         widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
         label="Total",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
+    )
+    
+    CONDICION_VENTA_CHOICES = (
+        ('Contado','Contado'),
     )
     
     condicion_venta = forms.ChoiceField(
-        choices=VentaCabecera.CONDICION_VENTA_CHOICES,
+        choices=CONDICION_VENTA_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),  # Mantén consistencia con tu template
-        initial='contado',
+        initial='Contado',
         label="Condición de Venta"
     )
     
@@ -235,9 +246,7 @@ class FormRegVentaCabecera(forms.ModelForm):
                 'nota_remision',
                 'condicion_venta'
         ]
-        
-        exclude = ['fecha_insercion','fecha_modificacion','activo','estado']
-        
+                
         labels = {
             'fecha_venta':'Fecha de Venta',
             'nro_comprobante':'Nro. Comprobante',
@@ -252,9 +261,69 @@ class FormRegVentaCabecera(forms.ModelForm):
             'fecha_venta': forms.DateTimeInput(attrs={'class': 'form-control','readonly': 'readonly'}),
             'vendedor': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'forma_pago': forms.Select(attrs={'class': 'form-control'}),
-            'forma_pago': forms.Select(attrs={'class': 'form-control'}),
             'nro_comprobante': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
         }
+    
+    def clean_descuento(self):
+        """Validar que el descuento sea válido"""
+        descuento = self.cleaned_data.get('descuento', Decimal('0.0'))
+        
+        if descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
+        
+        return descuento
+    
+    def clean_total(self):
+        """Validar que el total sea positivo"""
+        total = self.cleaned_data.get('total', Decimal('0.0'))
+        
+        if total < 0:
+            raise forms.ValidationError("El total no puede ser negativo. Verifique las cantidades de los productos.")
+        
+        if total == 0:
+            raise forms.ValidationError("El total debe ser mayor a cero. Agregue productos a la orden.")
+            
+        return total
+    
+    def clean_iva_cinco(self):
+        """Validar IVA 5%"""
+        iva_cinco = self.cleaned_data.get('iva_cinco', Decimal('0.0'))
+        
+        if iva_cinco < 0:
+            raise forms.ValidationError("El IVA 5% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_cinco
+    
+    def clean_iva_diez(self):
+        """Validar IVA 10%"""
+        iva_diez = self.cleaned_data.get('iva_diez', Decimal('0.0'))
+        
+        if iva_diez < 0:
+            raise ValidationError("El IVA 10% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_diez
+    
+    def clean(self):
+        """Validaciones adicionales de la orden"""
+        cleaned_data = super().clean()
+        cliente = cleaned_data.get('cliente')
+        total = cleaned_data.get('total', Decimal('0.0'))
+        descuento = cleaned_data.get('descuento', Decimal('0.0'))
+        
+        # Verificar que el proveedor esté activo
+        if cliente and not cliente.activo:
+            raise ValidationError({
+                'cliente': 'No se puede registrar una venta para un cliente inactivo. Seleccione un cliente activo.'
+            })
+        
+        # Validar relación entre descuento y total
+        if total > 0 and descuento > total:
+            raise ValidationError({
+                'descuento': f'El descuento ({descuento}) no puede ser mayor al total ({total}).'
+            })
+            
+        return cleaned_data
+    
     
 class FormRegVentaDetalle(forms.Form):
                                     
@@ -263,22 +332,10 @@ class FormRegVentaDetalle(forms.Form):
         label="Producto ID"
     )
     
-    '''producto_nombre = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Producto"
-    )'''
-    
     descripcion = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
         label="Descripción"
     )
-    
-    '''cantidad = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
-        label="Cantidad",
-        min_value=1,
-        initial=1
-    )'''
     
     cantidad = forms.IntegerField(
         widget=forms.NumberInput(attrs={
@@ -296,13 +353,6 @@ class FormRegVentaDetalle(forms.Form):
         label="Unidad de Medida"
     )
     
-    '''precio_unit_venta = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Precio Unitario",
-        initial=0.0,
-        min_value=0.0
-    )'''
-    
     precio_unit_venta = forms.DecimalField(
         widget=forms.NumberInput(attrs={
             'class': 'form-control', 
@@ -311,15 +361,10 @@ class FormRegVentaDetalle(forms.Form):
         }),
         label="Precio Unitario",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
     )
-    
-    '''subtotal = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Subtotal",
-        initial=0.0,
-        min_value=0.0
-    )'''
     
     subtotal = forms.DecimalField(
         widget=forms.NumberInput(attrs={
@@ -329,49 +374,70 @@ class FormRegVentaDetalle(forms.Form):
         }),
         label="Subtotal",
         initial=0.0,
-        min_value=0.0
+        min_value=0.0,
+        decimal_places=2,
+        max_digits=100
     )
     
-    def clean(self):
+    
+    def clean_cantidad(self):
+        """Validar cantidad con mensajes más específicos"""
+        cantidad = self.cleaned_data.get('cantidad')
         
+        if cantidad is None:
+            raise ValidationError("La cantidad es obligatoria.")
+            
+        if cantidad <= 0:
+            raise ValidationError(f"La cantidad debe ser mayor a cero. Valor ingresado: {cantidad}")
+        
+        # Validar que sea un número entero positivo
+        if not isinstance(cantidad, int) and not cantidad.is_integer():
+            raise ValidationError("La cantidad debe ser un número entero.")
+        
+        return cantidad
+    
+    
+    def clean_precio_unit_venta(self):
+        """Validar precio de venta"""
+        precio = self.cleaned_data.get('precio_unit_venta')
+        
+        if precio is None:
+            raise ValidationError("El precio de compra es obligatorio.")
+            
+        if precio <= 0:
+            raise ValidationError(f"El precio debe ser mayor a cero. Valor ingresado: {precio}")
+            
+        return precio
+    
+    def clean_subtotal(self):
+        """Validar subtotal"""
+        subtotal = self.cleaned_data.get('subtotal')
+        
+        if subtotal is not None and subtotal < 0:
+            raise ValidationError("El subtotal no puede ser negativo. Verifique la cantidad y el precio.")
+            
+        return subtotal
+    
+    def clean(self):
         cleaned_data = super().clean()
         cantidad = cleaned_data.get('cantidad')
         producto_id = cleaned_data.get('producto_id')
-        print ('-----------------------------------')
-        print ('Ingreso al form de detalle',cantidad)
-        if cantidad is None:
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data  # Retornar aquí para evitar continuar con la validación
-        
-        if cantidad == 0:
-            #raise forms.ValidationError('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data
-        
-        if cantidad < 0:
-            #raise forms.ValidationError('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data
-        # Validar el producto
-        #producto = Producto.objects.filter(id=producto_id).first()  # Obtener el producto por ID
-        
-        '''if not producto:
-            self.add_error('producto_id',"Producto no encontrado.")'''
-        
+    
         # Validar producto
         if not producto_id:
             self.add_error('producto_id', "Debe seleccionar un producto.")
-            return cleaned_data
-            
-        try:
-            producto = Producto.objects.get(id=producto_id)
-        except Producto.DoesNotExist:
-            self.add_error('producto_id', "Producto no encontrado.")
-            return cleaned_data
-        
-        if producto.cantidad_en_stock < cantidad:
-            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
-            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
+        else:
+            try:
+                producto = Producto.objects.get(id=producto_id)
+                
+                # Validar stock solo si encontramos el producto y tenemos cantidad
+                if cantidad and producto.cantidad_en_stock < cantidad:
+                    mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
+                    self.add_error('cantidad', mensaje)
+                    
+            except Producto.DoesNotExist:
+                self.add_error('producto_id', "Producto no encontrado.")
+    
         return cleaned_data
 
     
@@ -399,13 +465,6 @@ class FormEditVentaDetalle(forms.Form):
         label="Descripción"
     )
     
-    '''cantidad = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
-        label="Cantidad",
-        min_value=1,
-        initial=1
-    )'''
-    
     cantidad = forms.IntegerField(
         widget=forms.NumberInput(attrs={
             'class': 'form-control cantidad',
@@ -422,13 +481,6 @@ class FormEditVentaDetalle(forms.Form):
         label="Unidad de Medida"
     )
     
-    '''precio_unit_venta = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Precio Unitario",
-        initial=0.0,
-        min_value=0.0
-    )'''
-    
     precio_unit_venta = forms.DecimalField(
         widget=forms.NumberInput(attrs={
             'class': 'form-control precio_unit_venta', 
@@ -439,13 +491,6 @@ class FormEditVentaDetalle(forms.Form):
         initial=0.0,
         min_value=0.0
     )
-    
-    '''subtotal = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        label="Subtotal",
-        initial=0.0,
-        min_value=0.0
-    )'''
     
     subtotal = forms.DecimalField(
         widget=forms.NumberInput(attrs={
@@ -459,37 +504,32 @@ class FormEditVentaDetalle(forms.Form):
     )
     
     def clean(self):
-        
         cleaned_data = super().clean()
         cantidad = cleaned_data.get('cantidad')
         producto_id = cleaned_data.get('producto_id')
         
+        # Validar cantidad
         if cantidad is None or cantidad <= 0:
-            self.add_error('cantidad',"La cantidad debe ser un número entero mayor a cero.")
-            return cleaned_data  # Retornar aquí para evitar continuar con la validación
+            self.add_error('cantidad', "La cantidad debe ser un número entero mayor a cero.")
         
-        # Validar el producto
-        #producto = Producto.objects.filter(id=producto_id).first()  # Obtener el producto por ID
-        
-        '''if not producto:
-            self.add_error('producto_id',"Producto no encontrado.")'''
-        
-        # Validar producto
-        if not producto_id:
+        # Validar producto solo si la cantidad es válida
+        elif not producto_id:
             self.add_error('producto_id', "Debe seleccionar un producto.")
-            return cleaned_data
-            
-        try:
-            producto = Producto.objects.get(id=producto_id)
-        except Producto.DoesNotExist:
-            self.add_error('producto_id', "Producto no encontrado.")
-            return cleaned_data
         
-        if producto.cantidad_en_stock < cantidad:
-            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
-            self.add_error('cantidad', mensaje)  # ¡Error vinculado al campo!
+        else:
+            # Intentar obtener el producto y validar stock
+            try:
+                producto = Producto.objects.get(id=producto_id)
+                
+                # Validar stock disponible
+                if producto.cantidad_en_stock < cantidad:
+                    mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
+                    self.add_error('cantidad', mensaje)
+                    
+            except Producto.DoesNotExist:
+                self.add_error('producto_id', "Producto no encontrado.")
+        
         return cleaned_data
-    
     
 class FormEditarVentaCabecera(forms.ModelForm):
     iva_diez = forms.DecimalField(
@@ -529,10 +569,10 @@ class FormEditarVentaCabecera(forms.ModelForm):
     )
     
     condicion_venta = forms.ChoiceField(
-        choices=VentaCabecera.CONDICION_VENTA_CHOICES,
+        choices=[('contado','Contado')],
         widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),  # Mantén consistencia con tu template
-        initial='contado',
-        label="Condición de Venta"
+        label="Condición de Venta",
+        
     )
     
     nota_remision = forms.CharField(required=False,
@@ -564,9 +604,7 @@ class FormEditarVentaCabecera(forms.ModelForm):
                 'timbrado',
                 'nota_remision',
         ]
-        
-        exclude = ['fecha_insercion','fecha_modificacion','activo','estado']
-        
+                
         labels = {
             'fecha_venta':'Fecha de Venta',
             'nro_comprobante':'Nro. Comprobante',
@@ -584,92 +622,80 @@ class FormEditarVentaCabecera(forms.ModelForm):
             'timbrado': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             
         }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-'''class FormRegVentaDetalle(forms.ModelForm):
-    
-    class Meta:
-        model = VentaDetalle
-        fields = [
-            'producto',
-            'monto_iva_cinco',
-            'monto_iva_diez',
-            'precio_unit_venta',
-            'cantidad',
-            'descripcion',
-            'unidad_medida',
-            'subtotal',
-        ]
         
-        exclude = ['fecha_insercion','fecha_modificacion','activo']
         
-        labels = {
-            'producto':'Producto',
-            'cantidad':'Cantidad',
-            'subtotal':'Subtotal',
-            'descripcion':'Descripcion',
-            'unidad_medida':'Unidad de Medida',
-            'precio_unit_venta':'Precio Unitario',
-            'monto_iva_diez':'IVA 10%',
-            'monto_iva_cinco':'IVA 5%',
-        }
+    def _validar_cantidad(self, cantidad, cleaned_data):
+        """Valida que la cantidad sea válida."""
+        if cantidad is None or cantidad <= 0:
+            self.add_error('cantidad', "La cantidad debe ser un número entero mayor a cero.")
+            return False
+        return True
+    
+    
+    def _validar_producto(self, producto_id, cleaned_data):
+        """Valida que el producto exista."""
+        if not producto_id:
+            self.add_error('producto_id', "Debe seleccionar un producto.")
+            return None
+            
+        try:
+            return Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            self.add_error('producto_id', "Producto no encontrado.")
+            return None
+    
+    def _validar_stock(self, producto, cantidad):
+        """Valida que haya suficiente stock."""
+        if producto.cantidad_en_stock < cantidad:
+            mensaje = f"No hay suficiente stock para el producto '{producto.nombre}'. Stock disponible: {producto.cantidad_en_stock}."
+            self.add_error('cantidad', mensaje) # ¡Error vinculado al campo!
+    
+    
+    def clean_descuento(self):
+        """Validar que el descuento sea válido"""
+        descuento = self.cleaned_data.get('descuento', Decimal('0.0'))
         
-        widgets = {
-            'producto': forms.Select(attrs={'class': 'form-control'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'subtotal': forms.NumberInput(attrs={'class': 'form-control'}),
-            'descripcion': forms.TextInput(attrs={'class': 'form-control'}),
-            'unidad_medida': forms.TextInput(attrs={'class': 'form-control'}),
-            'precio_unit_venta': forms.NumberInput(attrs={'class': 'form-control'}),
-            'monto_iva_diez': forms.NumberInput(attrs={'class': 'form-control'}),
-            'monto_iva_cinco': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
-'''
+        if descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
+        
+        return descuento
+    
+    def clean_total(self):
+        """Validar que el total sea positivo"""
+        total = self.cleaned_data.get('total', Decimal('0.0'))
+        
+        if total < 0:
+            raise forms.ValidationError("El total no puede ser negativo. Verifique las cantidades de los productos.")
+        
+        if total == 0:
+            raise forms.ValidationError("El total debe ser mayor a cero. Agregue productos a la orden.")
+            
+        return total
+    
+    def clean_iva_cinco(self):
+        """Validar IVA 5%"""
+        iva_cinco = self.cleaned_data.get('iva_cinco', Decimal('0.0'))
+        
+        if iva_cinco < 0:
+            raise forms.ValidationError("El IVA 5% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_cinco
+    
+    def clean_iva_diez(self):
+        """Validar IVA 10%"""
+        iva_diez = self.cleaned_data.get('iva_diez', Decimal('0.0'))
+        
+        if iva_diez < 0:
+            raise ValidationError("El IVA 10% no puede ser negativo. Verifique las cantidades de los productos.")
+            
+        return iva_diez
+    
+    
+    def validar_cliente_activo(self):
+        cliente = self.cleaned_data.get('cliente')
+        
+        if cliente and not cliente.activo:
+            raise ValidationError("No se puede registrar una venta para un cliente inactivo. Seleccione un cliente activo.")
+        
+        return cliente
 
-
-
-#--------------------------------------------------------------------
-
-TIPO_COMPROBANTE_CHOICES = [
-    ('boleta', 'Boleta'),
-    ('factura', 'Factura'),
-    ('ticket', 'Ticket'),
-]
-
-class VentaForm(forms.Form):
-    cliente = forms.ModelChoiceField(
-        queryset=Cliente.objects.all(),
-        label="Cliente",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    fecha = forms.DateField(
-        label="Fecha de Venta",
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    vendedor = forms.CharField(
-        label="Vendedor",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'})
-    )
-    tipo_comprobante = forms.ChoiceField(
-        choices=TIPO_COMPROBANTE_CHOICES,
-        label="Tipo de Comprobante",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    numero_comprobante = forms.CharField(
-        label="Número de Comprobante",
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    total = forms.DecimalField(
-        label="Total",
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'})
-    )

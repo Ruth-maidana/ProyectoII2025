@@ -5,6 +5,7 @@ from xhtml2pdf import pisa
 import matplotlib.pyplot as plt
 import matplotlib
 from django.utils import timezone
+import logging
 from apps.inventarios.models import MovimientoStock
 matplotlib.use('Agg') 
 import base64
@@ -15,16 +16,18 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required,permission_required
 from apps.compras.models import Producto
 from .models import Cliente, ConfigTimbradoNumeracion, Empresa, VentaCabecera, VentaDetalle
-from .forms import ClienteViewForm, FormEditarCliente, FormEditarVentaCabecera, FormRegistrarCliente, VentaForm, FormRegVentaCabecera, FormRegVentaDetalle, FormEditVentaDetalle, FormConfigTimbradoNumeracion
+from .forms import ClienteViewForm, FormEditarCliente, FormEditarVentaCabecera, FormRegistrarCliente, FormRegVentaCabecera, FormRegVentaDetalle, FormEditVentaDetalle, FormConfigTimbradoNumeracion
 from django.forms import formset_factory, inlineformset_factory
 from django.db.models import Q,Sum
 from apps.inventarios.utils import registrar_movimiento_stock
 from django.db import transaction 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required,permission_required
+from django.views.decorators.http import require_http_methods
  # Para evitar problemas con el backend gráfico
 # Create your views here.
 
+logger = logging.getLogger(__name__)
 
 
 def registrar_config_tim_num(request):
@@ -39,24 +42,11 @@ def registrar_config_tim_num(request):
         form = FormConfigTimbradoNumeracion(instance=config)
 
     return render(request, 'configuracion/timbrado_numeracion.html', {'form': form})
-
-    '''if request.method == 'POST':
-        form = FormConfigTimbradoNumeracion(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Configuración de timbrado y numeracion registrada exitosamente.")
-            return redirect('list_config_timbrado_num')
-    else:
-        form = FormConfigTimbradoNumeracion()
-    context = {
-        'form': form,
-    }
-    return render(request, 'configuracion/timbrado_numeracion.html', context)'''
        
-
 
 @login_required(login_url='login/')
 @permission_required('ventas.add_cliente', raise_exception=True)
+@require_http_methods(["GET", "POST"])
 def registrar_cliente(request):
     if request.method == 'POST':
         form_reg_cliente = FormRegistrarCliente(request.POST)
@@ -81,6 +71,7 @@ def registrar_cliente(request):
 
 @login_required(login_url='login/')
 @permission_required('ventas.change_cliente', raise_exception=True)
+@require_http_methods(["GET", "POST"])
 def editar_cliente(request, id_cliente):
     # Recuperamos la instancia del proyecto
     cliente = Cliente.objects.get(id=id_cliente)
@@ -127,11 +118,6 @@ def listar_cliente(request):
             'cliente': cliente,
             'form': formulario
         })
-
-    '''clientes_forms = [
-        {'cliente': cliente, 'form': ClienteViewForm(instance=cliente)}
-        for cliente in clientes
-    ]'''
     return render(request, 'clientes/listar.html', {'Clientes': clientes, 'clientes_forms': clientes_forms})
 
 
@@ -140,12 +126,11 @@ def listar_cliente(request):
 @login_required(login_url='login/')
 @permission_required('ventas.add_ventacabecera', raise_exception=True)
 @permission_required('ventas.add_ventadetalle', raise_exception=True)
+@require_http_methods(["GET", "POST"])
 def registrar_venta(request):
     formset_venta = formset_factory(FormRegVentaDetalle, extra=0, can_delete=True)
     datos_empresa = Empresa.objects.first()
-    #fecha_actual = datetime.now().date()
     fecha_actual = timezone.now
-    print('Fecha Actual: ',fecha_actual)
         
     if datos_empresa:
         print(f"Datos de la empresa: {datos_empresa.nombre}, {datos_empresa.ruc}, {datos_empresa.direccion}")
@@ -157,36 +142,72 @@ def registrar_venta(request):
 
     if request.method == 'POST':
         form_venta_cab = FormRegVentaCabecera(request.POST)
-        form_venta_det = formset_venta(request.POST)
+        form_venta_det = formset_venta(request.POST,prefix='form')
         
-        print(list(request.POST.keys()))
-
-
-        # Imprimir los datos enviados al backend
-        print("Datos enviados al backend:")
-        print(request.POST)
-        print("Detalles de la venta:")
-        # Imprimir los datos de cada detalle de la venta
-        for i, form_det in enumerate(form_venta_det):
-            print(f"Form Detalle #{i}: {form_det}")
+        logger.debug(f"Datos POST recibidos: {dict(request.POST)}")
 
         if form_venta_cab.is_valid() and form_venta_det.is_valid():
+            
+            logger.info("Formularios válidos")
+            
+            # CORRECCIÓN: Validar que haya detalles ANTES de guardar la cabecera
+            detalles_validos = []
+            
+            for form_det in form_venta_det:
+                if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
+                    producto_id = form_det.cleaned_data.get('producto_id')
+                    cantidad = form_det.cleaned_data.get('cantidad')
+					
+                    if producto_id and cantidad:
+                        detalles_validos.append(form_det)
+                    else:
+                        messages.warning(request, "Detalle inválido - campos obligatorios faltantes")
+                        logger.warning("Detalle inválido - campos obligatorios faltantes")
+            
+            logger.info(f"Total de detalles válidos: {len(detalles_validos)}")
+            
+            # Si no hay detalles válidos, mostrar error y no guardar nada
+            if len(detalles_validos) == 0:
+                messages.warning(request, "Debe ingresar al menos un detalle de venta válido.")
+                logger.warning("No se encontraron detalles válidos")
+	
+                context = {
+                    'form_venta_cab': form_venta_cab,
+                    'form_venta_det': form_venta_det,
+                    'empresa': datos_empresa,
+                    'form_venta_det_prefix':form_venta_det.prefix
+				}
+                return render(request, 'ventas/registrar5.html', context)
+            
+            
             try:
                 with transaction.atomic():
                     # Guardar la cabecera de la venta
                     cabecera = form_venta_cab.save()
-                    print(f"Cabecera de venta guardada: {cabecera}")
+                    logger.info(f"Cabecera de compra guardada: {cabecera.nro_comprobante}")
+                    
+                    # Guardar los detalles válidos
+                    detalles_guardados = 0
                     
                     # Guardar los detalles de la venta
-                    for form_det in form_venta_det:
+                    for form_det in detalles_validos:
+                        
+                        logger.debug(f"Procesando detalle: {form_det.cleaned_data}")
+                        
                         producto_id = form_det.cleaned_data.get('producto_id')
                         cantidad = form_det.cleaned_data.get('cantidad')
                         descripcion = form_det.cleaned_data.get('descripcion')
                         unidad_medida = form_det.cleaned_data.get('unidad_medida')
                         precio_venta = form_det.cleaned_data.get('precio_unit_venta')
                         subtotal = form_det.cleaned_data.get('subtotal')
-                        producto_instance = Producto.objects.get(id=producto_id)
-                        print(f"Producto ID: {producto_id}, Cantidad: {cantidad}, Descripción: {descripcion}, Unidad de Medida: {unidad_medida}, Precio Unitario: {precio_venta}, Subtotal: {subtotal}")
+                        
+                        try:
+                            producto_instance = Producto.objects.get(id=producto_id)
+                        except Producto.DoesNotExist:
+                            messages.error(request, f"Producto con ID {producto_id} no existe. Detalle omitido.")
+                            logger.error(f"Producto con ID {producto_id} no existe. Saltando detalle.")
+                            continue
+                        
                         # Aquí puedes realizar la lógica para guardar los detalles de la venta
                         detalle = VentaDetalle(
                             venta_cab=cabecera,
@@ -197,8 +218,11 @@ def registrar_venta(request):
                             precio_unit_venta=precio_venta,
                             subtotal=subtotal,
                         )
-                        print(f"Detalle: {detalle}")
+                        
+                        logger.debug(f"Guardando detalle: {detalle}")
+                        
                         detalle.save()
+                        detalles_guardados += 1
                         
                         # Guardar el movimiento de stock
                         registrar_movimiento_stock(
@@ -212,20 +236,24 @@ def registrar_venta(request):
                             venta_cab=cabecera
                         )
                         
+                        
+                        logger.debug(f"Movimiento de stock registrado para producto {detalle.producto.nombre}")
+                        
                     # Actualizar el número de timbrado
                     config.incrementar_numeracion()  # Actualiza el número de timbrado
-                    print(f"Número de timbrado actualizado: {config.nro_actual}")
+                    logger.info(f"Número de timbrado actualizado a {config.nro_final}")
                     
                     messages.success(request, "Venta registrada exitosamente")
                     
                     return redirect('list_ventas')
                 
             except Exception as e:
-                print(f'Error: {e}')  # Log the error
-                messages.error(request, '¡Error al guardar en la base de datos!')
-                print('Error de integridad')
-            
+                messages.error(request, f'Error al registrar la venta: {str(e)}')
+                logger.error(f'Error al registrar la venta: {str(e)}')
+                            
         else:
+            
+            logger.warning("Errores en los formularios")
             
             errores = []
             # Errores de detalles
@@ -243,26 +271,16 @@ def registrar_venta(request):
             if errores:
                 messages.error(request, "\\n".join(errores))
 
-            print("Errores","\\n".join(errores))
+            logger.debug(f"Errores encontrados: {errores}")
             
-            '''errores = [
-                "Detalle #1, Campo [cantidad]: La cantidad es requerida.",
-                "Detalle #2, Campo [producto_id]: Debe seleccionar un producto."
-            ]
-            messages.error(request, "\\n".join(errores))'''
-            
-            print(form_venta_cab.errors)
-            print(form_venta_det.errors)
-            #messages.error(request, '¡Hubo un error al registrar la venta!')
-            
-            # Mantener los datos del formulario aunque falle validación
-            context = {
-                'form_venta_cab': form_venta_cab,
-                'form_venta_det': form_venta_det,
-                'empresa': datos_empresa,
-                'form_venta_det_prefix':form_venta_det.prefix
-            }
-            return render(request, 'ventas/registrar5.html', context)
+        # Mantener los datos del formulario aunque falle validación
+        context = {
+            'form_venta_cab': form_venta_cab,
+            'form_venta_det': form_venta_det,
+            'empresa': datos_empresa,
+            'form_venta_det_prefix':form_venta_det.prefix
+        }
+        return render(request, 'ventas/registrar5.html', context)
             
     else:
             
@@ -273,7 +291,7 @@ def registrar_venta(request):
             'vendedor': request.user,
         })
         
-        form_venta_det = formset_venta()
+        form_venta_det = formset_venta(prefix='form')
 
     context = {
         'form_venta_cab': form_venta_cab,
@@ -318,7 +336,9 @@ def obtener_stock_actual(producto):
 @login_required(login_url='login/')
 @permission_required('ventas.change_ventacabecera', raise_exception=True)
 @permission_required('ventas.change_ventadetalle', raise_exception=True)
+@require_http_methods(["GET", "POST"])
 def editar_venta_v3(request, id_venta):
+    
     venta = get_object_or_404(VentaCabecera, id=id_venta)
     datos_empresa = Empresa.objects.first()
     detalles_originales = VentaDetalle.objects.filter(venta_cab=venta)
@@ -327,9 +347,42 @@ def editar_venta_v3(request, id_venta):
 
     if request.method == 'POST':
         form_venta_cab = FormEditarVentaCabecera(request.POST, instance=venta)
-        form_venta_det = formset_venta(request.POST)
+        form_venta_det = formset_venta(request.POST,prefix='form')
+
+        logger.debug(f"Datos POST recibidos: {dict(request.POST)}")
 
         if form_venta_cab.is_valid() and form_venta_det.is_valid():
+            
+            logger.info("Formularios válidos para edición de compra")
+            
+            detalles_validos = []
+            
+            for form_det in form_venta_det:
+                if form_det.cleaned_data and not form_det.cleaned_data.get('DELETE', False):
+                    producto_id = form_det.cleaned_data.get('producto_id')
+                    cantidad = form_det.cleaned_data.get('cantidad')
+					
+                    if producto_id and cantidad:
+                        detalles_validos.append(form_det)
+                    else:
+                        messages.warning(request, "Detalle inválido - campos obligatorios faltantes")
+                        logger.warning("Detalle inválido - campos obligatorios faltantes")
+            
+            logger.info(f"Total de detalles válidos: {len(detalles_validos)}")
+            
+            
+            if len(detalles_validos) == 0:
+                messages.warning(request, "Debe ingresar al menos un detalle de venta válido.")
+                logger.warning("No se encontraron detalles válidos")
+	
+                context = {
+                    'form_venta_cab': form_venta_cab,
+                    'form_venta_det': form_venta_det,
+                    'empresa': datos_empresa,
+                    'form_venta_det_prefix':form_venta_det.prefix
+				}
+                return render(request, 'ventas/editar3.html', context)
+            
             try:
                 with transaction.atomic():
                     # 1. REVERSIÓN: Eliminar movimientos de stock originales
@@ -349,54 +402,61 @@ def editar_venta_v3(request, id_venta):
                     # 3. Eliminar detalles antiguos
                     detalles_originales.delete()
                     
-                    # 4. Crear nuevos detalles y movimientos
-                    for form_det in form_venta_det:
-                        if not form_det.cleaned_data.get('DELETE', False):
-                            producto_id = form_det.cleaned_data.get('producto_id')
-                            cantidad = form_det.cleaned_data.get('cantidad')
-                            descripcion = form_det.cleaned_data.get('descripcion')
-                            unidad_medida = form_det.cleaned_data.get('unidad_medida')
-                            precio_venta = form_det.cleaned_data.get('precio_unit_venta')
-                            subtotal = form_det.cleaned_data.get('subtotal')
-                            
-                            producto_instance = Producto.objects.get(id=producto_id)
-                            
-                            print(f"Creando nuevo detalle: Producto ID: {producto_id}, Cantidad: {cantidad}, ")
-                            # Crear nuevo detalle
-                            detalle = VentaDetalle(
-                                venta_cab=cabecera,
-                                producto=producto_instance,
-                                cantidad=cantidad,
-                                descripcion=descripcion,
-                                unidad_medida=unidad_medida,
-                                precio_unit_venta=precio_venta,
-                                subtotal=subtotal,
-                            )
-                            detalle.save()
-                            
-                            print(f"Detalle creado: {detalle}")
-
-                            # 5. Registrar movimiento de stock
-                            print(f"Registrando movimiento de stock: Producto: {producto_instance.nombre}, Cantidad: {cantidad}")
-                            # Registrar nuevo movimiento de stock
-                            registrar_movimiento_stock(
-                                producto=producto_instance,
-                                cantidad=cantidad,
-                                movimiento='SALIDA',
-                                descripcion=f"Venta editada #{cabecera.id}",
-                                fecha_mov_producto=cabecera.fecha_venta,
-                                venta_cab=cabecera
-                            )
+                    # 4. Crear nuevos detalles válidos
+                    detalles_guardados = 0
                     
+                    # 4. Crear nuevos detalles y movimientos
+                    for form_det in detalles_validos:
+                        
+                        logger.debug(f"Procesando detalle para guardar: {form_det.cleaned_data}")
+
+                        producto_id = form_det.cleaned_data.get('producto_id')
+                        cantidad = form_det.cleaned_data.get('cantidad')
+                        descripcion = form_det.cleaned_data.get('descripcion')
+                        unidad_medida = form_det.cleaned_data.get('unidad_medida')
+                        precio_venta = form_det.cleaned_data.get('precio_unit_venta')
+                        subtotal = form_det.cleaned_data.get('subtotal')
+                                                    
+                        try:
+                            producto_instance = Producto.objects.get(id=producto_id)
+                        except Producto.DoesNotExist:
+                            messages.error(request, f"Producto con ID {producto_id} no existe. Detalle omitido.")
+                            logger.error(f"Producto con ID {producto_id} no existe. Saltando detalle.")
+                            continue
+                        
+                        # Crear nuevo detalle
+                        detalle = VentaDetalle(
+                            venta_cab=cabecera,
+                            producto=producto_instance,
+                            cantidad=cantidad,
+                            descripcion=descripcion,
+                            unidad_medida=unidad_medida,
+                            precio_unit_venta=precio_venta,
+                            subtotal=subtotal,
+                        )
+                        detalle.save()
+                        detalles_guardados += 1
+                    
+
+                        # 5. Registrar movimiento de stock
+                        registrar_movimiento_stock(
+                            producto=producto_instance,
+                            cantidad=cantidad,
+                            movimiento='SALIDA',
+                            descripcion=f"Venta editada #{cabecera.id}",
+                            fecha_mov_producto=cabecera.fecha_venta,
+                            venta_cab=cabecera
+                        )
+                
                     messages.success(request, "Venta actualizada exitosamente")
                     return redirect('list_ventas')
                     
             except Exception as e:
+                logger.error(f'Error al actualizar la venta: {str(e)}')
                 messages.error(request, f'Error al actualizar la venta: {str(e)}')
-                print(f'Error: {e}')
                 # Aquí podrías agregar un rollback manual si es necesario
         else:
-            
+            logger.warning("Errores en los formularios de edición de venta")
             errores = []
             # Errores de detalles
             for i, form in enumerate(form_venta_det, start=1):
@@ -413,18 +473,17 @@ def editar_venta_v3(request, id_venta):
             if errores:
                 messages.error(request, "\\n".join(errores))
 
-            print("Errores","\\n".join(errores))
+            logger.debug(f"Errores encontrados: {errores}")
             
-            # Mantener los datos del formulario aunque falle validación
-            context = {
-                'form_venta_cab': form_venta_cab,
-                'form_venta_det': form_venta_det,
-                'empresa': datos_empresa,
-                #'form_venta_det_prefix':form_venta_det.prefix
-            }
+        # Mantener los datos del formulario aunque falle validación
+        context = {
+            'form_venta_cab': form_venta_cab,
+            'form_venta_det': form_venta_det,
+            'empresa': datos_empresa,
+            'form_venta_det_prefix':form_venta_det.prefix
+        }
             
             #messages.error(request, "Error en el formulario. Verifica los datos.")
-            print(form_venta_cab.errors, form_venta_det.errors)
     else:
         # Preparar datos iniciales para el formulario
         detalle_inicial = [{
@@ -439,13 +498,13 @@ def editar_venta_v3(request, id_venta):
         } for det in detalles_originales]
         
         form_venta_cab = FormEditarVentaCabecera(instance=venta)
-        form_venta_det = formset_venta(initial=detalle_inicial)
+        form_venta_det = formset_venta(initial=detalle_inicial,prefix='form')
 
     context = {
         'form_venta': form_venta_cab,
         'form_venta_det': form_venta_det,
         'empresa': datos_empresa,
-        #'venta': venta,
+        'form_venta_det_prefix':form_venta_det.prefix
     }
     return render(request, 'ventas/editar3.html', context)
 
@@ -479,6 +538,7 @@ def inactivar_venta(request, id_venta):
 @login_required(login_url='login/')
 #@permission_required('ventas.view_ventacabecera', raise_exception=True)
 #@permission_required('ventas.view_ventadetalle', raise_exception=True)
+@require_http_methods(["GET"])
 def listar_ventas(request):
     ventas = VentaCabecera.objects.prefetch_related('detalles').all()  # Usar related_name definido
     print("Ventas con detalles prefetch_related:")
@@ -487,7 +547,7 @@ def listar_ventas(request):
     context = {'Ventas': ventas}
     return render(request, 'ventas/listar2.html', context)
 
-
+@require_http_methods(["GET"])
 def buscar_productos(request):
     q = request.GET.get('q', '')
     productos = Producto.objects.filter(
@@ -510,7 +570,7 @@ def buscar_productos(request):
 
 
 ##################### FIN VENTAS  #######################
-
+@require_http_methods(["GET"])
 def reporte_ventas(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -578,10 +638,11 @@ def reporte_ventas(request):
     return render(request, 'reportes/rep_ventas.html', context)
 
 
-
+@require_http_methods(["GET"])
 def exportar_ventas_pdf(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
+    cliente_id = request.GET.get('cliente')
     
     ventas = VentaCabecera.objects.filter(activo=True).order_by('-fecha_venta')
     
@@ -589,6 +650,10 @@ def exportar_ventas_pdf(request):
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
         fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
         ventas = ventas.filter(fecha_venta__date__range=[fecha_inicio, fecha_fin])
+    
+    if cliente_id:
+        ventas = ventas.filter(cliente_id=cliente_id)
+    
     
     # Calcular total general
     total_general = ventas.aggregate(
@@ -615,38 +680,8 @@ def exportar_ventas_pdf(request):
         return HttpResponse('Error al generar PDF', status=500)
     
     return response
-
-'''def rep_ventas_mens_anual(request):
-    mes = request.GET.get('mes')
-    anio = request.GET.get('anio')
     
-
-    # Validación: Obligar a filtrar por mes y año
-    #if not mes or not anio:
-        #return messages.error(request, '¡Erro debe seleccionar un filtro!')
-
-    ventas = VentaCabecera.objects.filter(
-        activo=True,
-        fecha_venta__month=mes,
-        fecha_venta__year=anio
-    ).order_by('fecha_venta')
-    
-     # Calcular total general
-    total_general = ventas.aggregate(
-        total=Sum('total')
-    )['total'] or 0
-    
-    template_path = 'reportes/rep_ventas_pdf.html'
-    context = {
-        'ventas': ventas,
-        'total_general': total_general,
-        'fecha_inicio': fecha_inicio.strftime('%d/%m/%Y') if fecha_inicio else '',
-        'fecha_fin': fecha_fin.strftime('%d/%m/%Y') if fecha_fin else '',
-    }
-
-    return render(request, 'reportes/rep_ventas_mens_anual.html', context)'''
-    
-
+@require_http_methods(["GET"])
 def rep_ventas_mensual_anual(request):
     # Obtener parámetros
     tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
@@ -736,7 +771,7 @@ def rep_ventas_mensual_anual(request):
     return render(request, 'reportes/rep_ventas_mens_anual.html', context)
 
 
-
+@require_http_methods(["GET"])
 def exportar_ventas_mensual_anual_pdf(request):
     # Obtener parámetros (los mismos que en la función original)
     tipo_reporte = request.GET.get('tipo_reporte', 'mensual')  # 'mensual' o 'anual'
@@ -746,7 +781,6 @@ def exportar_ventas_mensual_anual_pdf(request):
     # Validación básica
     if not anio:
         messages.error(request, 'Debe seleccionar al menos el año')
-        #return render(request, 'reportes/rep_compras_mens_anual.html', {})
 
     # Filtrar ventas (igual que en la función original)
     ventas = VentaCabecera.objects.filter(activo=True)

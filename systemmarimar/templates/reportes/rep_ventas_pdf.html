@@ -62,7 +62,6 @@
                 <th>Comprobante</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
-                <th>Condición</th>
                 <th>Total</th>
             </tr>
         </thead>
@@ -73,18 +72,17 @@
                 <td>{{ venta.nro_comprobante }}</td>
                 <td>{{ venta.cliente }}</td>
                 <td>{{ venta.vendedor }}</td>
-                <td>{{ venta.get_condicion_venta_display }}</td>
                 <td>{{ venta.total|floatformat:2 }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No hay ventas registradas</td>
+                <td colspan="5" class="text-center">No hay ventas registradas</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr class="total-row">
-                <td colspan="5" class="text-right">Total:</td>
+                <td colspan="4" class="text-right">Total:</td>
                 <td>{{total_general|floatformat:0}}</td>
             </tr>
         </tfoot>

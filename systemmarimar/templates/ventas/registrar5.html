@@ -462,6 +462,141 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+
+    // Función para validar una fila específica
+    function validarFila(row) {
+        const errores = [];
+        
+        const cantidadInput = row.querySelector('[name$="-cantidad"]');
+        const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
+        const productoIdInput = row.querySelector('[name$="-producto_id"]');
+        
+        // Validar producto
+        if (!productoIdInput || !productoIdInput.value) {
+            errores.push("Debe seleccionar un producto");
+        }
+        
+        // Validar cantidad
+        if (cantidadInput) {
+            const cantidad = parseFloat(cantidadInput.value);
+            if (isNaN(cantidad)) {
+                errores.push("La cantidad debe ser un número válido");
+                cantidadInput.classList.add('is-invalid');
+            } else if (cantidad <= 0) {
+                errores.push(`La cantidad debe ser mayor a cero (valor actual: ${cantidad})`);
+                cantidadInput.classList.add('is-invalid');
+            } else {
+                cantidadInput.classList.remove('is-invalid');
+                cantidadInput.classList.add('is-valid');
+            }
+        }
+        
+        // Validar precio
+        if (precioInput) {
+            const precio = parseFloat(precioInput.value);
+            if (isNaN(precio)) {
+                errores.push("El precio debe ser un número válido");
+                precioInput.classList.add('is-invalid');
+            } else if (precio <= 0) {
+                errores.push(`El precio debe ser mayor a cero (valor actual: ${precio})`);
+                precioInput.classList.add('is-invalid');
+            } else {
+                precioInput.classList.remove('is-invalid');
+                precioInput.classList.add('is-valid');
+            }
+        }
+        
+        return errores;
+    }
+
+    // Función para validar todo el formulario antes de enviar
+    function validarFormularioCompleto() {
+        const errores = [];
+        const filas = document.querySelectorAll('#detalleBody tr.formset_row');
+        
+        // Validar que hay al menos una fila
+        if (filas.length === 0) {
+            errores.push("Debe agregar al menos un producto en el detalle");
+            return errores;
+        }
+        
+        // Validar cada fila
+        filas.forEach((fila, index) => {
+            const erroresFila = validarFila(fila);
+            if (erroresFila.length > 0) {
+                errores.push(`Producto #${index + 1}: ${erroresFila.join(', ')}`);
+            }
+        });
+        
+        // Validar campos de cabecera
+        const totalField = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
+        const descuentoField = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
+        const clienteField = document.querySelector('[name="{{ form_venta_cab.cliente.name }}"]');
+        
+        // Validar cliente
+        if (!clienteField || !clienteField.value) {
+            errores.push("Debe seleccionar un cliente");
+            if (clienteField) clienteField.classList.add('is-invalid');
+        } else {
+            clienteField.classList.remove('is-invalid');
+        }
+        
+        // Validar total
+        if (totalField) {
+            const total = parseFloat(totalField.value);
+            if (isNaN(total) || total <= 0) {
+                errores.push("El total debe ser mayor a cero");
+                totalField.classList.add('is-invalid');
+            } else {
+                totalField.classList.remove('is-invalid');
+            }
+        }
+        
+        // Validar descuento
+        if (descuentoField) {
+            const descuento = parseFloat(descuentoField.value || 0);
+            const total = parseFloat(totalField?.value || 0);
+            
+            if (descuento < 0) {
+                errores.push("El descuento no puede ser negativo");
+                descuentoField.classList.add('is-invalid');
+            } else if (descuento > total && total > 0) {
+                errores.push("El descuento no puede ser mayor al total");
+                descuentoField.classList.add('is-invalid');
+            } else {
+                descuentoField.classList.remove('is-invalid');
+            }
+        }
+        
+        return errores;
+    }
+
+    // Función mejorada para mostrar errores con SweetAlert2
+    function mostrarErroresValidacion(errores) {
+        if (errores.length === 0) return false;
+        
+        const listaErrores = errores.map(error => `<li style="text-align: left; margin: 5px 0;">${error}</li>`).join('');
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Errores de Validación',
+            html: `
+                <div style="text-align: left;">
+                    <p><strong>Por favor, corrija los siguientes errores:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${listaErrores}
+                    </ul>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#d33',
+            width: '600px'
+        });
+        
+        return true;
+    }
+
+
     document.addEventListener('DOMContentLoaded', function() {
             // Definir el prefijo de los formularios de detalle
             var formVentaDetPrefix = "{{ form_venta_det_prefix }}";
@@ -469,7 +604,15 @@
 
             const formVenta = document.getElementById('ventaForm');
             formVenta.addEventListener('submit', function(event) {
-                // Antes de enviar el formulario, eliminamos las filas vacías
+                // Validar antes de procesar
+                const errores = validarFormularioCompleto();
+                if (errores.length > 0) {
+                    event.preventDefault(); // Prevenir envío
+                    mostrarErroresValidacion(errores);
+                    return false;
+                }
+
+                // Si no hay errores, proceder con la limpieza de filas vacías
                 const filas = $('#detalleBody tr.formset_row');
                 let totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
                 let formCount = 0;
@@ -532,6 +675,93 @@
 
             const detalleTable = document.getElementById('detalle-table').querySelector('tbody');
 
+            // Función para calcular el total_producto
+            function calcularTotalProducto(row) {
+                const cantidadInput = row.querySelector('[name$="-cantidad"]');
+                const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
+                const totalProductoField = row.querySelector('[name$="-subtotal"]');
+
+                if (cantidadInput && precioInput && totalProductoField) {
+                    const cantidad = parseFloat(cantidadInput.value) || 0;
+                    const precio = parseFloat(precioInput.value) || 0;
+                    const totalProducto = cantidad * precio;
+                    totalProductoField.value = totalProducto.toFixed(2); // Actualizar el campo subtotal
+                }
+            }
+
+
+             // Function to calculate IVA for a row
+            function calcularIVA(row) {
+                const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
+                const cantidadInput = row.querySelector('[name$="-cantidad"]');
+                const ivaCell = row.querySelector('.iva-producto');
+                const subtotalInput = row.querySelector('[name$="-subtotal"]');
+
+                if (precioInput && cantidadInput && ivaCell && subtotalInput) {
+                    const precioUnitario = parseFloat(precioInput.value) || 0;
+                    const cantidad = parseFloat(cantidadInput.value) || 0;
+                    const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+
+                    let ivaValor = 0;
+                    if (ivaPorcentaje === 10) {
+                        ivaValor = (precioUnitario / 11) * cantidad;
+                    } else if (ivaPorcentaje === 5) {
+                        ivaValor = (precioUnitario / 21) * cantidad;
+                    }
+
+                    subtotalInput.value = (precioUnitario * cantidad).toFixed(2); // Update subtotal
+                    return ivaValor;
+                }
+                return 0;
+            }
+
+            // Function to calculate total IVA and update fields
+            function calcularTotalIVA() {
+                let totalIvaDiez = 0;
+                let totalIvaCinco = 0;
+
+                detalleTable.querySelectorAll('tr').forEach(function(row) {
+                    const ivaCell = row.querySelector('.iva-producto');
+                    if (ivaCell) {
+                        const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
+                        const ivaValor = calcularIVA(row);
+
+                        if (ivaPorcentaje === 10) {
+                            totalIvaDiez += ivaValor;
+                        } else if (ivaPorcentaje === 5) {
+                            totalIvaCinco += ivaValor;
+                        }
+                    }
+                });
+
+                // Update IVA fields
+                const ivaDiezField = document.querySelector('[name="{{ form_venta_cab.iva_diez.name }}"]');
+                const ivaCincoField = document.querySelector('[name="{{ form_venta_cab.iva_cinco.name }}"]');
+                if (ivaDiezField) ivaDiezField.value = totalIvaDiez.toFixed(2);
+                if (ivaCincoField) ivaCincoField.value = totalIvaCinco.toFixed(2);
+            }
+
+             // Función para calcular el total general
+		    function calcularTotalGeneral() {
+                let totalGeneral = 0;
+                detalleTable.querySelectorAll('tr').forEach(function(row) {
+                    const subtotalInput = row.querySelector('[name$="-subtotal"]');
+                    if (subtotalInput) {
+                        totalGeneral += parseFloat(subtotalInput.value) || 0;
+                    }
+                });
+
+                // Aplicar el descuento si está presente
+                const descuentoField = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
+                const descuento = parseFloat(descuentoField?.value) || 0;
+                totalGeneral -= descuento;
+
+                const totalGeneralField = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
+                if (totalGeneralField) {
+                    totalGeneralField.value = totalGeneral.toFixed(2); // Actualizar el campo total general
+                }
+		    }
+
             // Agregar producto al detalle
             $('#agregarProducto').on('click', function() {
                 var productoId = $('#productoSearch').val();
@@ -590,7 +820,7 @@
                 }
 
                 // Verificar si la cantidad es un número válido
-                /*if (isNaN(cantidad) || cantidad <= 0) {
+                if (isNaN(cantidad) || cantidad <= 0) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Advertencia',
@@ -599,9 +829,7 @@
                         showConfirmButton: false
                     });
                     return;
-                }*/
-                /*var formIdx = parseInt($('#id_' + formVentaDetPrefix + '-TOTAL_FORMS').val());
-                console.log("Form Index: " + formIdx);*/
+                }
 
                 var totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
                 var formIdx = parseInt(totalForms.val());
@@ -646,7 +874,7 @@
                 $('#productoSearch').val(null).trigger('change'); // Limpiar el campo de búsqueda
 
                 // Actualizar el número total de formularios
-                var totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
+                //var totalForms = $('#id_' + formVentaDetPrefix + '-TOTAL_FORMS');
 
 
                 /*var currentFormCount = parseInt(totalForms.val());
@@ -655,6 +883,13 @@
 
                 totalForms.val(formIdx + 1); // Se agrego
                 console.log("Total Forms Actualizo a: " + totalForms.val());
+
+                 // *** AQUÍ ESTÁ LA CORRECCIÓN: Calcular totales después de agregar la fila ***
+                // Obtener la fila recién agregada para calcular sus valores
+                const newRowElement = $('#detalleBody tr:last')[0];
+                calcularTotalProducto(newRowElement);
+                calcularTotalIVA();
+                calcularTotalGeneral();
 
                 
             });
@@ -674,51 +909,12 @@
                 calcularTotalIVA();
             });
 
-            // Función para calcular el total_producto
-            function calcularTotalProducto(row) {
-                const cantidadInput = row.querySelector('[name$="-cantidad"]');
-                const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
-                const totalProductoField = row.querySelector('[name$="-subtotal"]');
-
-                if (cantidadInput && precioInput && totalProductoField) {
-                    const cantidad = parseFloat(cantidadInput.value) || 0;
-                    const precio = parseFloat(precioInput.value) || 0;
-                    const totalProducto = cantidad * precio;
-                    totalProductoField.value = totalProducto.toFixed(2); // Actualizar el campo subtotal
-                }
-            }
-
-            // Función para calcular el total general
-		    function calcularTotalGeneral() {
-                let totalGeneral = 0;
-                detalleTable.querySelectorAll('tr').forEach(function(row) {
-                    const subtotalInput = row.querySelector('[name$="-subtotal"]');
-                    if (subtotalInput) {
-                        totalGeneral += parseFloat(subtotalInput.value) || 0;
-                    }
-                });
-
-                // Aplicar el descuento si está presente
-                const descuentoField = document.querySelector('[name="{{ form_venta_cab.descuento.name }}"]');
-
-                //console.log(descuentoField);
-
-
-                const descuento = parseFloat(descuentoField?.value) || 0;
-                totalGeneral -= descuento;
-
-                const totalGeneralField = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
-                if (totalGeneralField) {
-                    totalGeneralField.value = totalGeneral.toFixed(2); // Actualizar el campo total general
-                }
-		    }
-
-
             // Escuchar cambios en los campos cantidad, precio_unit_venta y descuento
             detalleTable.addEventListener('input', function(event) {
                 const row = event.target.closest('tr');
                 if (row) {
                     calcularTotalProducto(row); // Calcular el subtotal de la fila
+                    calcularTotalIVA(); // Calcular el IVA total
                     calcularTotalGeneral(); // Calcular el total general
                 }
             });
@@ -729,70 +925,81 @@
                 calcularTotalGeneral(); // Recalcular el total general cuando cambie el descuento
             });
 
-            // Function to calculate IVA for a row
-            function calcularIVA(row) {
-                const precioInput = row.querySelector('[name$="-precio_unit_venta"]');
-                const cantidadInput = row.querySelector('[name$="-cantidad"]');
-                const ivaCell = row.querySelector('.iva-producto');
-                const subtotalInput = row.querySelector('[name$="-subtotal"]');
-
-                if (precioInput && cantidadInput && ivaCell && subtotalInput) {
-                    const precioUnitario = parseFloat(precioInput.value) || 0;
-                    const cantidad = parseFloat(cantidadInput.value) || 0;
-                    const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
-
-                    let ivaValor = 0;
-                    if (ivaPorcentaje === 10) {
-                        ivaValor = (precioUnitario / 11) * cantidad;
-                    } else if (ivaPorcentaje === 5) {
-                        ivaValor = (precioUnitario / 21) * cantidad;
+             // Validación en tiempo real para los campos de cantidad
+            $(document).on('input', '[name$="-cantidad"]', function() {
+                const cantidad = parseFloat($(this).val());
+                const fila = $(this).closest('tr')[0];
+                
+                if (isNaN(cantidad) || cantidad <= 0) {
+                    $(this).addClass('is-invalid').removeClass('is-valid');
+                    
+                    // Mostrar tooltip de error
+                    if (!$(this).next('.invalid-feedback').length) {
+                        $(this).after(`
+                            <div class="invalid-feedback">
+                                La cantidad debe ser un número mayor a cero
+                            </div>
+                        `);
                     }
-
-                    subtotalInput.value = (precioUnitario * cantidad).toFixed(2); // Update subtotal
-                    return ivaValor;
+                } else {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                    $(this).next('.invalid-feedback').remove();
+                    
+                    // Recalcular si la cantidad es válida
+                    calcularTotalProducto(fila);
+                    calcularTotalIVA();
+                    calcularTotalGeneral();
                 }
-                return 0;
-            }
 
-            // Function to calculate total IVA and update fields
-            function calcularTotalIVA() {
-                let totalIvaDiez = 0;
-                let totalIvaCinco = 0;
+            
+            });
 
-                detalleTable.querySelectorAll('tr').forEach(function(row) {
-                    const ivaCell = row.querySelector('.iva-producto');
-                    const ivaPorcentaje = parseInt(ivaCell.textContent.replace('%', '').trim()) || 0;
-                    const ivaValor = calcularIVA(row);
-
-                    if (ivaPorcentaje === 10) {
-                        totalIvaDiez += ivaValor;
-                    } else if (ivaPorcentaje === 5) {
-                        totalIvaCinco += ivaValor;
-                    }
-                });
-
-                // Update IVA fields
-                const ivaDiezField = document.querySelector('[name="{{ form_venta_cab.iva_diez.name }}"]');
-                const ivaCincoField = document.querySelector('[name="{{ form_venta_cab.iva_cinco.name }}"]');
-                if (ivaDiezField) ivaDiezField.value = totalIvaDiez.toFixed(2);
-                if (ivaCincoField) ivaCincoField.value = totalIvaCinco.toFixed(2);
-            }
-
-            // Listen for changes in quantity, price, or discount
-            detalleTable.addEventListener('input', function(event) {
-                const row = event.target.closest('tr');
-                if (row) {
-                    calcularIVA(row); // Calculate IVA for the row
-                    calcularTotalIVA(); // Recalculate total IVA
-                    calcularTotalGeneral(); // Recalculate total general
+            // Validación en tiempo real para descuento
+            descuentoField?.addEventListener('input', function() {
+                const descuento = parseFloat(this.value || 0);
+                const totalField = document.querySelector('[name="{{ form_venta_cab.total.name }}"]');
+                const total = parseFloat(totalField?.value || 0);
+                
+                if (descuento < 0) {
+                    this.classList.add('is-invalid');
+                } else if (descuento > total && total > 0) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    calcularTotalGeneral();
                 }
             });
 
-            // Listen for changes in the discount field
-            descuentoField?.addEventListener('input', function() {
-                calcularTotalGeneral(); // Recalculate total general when discount changes
+            // Validación en tiempo real para campos de precio
+            $(document).on('input', '[name$="-precio_unit_venta"]', function() {
+                const precio = parseFloat($(this).val());
+                const fila = $(this).closest('tr')[0];
+                
+                if (isNaN(precio) || precio <= 0) {
+                    $(this).addClass('is-invalid').removeClass('is-valid');
+                } else {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                    
+                    // Recalcular si el precio es válido
+                    calcularTotalProducto(fila);
+                    calcularTotalIVA();
+                    calcularTotalGeneral();
+                }
+            });
+
+            // Validación para el cliente
+            const clienteField = document.querySelector('[name="{{ form_venta_cab.cliente.name }}"]');
+            clienteField?.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                }
             });
     });
+
 </script>
 </body>
 </html>
