@@ -1,4 +1,4 @@
-Pagina de Prueba: https://proyectoii2025-production.up.railway.app
+Pagina de Prueba: No disponible - vencio el plan gratuito
 
 Observacion: El despliegue no se hara en la NUBE
 
