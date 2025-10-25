@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.template.loader import render_to_string, get_template
-#from weasyprint import HTML, CSS
+from weasyprint import HTML, CSS
 from io import BytesIO
 from xhtml2pdf import pisa
 import matplotlib.pyplot as plt
